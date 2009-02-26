@@ -14,6 +14,7 @@
 #include <Core/Engine.h>
 
 #include <Display/Camera.h>
+#include <Scene/RenderStateNode.h>
 
 // SimpleSetup
 #include <Utils/SimpleSetup.h>
@@ -58,8 +59,11 @@ int main(int argc, char** argv) {
 
     // Get root node of scene
     ISceneNode* root = setup->GetScene();
+    RenderStateNode* rsn = new RenderStateNode();
+    rsn->EnableOption(RenderStateNode::WIREFRAME);
+    root->AddNode(rsn);
     TLEDNode* tled = new TLEDNode();
-    root->AddNode(tled);
+    rsn->AddNode(tled);
 
     setup->GetEngine().InitializeEvent().Attach(*tled);
     setup->GetEngine().ProcessEvent().Attach(*tled);

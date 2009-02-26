@@ -174,6 +174,7 @@ void drawTrianglesFromVBO(GLuint vbo, GLuint normalVbo,  int numTriangles, float
 
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, (GLfloat*)&color);
 	glMaterialfv(GL_FRONT, GL_AMBIENT, (GLfloat*)&ambcolor);
+    glColor4f(color.x,color.y,color.z,color.w);
 
 	//glColorMaterial(GL_FRONT, GL_AMBIENT);
 	//glEnable(GL_COLOR_MATERIAL);
@@ -215,6 +216,7 @@ void drawTetrahedraFromVBO(GLuint centersVbo, int numTetrahedra, float4 color) {
 
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, (GLfloat*)&color);
 	glMaterialfv(GL_FRONT, GL_AMBIENT, (GLfloat*)&ambcolor);
+    glColor4f(color.x,color.y,color.z,color.w);
 
 	//glColorMaterial(GL_FRONT, GL_AMBIENT);
 	//glEnable(GL_COLOR_MATERIAL);
@@ -316,7 +318,7 @@ void display(unsigned int object_number, TetrahedralMesh* mesh, TetrahedralTLEDS
 
 	drawTrianglesFromVBO(vbo[object_number], normalVbo[object_number], surface->numFaces, color);
 
-	color = make_float4(1,1,0,0.5);
+	color = make_float4(0,1,0,0.5);
     drawTetrahedraFromVBO(centersVbo[object_number], mesh->numTetrahedra, color);
 
 //	drawCoordinates();
