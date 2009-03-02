@@ -55,9 +55,7 @@ void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
 }
 
 void TLEDNode::Apply(Renderers::IRenderingView* view) {
-    if (state == NULL || mesh == NULL || surface == NULL) return;
-    display(0,mesh, state, surface);
-
+    // draw coordinate system axis
     view->GetRenderer()->DrawLine( Line(Vector<3,float>(0.0),
                                         Vector<3,float>(1000.0,0.0,0.0) ),
                                    Vector<3,float>(1.0,0.0,0.0) );
@@ -68,5 +66,26 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
                                         Vector<3,float>(0.0,0.0,-1000.0) ),
                                    Vector<3,float>(0.0,0.0,1.0) );
 
-    //view->GetViewport()->GetViewingVolume()->LookAt();
+    view->GetRenderer()->DrawPoint( Vector<3,float>(110.0,45.0,-10.0),
+                                    Vector<3,float>(0.0,1.0,1.0), 10 );
+
+    // draw xz plane as grid
+    float numberOfLinesPerAxis = 1000;
+    float spaceBetweenLines = 20;
+    Vector<3,float> color(0.0,0.0,0.0);
+    for (float i= -numberOfLinesPerAxis; i<numberOfLinesPerAxis; 
+         i+=spaceBetweenLines) {
+        if (i == 0.0) continue;
+        view->GetRenderer()->
+            DrawLine( Line(Vector<3,float>(-numberOfLinesPerAxis,0.0,i),
+                           Vector<3,float>(numberOfLinesPerAxis,0.0,i) ),
+                      color);
+        view->GetRenderer()->
+            DrawLine( Line(Vector<3,float>(i, 0.0, -numberOfLinesPerAxis),
+                           Vector<3,float>(i, 0.0, numberOfLinesPerAxis) ),
+                      color);
+    }
+
+    if (state == NULL || mesh == NULL || surface == NULL) return;
+    display(0,mesh, state, surface);
 }
