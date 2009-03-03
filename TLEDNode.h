@@ -5,6 +5,7 @@
 #include <Core/EngineEvents.h>
 #include <Scene/RenderNode.h>
 #include <Renderers/IRenderingView.h>
+#include <string>
 
 using namespace OpenEngine;
 
@@ -12,7 +13,7 @@ using namespace OpenEngine;
 
 class TLEDNode : public Scene::RenderNode, public Core::IModule {
  public:
-    TLEDNode();
+    TLEDNode(std::string meshFile, std::string surfaceFile);
     virtual ~TLEDNode();
 
     virtual void Apply(Renderers::IRenderingView* view);
@@ -21,6 +22,8 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     virtual void Handle(Core::DeinitializeEventArg arg);
 
  private:
+    std::string meshFile;
+    std::string surfaceFile;
     TetrahedralTLEDState* state;
     TetrahedralMesh* mesh;
     TriangleSurface* surface;

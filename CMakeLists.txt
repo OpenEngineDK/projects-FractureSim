@@ -45,6 +45,8 @@ SET( PROJECT_SOURCES
   ${CUDA_TARGET_LINK}
   main.cpp
   TLEDNode.cpp
+  GridNode.cpp
+  CoordSystemNode.cpp
 )
 
 # Include needed to use SDL under Mac OS X

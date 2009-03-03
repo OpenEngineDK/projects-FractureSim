@@ -21,6 +21,8 @@
 #include <Utils/MoveHandler.h>
 
 #include "TLEDNode.h"
+#include "GridNode.h"
+#include "CoordSystemNode.h"
 
 // name spaces that we will be using.
 // this combined with the above imports is almost the same as
@@ -42,7 +44,7 @@ int main(int argc, char** argv) {
     logger.info << logger.end;
 
     // Create simple setup
-    SimpleSetup* setup = new SimpleSetup("TLED");
+    SimpleSetup* setup = new SimpleSetup("TLED", new Viewport(0,0,800,600));
 
       // Move the camera
     Camera* camera = setup->GetCamera();
@@ -62,8 +64,19 @@ int main(int argc, char** argv) {
     RenderStateNode* rsn = new RenderStateNode();
     rsn->EnableOption(RenderStateNode::WIREFRAME);
     root->AddNode(rsn);
-    TLEDNode* tled = new TLEDNode();
+
+    std::string dataDir = "projects/TLED/data/RegistrationShapes/";
+    //std::string meshFile = dataDir + "tand2.msh";
+    //std::string surfaceFile = dataDir + "tand2.obj";
+    std::string meshFile = dataDir + "PROSTATE.msh";
+    std::string surfaceFile = dataDir + "PROSTATE.obj";
+    TLEDNode* tled = new TLEDNode(meshFile, surfaceFile);
     rsn->AddNode(tled);
+
+    Vector<3,float> color(0.0,0.0,0.0);
+    root->AddNode(new GridNode(1000,20,color));
+
+    root->AddNode(new CoordSystemNode());
 
     setup->GetEngine().InitializeEvent().Attach(*tled);
     setup->GetEngine().ProcessEvent().Attach(*tled);
