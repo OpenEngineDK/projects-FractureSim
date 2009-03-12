@@ -31,7 +31,7 @@ void applyTransformation(VisualBuffer& vb) {
     unsigned int blockSizeCeil = (int)ceil((float)blockSize/128.0f);
     
     //printf("Grid: %i  block: %i blockCeil: %i\n", gridSize, blockSize, blockSizeCeil);
-    applyTransformation_k<<<make_uint3(gridSize,1,1), make_uint3(blockSizeCeil,1,1)>>>(vb.bufExt, vb.buf, blockSize);
+    applyTransformation_k<<<make_uint3(gridSize,1,1), make_uint3(blockSizeCeil,1,1)>>>(vb.buf, vb.matBuf, blockSize);
     CUT_CHECK_ERROR("Error applying transformations");
 }
 
@@ -221,13 +221,13 @@ updateMeshCentersFromDisplacements2_k(float4* buffer, Body mesh,
 
     //PointShape p(center);
     //p.CopyToBuf(bufArray, me_idx);
-
-    /*    float4 pos = center;
+    /*
+    float4 pos = center;
     float4 dir = {0, 1.0, 0, 0};
     VectorShape v(pos, pos + dir);
     v.CopyToBuf(buffer, me_idx);
     */
-
+    
     PolyShape p;
     p.CopyToBuf(buffer, me_idx);
 }

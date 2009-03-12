@@ -231,9 +231,15 @@ void display(unsigned int object_number, Solid* solid, float4* buf) {
 
     //update tedrahedra centers
 	int gridSize2 = (int)ceil(((float)mesh->numTetrahedra)/BLOCKSIZE);
-	updateMeshCentersFromDisplacements_k<<<make_uint3(gridSize2,1,1), make_uint3(BLOCKSIZE,1,1)>>>(d_centers, *mesh, solid->vertexpool->data, solid->vertexpool->Ui_t);
-	updateMeshCentersFromDisplacements2_k<<<make_uint3(gridSize2,1,1), make_uint3(BLOCKSIZE,1,1)>>>(buf, *mesh, solid->vertexpool->data, solid->vertexpool->Ui_t);
-	CUT_CHECK_ERROR("Error extracting surface");
+    //	updateMeshCentersFromDisplacements_k<<<make_uint3(gridSize2,1,1), make_uint3(BLOCKSIZE,1,1)>>>(d_centers, *mesh, solid->vertexpool->data, solid->vertexpool->Ui_t);
+	
+    updateMeshCentersFromDisplacements2_k<<<make_uint3(gridSize2,1,1), make_uint3(BLOCKSIZE,1,1)>>>(buf, *mesh, solid->vertexpool->data, solid->vertexpool->Ui_t);
+	
+  
+    
+
+
+    CUT_CHECK_ERROR("Error extracting surface");
     // unmap buffer object
     CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vbo[object_number]));
     CUDA_SAFE_CALL(cudaGLUnmapBufferObject( normalVbo[object_number]));

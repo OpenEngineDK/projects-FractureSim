@@ -64,15 +64,14 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     solid->vertexpool = vertexpool;
 
     logger.info << "pre computing" << logger.end;
-	precompute(solid,
-               0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f);
+	precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f);
     logger.info << "TLEDNode initialization done" << logger.end;
 
     PolyShape ps("box.obj");
 
     // Initialize the Visualizer
     visualizer = new Visualizer();
-    //visualizer->AllocBuffer(ELM_CENTER_OF_MASS, mesh->numTetrahedra, LINES);
+    //visualizer->AllocBuffer(ELM_CENTER_OF_MASS, solid->body->numTetrahedra, LINES);
     visualizer->AllocPolyBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
 }
 
@@ -94,11 +93,13 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (!solid->IsInitialized()) return;
     
 	// Map all visual buffers
-    //visualizer->MapAllBufferObjects();
+    visualizer->MapAllBufferObjects();
     //
     display(0, solid, visualizer->GetBuffer(STRESS_TENSORS));
-	// Unmap all visual buffers
-    //visualizer->UnmapAllBufferObjects();
+    //display(0, solid, visualizer->GetBuffer(ELM_CENTER_OF_MASS));
+	
+    // Unmap all visual buffers
+    visualizer->UnmapAllBufferObjects();
     // Render all debug information
     visualizer->Render();
 }

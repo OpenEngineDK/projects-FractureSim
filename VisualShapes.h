@@ -19,8 +19,8 @@
 #include <cuda_runtime_api.h> // includes cudaMalloc and cudaMemset
 
 enum {
-    //    ELM_CENTER_OF_MASS = 0,
-    STRESS_TENSORS = 0,
+    ELM_CENTER_OF_MASS = 0,
+    STRESS_TENSORS,
     NUM_BUFFERS
 };
 
@@ -33,11 +33,11 @@ enum {
 
 
 struct VisualBuffer {
-    VisualBuffer() : vboID(0), buf(NULL), bufExt(NULL), numElm(0), 
+    VisualBuffer() : vboID(0), buf(NULL), matBuf(NULL), numElm(0), 
                      byteSize(0), mode(0), enabled(true) {}
     GLuint vboID;
     float4* buf;
-    float4* bufExt;
+    float4* matBuf;
     unsigned int numElm;
     unsigned int byteSize;
     GLenum mode;
@@ -85,9 +85,9 @@ struct PolyShape {
     void CopyToBuf(float4* buf, int idx) {
         // Insert 4x4 transformation matrix into buffer
         float4 row0 = {0.01,0,0,0}; // move in x direction
-        float4 row1 = {0,1,0,0};
-        float4 row2 = {0,0,1,0};
-        float4 row3 = {0,0,0,1};
+        //float4 row1 = {0,1,0,0};
+        //float4 row2 = {0,0,1,0};
+        //float4 row3 = {0,0,0,1};
         
         
         buf[(idx*4)+0] = row0;

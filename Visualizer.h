@@ -85,15 +85,15 @@ public:
         // ------------------ MATRIX BUFFER ----------------- //
         int matByteSize = numElm * sizeof(float4) * 4;
         // Cuda malloc array for matrix transformations of the vertices.
-        cudaMalloc((void**)&vb[id].buf, matByteSize); // float4 x 4 = 16 (4x4 matix) 
-        cudaMemset(vb[id].buf, 0, matByteSize);
+        cudaMalloc((void**)&vb[id].matBuf, matByteSize); // float4 x 4 = 16 (4x4 matix) 
+        cudaMemset(vb[id].matBuf, 0, matByteSize);
 
         // ----------- VERTEX BUFFER ------------------- //            
         // Each element has a float4 pr. vertex
         vb[id].byteSize = numElm * sizeof(float4) * ps.numVertices; 
         // Cuda malloc array for the actual vertices of the polygon model.
-        cudaMalloc((void**)&vb[id].bufExt, vb[id].byteSize);
-        cudaMemset(vb[id].bufExt, 0, vb[id].byteSize);
+        cudaMalloc((void**)&vb[id].buf, vb[id].byteSize);
+        cudaMemset(vb[id].buf, 0, vb[id].byteSize);
 
         // create buffer object
         glGenBuffers( 1, &vb[id].vboID);
@@ -108,11 +108,11 @@ public:
         CUT_CHECK_ERROR_GL();
            
         // Map VBO id to buffer
-        CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[id].bufExt, vb[id].vboID));    
+        CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[id].buf, vb[id].vboID));    
  
         // Copy the poly shape to cuda, one for each element
         cudaError_t stat;
-        stat = cudaMemcpy(vb[id].bufExt, ps.vertices, ps.numVertices * sizeof(float4), cudaMemcpyHostToDevice);
+        stat = cudaMemcpy(vb[id].buf, ps.vertices, ps.numVertices * sizeof(float4), cudaMemcpyHostToDevice);
         if( stat == cudaSuccess )
             printf("PolyShape copied successfully to gfx\n");
  
@@ -121,14 +121,19 @@ public:
     }
 
     float4* GetBuffer(unsigned int id) {
-        return vb[id].buf;
+        if( vb[id].mode == POLYGONS )
+            return vb[id].matBuf;
+        else
+            return vb[id].buf;
     }
 
 
     void MapAllBufferObjects() {   
         // Map VBO id to buffer
-        for( int i=0; i<NUM_BUFFERS; i++ )
-            CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[i].buf, vb[i].vboID));
+        for( int i=0; i<NUM_BUFFERS; i++ ) {
+            if( vb[i].mode != POLYGONS )
+                CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[i].buf, vb[i].vboID));
+        }
     }
 
     void UnmapAllBufferObjects() {
@@ -177,7 +182,7 @@ public:
                 // must be calculated by applying transformation matrix to model.
                 if( vb[i].mode == POLYGONS ){
 
-                    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[i].bufExt, vb[i].vboID));
+                    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[i].buf, vb[i].vboID));
                     applyTransformation(vb[i]);
                     CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb[i].vboID ));
 
@@ -192,7 +197,8 @@ public:
                     // TODO change number of GL_FLOATS according to vb.mode
                     glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
                     glEnableClientState(GL_VERTEX_ARRAY);
-                    glDrawArrays(vb[i].mode, 0, vb[i].numElm*vb[i].mode);
+                    //glDrawArrays(vb[i].mode, 0, vb[i].numElm*vb[i].mode);
+                    glDrawArrays(GL_LINES, 0, vb[i].numElm*vb[i].mode);
                 }
 
                 glDisableClientState(GL_VERTEX_ARRAY);
