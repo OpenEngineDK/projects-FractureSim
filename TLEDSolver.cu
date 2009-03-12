@@ -292,20 +292,25 @@ Tetrahedron fixTetrahedronOrientation(Tetrahedron tet, Point *hpoints) {
 }
 
 //must return smallest length encountered
-float CPUPrecalculation(Solid* solid, int blockSize, int& return_maxNumForces, float density, float smallestAllowedVolume, float smallestAllowedLength) {
+float CPUPrecalculation(Solid* solid, int blockSize, unsigned int& return_maxNumForces, float density, float smallestAllowedVolume, float smallestAllowedLength) {
 
     Body* mesh = solid->body;
 
     float totalSmallestLengthSquared = 9e9;
     double totalVolume = 0;
-    Tetrahedron *htetrahedra = (Tetrahedron*)malloc(sizeof(Tetrahedron) * mesh->numTetrahedra);
-    Point *hpoints = (Point*)malloc(sizeof(Point) * solid->vertexpool->size);
+    Tetrahedron *htetrahedra = 
+        (Tetrahedron*)malloc(sizeof(Tetrahedron) * mesh->numTetrahedra);
+    Point *hpoints =
+        (Point*)malloc(sizeof(Point) * solid->vertexpool->size);
 
     //copy datastructure back and compact
     cudaMemcpy(hpoints, solid->vertexpool->data, sizeof(Point) * solid->vertexpool->size, cudaMemcpyDeviceToHost);
-    cudaMemcpy(htetrahedra, mesh->tetrahedra, sizeof(Tetrahedron) * mesh->numTetrahedra, cudaMemcpyDeviceToHost);
+    cudaFree(solid->vertexpool->data);
 
-    int tmpPointCount = solid->vertexpool->size;
+    cudaMemcpy(htetrahedra, mesh->tetrahedra, sizeof(Tetrahedron) * mesh->numTetrahedra, cudaMemcpyDeviceToHost);
+    cudaFree(mesh->tetrahedra);
+
+    unsigned int tmpPointCount = solid->vertexpool->size;
 
 	//	int res = tmpPointCount % blockSize;
 
@@ -316,13 +321,13 @@ float CPUPrecalculation(Solid* solid, int blockSize, int& return_maxNumForces, f
 
     float* mass = (float*)malloc(sizeof(float) * tmpPointCount);
     memset(mass, 0, sizeof(float) * tmpPointCount);
-    for (int i = 0; i < mesh->numTetrahedra; i++) {
+    for (unsigned int i = 0; i < mesh->numTetrahedra; i++) {
         if (htetrahedra[i].x >= 0) {
             htetrahedra[i] = fixTetrahedronOrientation(htetrahedra[i],hpoints);
         }
     }
 
-    int tmpTetCount = mesh->numTetrahedra;
+    unsigned int tmpTetCount = mesh->numTetrahedra;
 	//	res = tmpTetCount % blockSize;
     //		if (res>0) {
     //			tmpTetCount += blockSize - res;
@@ -335,12 +340,12 @@ float CPUPrecalculation(Solid* solid, int blockSize, int& return_maxNumForces, f
     float* initialVolume = (float*)malloc(sizeof(float) * tmpTetCount); 
     int* numForces = (int*)malloc(sizeof(int) * tmpPointCount);
     int maxNumForces = 0;
-    for (int i = 0; i < tmpPointCount; i++) {
+    for (unsigned int i = 0; i < tmpPointCount; i++) {
         numForces[i] = 0;
     }
 		
-    int counter = 0;
-    for (int i = 0; i < mesh->numTetrahedra; i++) {
+    unsigned int counter = 0;
+    for (unsigned int i = 0; i < mesh->numTetrahedra; i++) {
         if (htetrahedra[i].x >= 0 && 
             htetrahedra[i].y >= 0 && 
             htetrahedra[i].z >= 0 &&
@@ -455,7 +460,7 @@ float CPUPrecalculation(Solid* solid, int blockSize, int& return_maxNumForces, f
         //getchar();
 
 		// these are the padded ones
-    for (int i = counter; i < tmpTetCount; i++) {
+    for (unsigned int i = counter; i < tmpTetCount; i++) {
         tets[i].x = -1;
         tets[i].y = -1;
         tets[i].z = -1;
@@ -465,14 +470,9 @@ float CPUPrecalculation(Solid* solid, int blockSize, int& return_maxNumForces, f
     mesh->numTetrahedra = tmpTetCount;
 
     //copy points to a padded array
-    cudaFree(solid->vertexpool->data);
     cudaMalloc((void**)&(solid->vertexpool->data), sizeof(Point) * tmpPointCount);
     cudaMemcpy(solid->vertexpool->data, hpoints, sizeof(Point) * solid->vertexpool->size, cudaMemcpyHostToDevice);
     solid->vertexpool->size = tmpPointCount;
-    free(hpoints);
-    free(htetrahedra);
-    free(numForces);
-    cudaFree(mesh->tetrahedra);
 
 //		for (int i=0; i<solid->vertexpool->size; i++) {
 //			printf("Vertex %i: %f, %f, %f\n", i, 
@@ -498,7 +498,11 @@ float CPUPrecalculation(Solid* solid, int blockSize, int& return_maxNumForces, f
     cudaMemcpy(solid->vertexpool->mass, mass,
                sizeof(float) * solid->vertexpool->size, cudaMemcpyHostToDevice);
 
-    for (int i = 0; i < tmpPointCount; i++) {
+    free(hpoints);
+    free(htetrahedra);
+    free(numForces);
+
+    for (unsigned int i = 0; i < tmpPointCount; i++) {
         if (mass[i] == 0) {
             printf("warning: point without mass detected\n");
         }

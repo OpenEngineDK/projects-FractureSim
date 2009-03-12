@@ -37,7 +37,9 @@ void TetGenLoader::Load() {
         vertexPool.push_back(point);
 	}
 	fclose (vFile);
-}
+    if (numVertices != vertexPool.size())
+        throw Core::Exception("wrong number of vertex in vertexpool");
+    }
     {
 	FILE* bFile = fopen(bodyfile.c_str(),"r");
 	if (!bFile)
@@ -57,6 +59,8 @@ void TetGenLoader::Load() {
         body.push_back(bid);
 	}
 	fclose (bFile);
+    if (numTetrahedra != body.size())
+        throw Core::Exception("wrong number of body indices");
     }
     {
 	FILE* sFile = fopen(surfacefile.c_str(),"r");
@@ -75,6 +79,8 @@ void TetGenLoader::Load() {
         surface.push_back(sid);
 	}
 	fclose (sFile);
+    if (numTriangles != surface.size())
+        throw Core::Exception("wrong number of surface indices");
     }
     logger.info << "---- -------------- ----"  << logger.end;
 }

@@ -45,7 +45,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     vertexpool = TypeConverter
         ::ConvertToVertexPool(loader->GetVertexPool());
-    vertexpool->Scale(1.1);
+    //vertexpool->Scale(1.1);
     //vertexpool->Move(10,10,10);
     vertexpool->ConvertToCuda();
 

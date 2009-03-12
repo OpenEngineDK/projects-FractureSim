@@ -22,12 +22,14 @@
 // SimpleSetup
 #include <Utils/SimpleSetup.h>
 #include <Utils/MoveHandler.h>
+#include <Utils/RenderStateHandler.h>
 
 #include "TLEDNode.h"
 #include "GridNode.h"
 #include "CoordSystemNode.h"
 #include "Visualizer.h"
 #include "VisualShapes.h"
+#include "KeyHandler.h"
 
 // name spaces that we will be using.
 // this combined with the above imports is almost the same as
@@ -72,6 +74,13 @@ int main(int argc, char** argv) {
     RenderStateNode* rsn = new RenderStateNode();
     rsn->EnableOption(RenderStateNode::WIREFRAME);
     root->AddNode(rsn);
+    RenderStateHandler* rsh = new RenderStateHandler(*rsn);
+    setup->GetKeyboard().KeyEvent().Attach(*rsh);
+
+    KeyHandler* kh = new KeyHandler(*camera);
+    kh->SetEye(Vector<3,float>(0.0,10.0,-10.0f));
+    kh->SetPoint(Vector<3,float>(0.0,10.0,0.0));
+    setup->GetKeyboard().KeyEvent().Attach(*kh);
 
     std::string dataDir = "projects/TLED/data/RegistrationShapes/";
     //std::string meshFile = dataDir + "tand2.msh";

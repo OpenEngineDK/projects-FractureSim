@@ -16,7 +16,7 @@ struct VertexPool {
     unsigned int size;
 	float4 *ABC, *Ui_t, *Ui_tminusdt, *externalForces;
 	float* mass;
-	int maxNumForces;
+	unsigned int maxNumForces;
     float4* pointForces;
 
     VertexPool() {}
@@ -45,7 +45,7 @@ struct VertexPool {
 class Surface {
  public:
 	Triangle* faces;
-	int numFaces;
+	unsigned int numFaces;
 
     Surface() {}
     Surface(unsigned int numTriangles) {
@@ -67,7 +67,7 @@ struct ShapeFunctionDerivatives {
 class Body {
  public:
 	Tetrahedron* tetrahedra;
-	int numTetrahedra;
+	unsigned int numTetrahedra;
 
 	float* volume;
 	ShapeFunctionDerivatives* shape_function_deriv;
