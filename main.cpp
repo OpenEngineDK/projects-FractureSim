@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     logger.info << "========= Running OpenEngine Test Project =========";
     logger.info << logger.end;
    
-      // Move the camera
+    // Move the camera
     Camera* camera = setup->GetCamera();
     camera->SetPosition(Vector<3,float>(10,0,10));
     camera->LookAt(Vector<3,float>(0,0,0));

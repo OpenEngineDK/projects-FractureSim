@@ -141,8 +141,7 @@ float3 calcNormal(float4 *v0, float4 *v1, float4 *v2)
 
 
 __global__ void
-updateSurfacePositionsFromDisplacements_k(float3 *tris, float3 *normals, TriangleSurface surface, Point *points, float4 *displacements)
-{
+updateSurfacePositionsFromDisplacements_k(float3 *tris, float3 *normals, Surface surface, Point *points, float4 *displacements) {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (me_idx>=surface.numFaces) return;
@@ -179,10 +178,8 @@ updateSurfacePositionsFromDisplacements_k(float3 *tris, float3 *normals, Triangl
 	normals[(3*me_idx)+2] = normal;
 }
 
-__global__ void
-updateMeshCentersFromDisplacements_k(float3 *centers,
-                                     TetrahedralMesh mesh, float4 *displacements)
-{
+__global__ void updateMeshCentersFromDisplacements_k
+(float3 *centers, Body mesh, Point* points, float4 *displacements) {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (me_idx>=mesh.numTetrahedra) return;
@@ -190,8 +187,6 @@ updateMeshCentersFromDisplacements_k(float3 *centers,
     Tetrahedron tetra = mesh.tetrahedra[me_idx];
 
 	float4 pos0, pos1, pos2, pos3;
-
-    float4* points = mesh.points;
 
     pos0 = points[tetra.x] + displacements[tetra.x];
     pos1 = points[tetra.y] + displacements[tetra.y];
@@ -206,8 +201,8 @@ updateMeshCentersFromDisplacements_k(float3 *centers,
 
 
 __global__ void
-updateMeshCentersFromDisplacements2_k(float4* buffer,
-                                      TetrahedralMesh mesh, float4 *displacements)
+updateMeshCentersFromDisplacements2_k(float4* buffer, Body mesh, 
+                                      Point* points, float4 *displacements)
 {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -216,8 +211,6 @@ updateMeshCentersFromDisplacements2_k(float4* buffer,
     Tetrahedron tetra = mesh.tetrahedra[me_idx];
 
 	float4 pos0, pos1, pos2, pos3;
-
-    float4* points = mesh.points;
 
     pos0 = points[tetra.x] + displacements[tetra.x];
     pos1 = points[tetra.y] + displacements[tetra.y];

@@ -26,11 +26,13 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     std::string meshFile;
     std::string surfaceFile;
     TetrahedralTLEDState* state;
-    TetrahedralMesh* mesh;
-    TriangleSurface* surface;
 
     // Test
     Visualizer* visualizer;
+    VertexPool* vertexpool;
+    Body* body;
+    Surface* surface;
+    Solid* solid;
 };
 
 #endif // _TLED_NODE_

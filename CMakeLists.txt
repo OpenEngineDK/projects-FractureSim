@@ -20,6 +20,7 @@ CUDA_INCLUDE_DIRECTORIES(
 
 # Use the CUDA_COMPILE macro.
 CUDA_INCLUDE_DIRECTORIES(
+  "${OE_SOURCE_DIR}"
   ${FOUND_CUDA_NVCC_INCLUDE}
   "/Developer/CUDA/common/inc/" #to include cutil.h
   ${GLUT_INCLUDE_DIR}
@@ -31,6 +32,7 @@ CUDA_ADD_LIBRARY(cuda_lib
   ImageD.cu
   TLEDSolver.cu
   Visualization_kernels.cu
+  TetrahedralMesh.cu
   ${CUDA_CUT_TARGET_LINK}
 )
   
@@ -48,6 +50,8 @@ SET( PROJECT_SOURCES
   TLEDNode.cpp
   GridNode.cpp
   CoordSystemNode.cpp
+  MshObjLoader.cpp
+  TetGenLoader.cpp
   Visualizer.h
   VisualShapes.cpp
 )
