@@ -265,7 +265,7 @@ void cleanupDisplay(void) {
 
 }
 
-void display(unsigned int object_number, TetrahedralMesh* mesh, TetrahedralTLEDState *state, TriangleSurface* surface) {  
+void display(unsigned int object_number, TetrahedralMesh* mesh, TetrahedralTLEDState *state, TriangleSurface* surface, float4* bufArray) {  
 
 //	int tetSize = mesh->numTetrahedra / BLOCKSIZE;
 //	int pointSize = mesh->numPoints / BLOCKSIZE;
@@ -291,7 +291,8 @@ void display(unsigned int object_number, TetrahedralMesh* mesh, TetrahedralTLEDS
 
     //update tedrahedra centers
 	int gridSize2 = (int)ceil(((float)mesh->numTetrahedra)/BLOCKSIZE);
-	updateMeshCentersFromDisplacements_k<<<make_uint3(gridSize2,1,1), make_uint3(BLOCKSIZE,1,1)>>>(d_centers, *mesh, state->Ui_t);
+    //    updateMeshCentersFromDisplacements_k<<<make_uint3(gridSize2,1,1), make_uint3(BLOCKSIZE,1,1)>>>(d_centers, *mesh, state->Ui_t);    
+    updateMeshCentersFromDisplacements2_k<<<make_uint3(gridSize2,1,1), make_uint3(BLOCKSIZE,1,1)>>>(bufArray, *mesh, state->Ui_t);
 
 
 	CUT_CHECK_ERROR("Error extracting surface");
@@ -333,36 +334,38 @@ void display(unsigned int object_number, TetrahedralMesh* mesh, TetrahedralTLEDS
 //    glutPostRedisplay();
 }
 
-	Tetrahedron fixTetrahedronOrientation(Tetrahedron tet, Point *hpoints)
-	{
-		Tetrahedron res;
-		
-		//the x,y,z and w points are called a,b,c and d
 
-		res = tet;
 
-		Vector3D a = crop_last_dim(hpoints[tet.x]);
-		Vector3D b = crop_last_dim(hpoints[tet.y]);
-		Vector3D c = crop_last_dim(hpoints[tet.z]);
-		Vector3D d = crop_last_dim(hpoints[tet.w]);
 
-		Vector3D ab = b-a;
-		Vector3D ac = c-a;
-		Vector3D ad = d-a;
-		
-		Vector3D abxac = cross(ab,ac);
-		
-		float projection = dot(abxac, ad);
-
-		if (projection<0)
-		{
-//			printf("Switching a and b\n");
-			res.x = tet.y;
-			res.y = tet.x;
-		}
-
-		return res; 
-	}
+Tetrahedron fixTetrahedronOrientation(Tetrahedron tet, Point *hpoints)
+{
+    Tetrahedron res;
+	
+    //the x,y,z and w points are called a,b,c and d
+    
+    res = tet;
+    
+    Vector3D a = crop_last_dim(hpoints[tet.x]);
+    Vector3D b = crop_last_dim(hpoints[tet.y]);
+    Vector3D c = crop_last_dim(hpoints[tet.z]);
+    Vector3D d = crop_last_dim(hpoints[tet.w]);
+    
+    Vector3D ab = b-a;
+    Vector3D ac = c-a;
+    Vector3D ad = d-a;
+	
+    Vector3D abxac = cross(ab,ac);
+	
+    float projection = dot(abxac, ad);
+    
+    if (projection<0) {
+        //			printf("Switching a and b\n");
+        res.x = tet.y;
+        res.y = tet.x;
+    }
+    
+    return res; 
+}
 
 
 	//must return smallest length encountered
@@ -749,8 +752,8 @@ void doTimeStep(TetrahedralMesh* mesh, TetrahedralTLEDState *state)
 
 
 void precompute(TetrahedralMesh* mesh, TetrahedralTLEDState *state, 
-     						   float density, float smallestAllowedVolume, float smallestAllowedLength,
-						   float mu, float lambda, float timeStepFactor, float damping) 
+                float density, float smallestAllowedVolume, float smallestAllowedLength,
+                float mu, float lambda, float timeStepFactor, float damping) 
 {
 /*	CUT_DEVICE_INIT(1, "");
 */

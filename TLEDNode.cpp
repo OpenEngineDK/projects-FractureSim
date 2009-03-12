@@ -18,7 +18,6 @@ TLEDNode::TLEDNode(std::string meshFile, std::string surfaceFile) {
 }
 
 TLEDNode::~TLEDNode() {
-
 }
 
 void TLEDNode::Handle(Core::InitializeEventArg arg) {
@@ -31,11 +30,21 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     std::cout << "pre computing" << std::endl;
 	precompute(mesh, state, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f);
     std::cout << "TLEDNode initialization done" << std::endl;
+
+
+    PolyShape ps("box.obj");
+
+    // Initialize the Visualizer
+    visualizer = new Visualizer();
+    //visualizer->AllocBuffer(ELM_CENTER_OF_MASS, mesh->numTetrahedra, LINES);
+    visualizer->AllocPolyBuffer(STRESS_TENSORS, mesh->numTetrahedra, ps);
+
 }
 
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if (state == NULL || mesh == NULL || surface == NULL) return;
-	for (int i=0; i<25; i++) {
+
+    for (int i=0; i<25; i++) {
 		calculateGravityForces(mesh, state); 
 		doTimeStep(mesh, state);
 		applyFloorConstraint(mesh, state, -10); 
@@ -45,7 +54,17 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
 void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
 }
 
+
 void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (state == NULL || mesh == NULL || surface == NULL) return;
-    display(0,mesh, state, surface);
+    
+	// Map all visual buffers
+    //visualizer->MapAllBufferObjects();
+    //
+    display(0, mesh, state, surface, visualizer->GetBuffer(STRESS_TENSORS));
+	// Unmap all visual buffers
+    //visualizer->UnmapAllBufferObjects();
+    // Render all debug information
+    visualizer->Render();
+
 }

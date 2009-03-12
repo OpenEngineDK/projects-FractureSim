@@ -5,6 +5,7 @@
 #include <Core/EngineEvents.h>
 #include <Scene/RenderNode.h>
 #include <Renderers/IRenderingView.h>
+#include "Visualizer.h"
 #include <string>
 
 using namespace OpenEngine;
@@ -27,6 +28,9 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     TetrahedralTLEDState* state;
     TetrahedralMesh* mesh;
     TriangleSurface* surface;
+
+    // Test
+    Visualizer* visualizer;
 };
 
 #endif // _TLED_NODE_
