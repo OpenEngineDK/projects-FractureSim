@@ -2,8 +2,8 @@
 # will become the name of the binary target.
 SET( PROJECT_NAME "TLED")
 
-#SET(CMAKE_BUILD_TYPE debug)
-SET(CMAKE_BUILD_TYPE "release")
+SET(CMAKE_BUILD_TYPE debug)
+#SET(CMAKE_BUILD_TYPE "release")
 
 #SET(CUDA_BUILD_TYPE "Emulation") #can be either: Emulation, Device
 SET(CUDA_BUILD_TYPE "Device") #can be either: Emulation, Device
@@ -36,6 +36,7 @@ CUDA_ADD_LIBRARY(cuda_lib
   
 INCLUDE_DIRECTORIES(
   ${FOUND_CUDA_NVCC_INCLUDE}
+  "/Developer/CUDA/common/inc/" #to include cutil.h
 )
 
 # Project source code list
@@ -47,6 +48,8 @@ SET( PROJECT_SOURCES
   TLEDNode.cpp
   GridNode.cpp
   CoordSystemNode.cpp
+  Visualizer.h
+  VisualShapes.cpp
 )
 
 # Include needed to use SDL under Mac OS X
@@ -67,10 +70,11 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME}
   OpenEngine_Display
   OpenEngine_Devices
   OpenEngine_Scene
-  # Extension dependencies
+ # Extension dependencies
   Extensions_SDL
   Extensions_SetupHelpers
   Extensions_GenericHandlers
+  Extensions_OpenGLRenderer
   ${CUDA_TARGET_LINK}
   cuda_lib
 )

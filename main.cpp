@@ -13,6 +13,9 @@
 #include <Logging/StreamLogger.h>
 #include <Core/Engine.h>
 
+// Math
+#include <Math/Tensor.h>
+
 #include <Display/Camera.h>
 #include <Scene/RenderStateNode.h>
 
@@ -23,6 +26,8 @@
 #include "TLEDNode.h"
 #include "GridNode.h"
 #include "CoordSystemNode.h"
+#include "Visualizer.h"
+#include "VisualShapes.h"
 
 // name spaces that we will be using.
 // this combined with the above imports is almost the same as
@@ -31,6 +36,8 @@ using namespace OpenEngine::Logging;
 using namespace OpenEngine::Core;
 using namespace OpenEngine::Display;
 using namespace OpenEngine::Utils;
+using namespace OpenEngine::Math;
+using namespace OpenEngine::Resources;
 
 /**
  * Main method for the first quarter project of CGD.
@@ -39,17 +46,18 @@ using namespace OpenEngine::Utils;
  * method in Java.
  */
 int main(int argc, char** argv) {
-    // Print usage info.
-    logger.info << "========= Running OpenEngine Test Project =========";
-    logger.info << logger.end;
-
+ 
     // Create simple setup
     SimpleSetup* setup = new SimpleSetup("TLED", new Viewport(0,0,800,600));
 
+   // Print usage info.
+    logger.info << "========= Running OpenEngine Test Project =========";
+    logger.info << logger.end;
+   
       // Move the camera
     Camera* camera = setup->GetCamera();
-    camera->SetPosition(Vector<3,float>(0,0,0));
-    camera->LookAt(Vector<3,float>(10,0,0));
+    camera->SetPosition(Vector<3,float>(10,0,10));
+    camera->LookAt(Vector<3,float>(0,0,0));
 
     // Register movement handler to be able to move the camera
     MoveHandler* move_h = 
@@ -75,16 +83,18 @@ int main(int argc, char** argv) {
 
     Vector<3,float> color(0.0,0.0,0.0);
     root->AddNode(new GridNode(1000,20,color));
-
     root->AddNode(new CoordSystemNode());
 
     setup->GetEngine().InitializeEvent().Attach(*tled);
     setup->GetEngine().ProcessEvent().Attach(*tled);
     setup->GetEngine().DeinitializeEvent().Attach(*tled);
 
+    setup->AddDataDirectory("resources/");
+
+    
     // Start the engine.
     setup->GetEngine().Start();
-
+    
     // Return when the engine stops.
     return EXIT_SUCCESS;
 }
