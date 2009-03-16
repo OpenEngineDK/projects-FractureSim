@@ -17,6 +17,7 @@
 #include <Math/Tensor.h>
 
 #include <Display/Camera.h>
+#include <Scene/BlendingNode.h>
 #include <Scene/RenderStateNode.h>
 
 // SimpleSetup
@@ -75,10 +76,12 @@ int main(int argc, char** argv) {
     RenderStateHandler* rsh = new RenderStateHandler(*rsn);
     setup->GetKeyboard().KeyEvent().Attach(*rsh);
 
-    KeyHandler* kh = new KeyHandler(*camera);
-    kh->SetEye(Vector<3,float>(0.0,10.0,0.0));
-    kh->SetPoint(Vector<3,float>(10.0,10.0,0.0));
-    setup->GetKeyboard().KeyEvent().Attach(*kh);
+    Scene::BlendingNode* bn = new Scene::BlendingNode();
+    rsn->AddNode(bn);
+
+    Vector<3,float> color(0.0,0.0,0.0);
+    bn->AddNode(new GridNode(1000,20,color));
+    bn->AddNode(new CoordSystemNode());
 
     std::string dataDir = "projects/TLED/data/RegistrationShapes/";
     //std::string meshFile = dataDir + "tand2.msh";
@@ -86,15 +89,16 @@ int main(int argc, char** argv) {
     std::string meshFile = dataDir + "PROSTATE.msh";
     std::string surfaceFile = dataDir + "PROSTATE.obj";
     TLEDNode* tled = new TLEDNode(meshFile, surfaceFile);
-    rsn->AddNode(tled);
-
-    Vector<3,float> color(0.0,0.0,0.0);
-    root->AddNode(new GridNode(1000,20,color));
-    root->AddNode(new CoordSystemNode());
-
+    bn->AddNode(tled);
     setup->GetEngine().InitializeEvent().Attach(*tled);
     setup->GetEngine().ProcessEvent().Attach(*tled);
     setup->GetEngine().DeinitializeEvent().Attach(*tled);
+
+    KeyHandler* kh = new KeyHandler(*camera, *tled);
+    kh->SetEye(Vector<3,float>(0.0,10.0,0.0));
+    kh->SetPoint(Vector<3,float>(10.0,10.0,0.0));
+    setup->GetKeyboard().KeyEvent().Attach(*kh);
+
 
     setup->AddDataDirectory("resources/");
     

@@ -3,18 +3,14 @@
 #include "TetGenLoader.h"
 #include "TypeConverter.h"
 #include "Precompute.h"
-
 #include "Physics_kernels.h"
+#include "HelperFunctions.h"
 
 #include <string>
 #include <iostream>
 
 #include <Math/Vector.h>
-#include <Geometry/Line.h>
 #include <Logging/Logger.h>
-
-using OpenEngine::Math::Vector;
-using OpenEngine::Geometry::Line;
 
 TLEDNode::TLEDNode(std::string meshFile, std::string surfaceFile) {
     this->meshFile = meshFile;
@@ -23,6 +19,11 @@ TLEDNode::TLEDNode(std::string meshFile, std::string surfaceFile) {
     body = NULL;
     surface = NULL;
     vertexpool = NULL;
+    numIterations = 25;
+    paused = false;
+    renderPlane = true;
+    minX = 220.0;
+    plane = Create(10,40,10, Vector<4,float>(0.5,0.5,0.0,0.2));
 }
 
 TLEDNode::~TLEDNode() {
@@ -123,18 +124,20 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 }
 
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
-    if (!solid->IsInitialized()) return;
-	for (unsigned int i=0; i<25; i++) {
+    if (!solid->IsInitialized() || paused) return;
+	for (unsigned int i=0; i<numIterations; i++) {
         calculateGravityForces(solid);
         calculateInternalForces(solid);
         updateDisplacement(solid);
         applyFloorConstraint(solid, 0); 
 	}
 
+    plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
+
 	// Update all visualization data
     vbom->MapAllBufferObjects();    
     //updateSurface(solid, vbom);
-    updateBodyMesh(solid, vbom, 0.0);
+    updateBodyMesh(solid, vbom, minX);
     //updateCenterOfMass(solid, vbom);
     updateStressTensors(solid, vbom);    
     vbom->UnmapAllBufferObjects();
@@ -150,10 +153,15 @@ void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
 }
 
 void TLEDNode::Apply(Renderers::IRenderingView* view) {
+    VisitSubNodes(*view);
+
     if (!solid->IsInitialized()) return;
 
     vbom->Render();
-
     vbom->Render(vbom->GetBuf(BODY_MESH), 
                  vbom->GetBuf(BODY_COLORS));
+
+    // needs to be last, because it is transparent
+    if (renderPlane) 
+        plane->Accept(*view);
 }

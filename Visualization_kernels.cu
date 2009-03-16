@@ -158,55 +158,66 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, Body mesh, Point* points,
 	me_idx *= 12;
     int col_idx = me_idx;
     
-    /*    if ( pos0.x < minX ||
+    if ( pos0.x < minX ||
          pos1.x < minX ||
          pos2.x < minX ||
          pos3.x < minX ) {
         for (unsigned int i=0; i<12; i++) {
-            buf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
-            }
-            } */
-    //else {
-    float val = (float)me_idx / (float)mesh.numTetrahedra;
-    float4 col = make_float4(val, val, 0.5, 1.0);
-    //    float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
+            vertBuf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
+        }
+    } else {
+        /*
+        double A[3][3];
+        for(int i=0; i<3; i++)
+            for(int j=0; j<3; j++)
+                A[i][j] = rotT(i,j);
 
-    // 0     2     3
-    vertBuf[me_idx++] = pos0;
-    vertBuf[me_idx++] = pos2;
-    vertBuf[me_idx++] = pos3;
+        double V[3][3];
+        double d[3];
+        eigen_decomposition(A,V,d);
 
-    colrBuf[col_idx++] = col;
-    colrBuf[col_idx++] = col;
-    colrBuf[col_idx++] = col;
+        int maxEigValue = max(d[0], max(d[1],d[2]));
+        */
+        float val = (float)me_idx / (float)mesh.numTetrahedra;
+        float4 col = make_float4(val, 0.0, 0.0, 1.0);
+        //float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
 
-    // 0     3     1
-    vertBuf[me_idx++] = pos0;
-    vertBuf[me_idx++] = pos3;
-    vertBuf[me_idx++] = pos1;
+        // 0     2     3
+        vertBuf[me_idx++] = pos0;
+        vertBuf[me_idx++] = pos2;
+        vertBuf[me_idx++] = pos3;
+
+        colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
+
+        // 0     3     1
+        vertBuf[me_idx++] = pos0;
+        vertBuf[me_idx++] = pos3;
+        vertBuf[me_idx++] = pos1;
     
-    colrBuf[col_idx++] = col;
-    colrBuf[col_idx++] = col;
-    colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
 
-    // 0     1     2
-    vertBuf[me_idx++] = pos0;
-    vertBuf[me_idx++] = pos1;
-    vertBuf[me_idx++] = pos2;
+        // 0     1     2
+        vertBuf[me_idx++] = pos0;
+        vertBuf[me_idx++] = pos1;
+        vertBuf[me_idx++] = pos2;
 
-    colrBuf[col_idx++] = col;
-    colrBuf[col_idx++] = col;
-    colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
 
-    // 1     2     3
-    vertBuf[me_idx++] = pos1;
-    vertBuf[me_idx++] = pos2;
-    vertBuf[me_idx++] = pos3;
+        // 1     2     3
+        vertBuf[me_idx++] = pos1;
+        vertBuf[me_idx++] = pos2;
+        vertBuf[me_idx++] = pos3;
 
-    colrBuf[col_idx++] = col;
-    colrBuf[col_idx++] = col;
-    colrBuf[col_idx++] = col;
-        // }
+        colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
+        colrBuf[col_idx++] = col;
+    }
 
 }
 

@@ -187,11 +187,12 @@ void VboManager::Render() {
             glColor4f(color.x,color.y,color.z,color.w);
      
             // Draw VBO
+            /*
             glShadeModel(GL_FLAT);
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_AUTO_NORMAL); 
             glEnable(GL_NORMALIZE); 
-            
+            */
             // If the visual buffer is a polygon the vertex buffer
             // must be calculated by applying transformation matrix to model.
             if( vb[i].mode == GL_POLYGON ) {
@@ -221,7 +222,7 @@ void VboManager::Render() {
             glDisableClientState(GL_VERTEX_ARRAY);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            glDisable(GL_DEPTH_TEST);
+            //glDisable(GL_DEPTH_TEST);
             CHECK_FOR_GL_ERROR();
         }
     }
@@ -231,11 +232,11 @@ void VboManager::Render() {
 void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr) {
     if( vert.vboID > 0 && colr.vboID ) {
         // Draw VBO
-        glShadeModel(GL_FLAT);
+        /*        glShadeModel(GL_FLAT);
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_AUTO_NORMAL); 
         glEnable(GL_NORMALIZE); 
-     
+     */
 
         // Use color array
         //glBindBuffer(GL_ARRAY_BUFFER, colr.vboID);
@@ -270,7 +271,7 @@ void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         //glBindBufferARB(GL_ARRAY_BUFFER, 0);
 
-        glDisable(GL_DEPTH_TEST);
+        //glDisable(GL_DEPTH_TEST);
         CHECK_FOR_GL_ERROR();
     }
 

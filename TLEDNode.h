@@ -6,6 +6,7 @@
 #include <Core/IModule.h>
 #include <Core/EngineEvents.h>
 #include <Scene/RenderNode.h>
+#include <Scene/TransformationNode.h>
 #include <Renderers/IRenderingView.h>
 
 #include "VboManager.h"
@@ -16,6 +17,10 @@ using namespace OpenEngine;
 
 class TLEDNode : public Scene::RenderNode, public Core::IModule {
  public:
+    unsigned int numIterations;
+    bool paused, renderPlane;
+    float minX;
+
     TLEDNode(std::string meshFile, std::string surfaceFile);
     virtual ~TLEDNode();
 
@@ -25,6 +30,8 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     virtual void Handle(Core::DeinitializeEventArg arg);
 
  private:
+    Scene::TransformationNode* plane;
+
     std::string meshFile;
     std::string surfaceFile;
     TetrahedralTLEDState* state;
