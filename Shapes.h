@@ -22,7 +22,7 @@
 // NOTE: DO NOT CHANGE THE ORDER OF THE MEMBER VARIABLES!
 // The float4 color member *MUST* be in the top due to memory layout.
 struct VisualBuffer {
-    VisualBuffer() : vboID(0), buf(NULL), matBuf(NULL), modelBuf(NULL), numElm(0), 
+    VisualBuffer() : vboID(0), buf(NULL), matBuf(NULL), modelBuf(NULL), colorBuf(NULL), numElm(0), 
                      byteSize(0), mode(0), enabled(true) { 
         color = make_float4(0.0,1.0,0.0,1.0); 
     }
@@ -31,6 +31,7 @@ struct VisualBuffer {
     float4* buf; 
     float4* matBuf;
     float4* modelBuf;          // Base geometry of model
+    float4* colorBuf;
     unsigned int numElm;
     unsigned int byteSize;
     unsigned int numIndices;

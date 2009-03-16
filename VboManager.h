@@ -17,6 +17,7 @@ enum {
     SURFACE_NORMALS,
     CENTER_OF_MASS,
     BODY_MESH,
+    BODY_COLORS,
     STRESS_TENSORS,
     NUM_BUFFERS
 };
@@ -46,6 +47,7 @@ public:
     void Disable(int id);
 
     void Render();
+    void Render(VisualBuffer& vert, VisualBuffer& colr);
 
     // debug
     void dumpBufferToFile(char* filename, VisualBuffer& vb);

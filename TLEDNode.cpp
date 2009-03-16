@@ -102,12 +102,18 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // Alloc buffers
     vbom->AllocBuffer(SURFACE_VERTICES, solid->surface->numFaces, GL_TRIANGLES);
     vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_POINTS);
+
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
     vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
+    vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
-    /*
-    vbom->Disable(SURFACE_VERTICES);
-    vbom->Disable(SURFACE_NORMALS);
+    
+
+    // Disabled to bypass normal rendering
+    vbom->Disable(BODY_MESH);
+    vbom->Disable(BODY_COLORS);
+
+    /*vbom->Disable(SURFACE_NORMALS);
     vbom->Disable(CENTER_OF_MASS);
     */
  
@@ -132,6 +138,9 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     //updateCenterOfMass(solid, vbom);
     updateStressTensors(solid, vbom);    
     vbom->UnmapAllBufferObjects();
+    
+    //vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
+    //exit(-1);
 }
 
 void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
@@ -144,4 +153,7 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (!solid->IsInitialized()) return;
 
     vbom->Render();
+
+    vbom->Render(vbom->GetBuf(BODY_MESH), 
+                 vbom->GetBuf(BODY_COLORS));
 }

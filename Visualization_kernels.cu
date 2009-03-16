@@ -140,7 +140,7 @@ void updateCenterOfMass(Solid* solid, VboManager* vbom) {
 }
 
 __global__ void 
-updateBodyMesh_k(float4* buf, Body mesh, Point* points,
+updateBodyMesh_k(float4* vertBuf, float4* colrBuf, Body mesh, Point* points,
                  float4* displacements, float minX) {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -156,7 +156,7 @@ updateBodyMesh_k(float4* buf, Body mesh, Point* points,
     pos3 = points[tetra.w] + displacements[tetra.w];
 
 	me_idx *= 12;
-
+    int col_idx = me_idx;
     
     /*    if ( pos0.x < minX ||
          pos1.x < minX ||
@@ -167,25 +167,45 @@ updateBodyMesh_k(float4* buf, Body mesh, Point* points,
             }
             } */
     //else {
-        // 0     2     3
-        buf[me_idx++] = pos0;
-        buf[me_idx++] = pos2;
-        buf[me_idx++] = pos3;
+    //float val = (float)me_idx / (float)mesh.numTetrahedra;
+    //float4 col = make_float4(val, val, 0.5, 1.0);
+    float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
 
-        // 0     3     1
-        buf[me_idx++] = pos0;
-        buf[me_idx++] = pos3;
-        buf[me_idx++] = pos1;
+    // 0     2     3
+    vertBuf[me_idx++] = pos0;
+    vertBuf[me_idx++] = pos2;
+    vertBuf[me_idx++] = pos3;
 
-        // 0     1     2
-        buf[me_idx++] = pos0;
-        buf[me_idx++] = pos1;
-        buf[me_idx++] = pos2;
+    colrBuf[col_idx++] = col;
+    colrBuf[col_idx++] = col;
+    colrBuf[col_idx++] = col;
 
-        // 1     2     3
-        buf[me_idx++] = pos1;
-        buf[me_idx++] = pos2;
-        buf[me_idx++] = pos3;
+    // 0     3     1
+    vertBuf[me_idx++] = pos0;
+    vertBuf[me_idx++] = pos3;
+    vertBuf[me_idx++] = pos1;
+    
+    colrBuf[col_idx++] = col;
+    colrBuf[col_idx++] = col;
+    colrBuf[col_idx++] = col;
+
+    // 0     1     2
+    vertBuf[me_idx++] = pos0;
+    vertBuf[me_idx++] = pos1;
+    vertBuf[me_idx++] = pos2;
+
+    colrBuf[col_idx++] = col;
+    colrBuf[col_idx++] = col;
+    colrBuf[col_idx++] = col;
+
+    // 1     2     3
+    vertBuf[me_idx++] = pos1;
+    vertBuf[me_idx++] = pos2;
+    vertBuf[me_idx++] = pos3;
+
+    colrBuf[col_idx++] = col;
+    colrBuf[col_idx++] = col;
+    colrBuf[col_idx++] = col;
         // }
 
 }
@@ -196,6 +216,7 @@ void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
     updateBodyMesh_k
         <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
         (vbom->GetBuf(BODY_MESH).buf, 
+         vbom->GetBuf(BODY_COLORS).buf,
          *solid->body, 
          solid->vertexpool->data, 
          solid->vertexpool->Ui_t, minX);

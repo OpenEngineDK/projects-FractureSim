@@ -185,14 +185,13 @@ void VboManager::Render() {
             glMaterialfv(GL_FRONT, GL_DIFFUSE, (GLfloat*)&color);
             glMaterialfv(GL_FRONT, GL_AMBIENT, (GLfloat*)&ambcolor);
             glColor4f(color.x,color.y,color.z,color.w);
-                
+     
             // Draw VBO
             glShadeModel(GL_FLAT);
             glEnable(GL_DEPTH_TEST);
-
             glEnable(GL_AUTO_NORMAL); 
             glEnable(GL_NORMALIZE); 
-         
+            
             // If the visual buffer is a polygon the vertex buffer
             // must be calculated by applying transformation matrix to model.
             if( vb[i].mode == GL_POLYGON ) {
@@ -208,6 +207,7 @@ void VboManager::Render() {
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glDrawArrays(GL_TRIANGLES, 0, vb[i].numIndices);
                 //printf("numElm: %i", vb[i].numElm);
+                CHECK_FOR_GL_ERROR();
             }
             else {
                 glBindBuffer(GL_ARRAY_BUFFER, vb[i].vboID);
@@ -215,6 +215,7 @@ void VboManager::Render() {
                 glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
                 glEnableClientState(GL_VERTEX_ARRAY);
                 glDrawArrays(vb[i].mode, 0, vb[i].numIndices);
+                CHECK_FOR_GL_ERROR();
             }
 
             glDisableClientState(GL_VERTEX_ARRAY);
@@ -224,6 +225,55 @@ void VboManager::Render() {
             CHECK_FOR_GL_ERROR();
         }
     }
+}
+
+
+void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr) {
+    if( vert.vboID > 0 && colr.vboID ) {
+        // Draw VBO
+        glShadeModel(GL_FLAT);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_AUTO_NORMAL); 
+        glEnable(GL_NORMALIZE); 
+     
+
+        // Use color array
+        //glBindBuffer(GL_ARRAY_BUFFER, colr.vboID);
+        glBindBufferARB(GL_ARRAY_BUFFER, colr.vboID);
+        glColorPointer( 4, GL_FLOAT, sizeof(float4), colr.buf );
+        glEnableClientState( GL_COLOR_ARRAY );
+             
+        // If the visual buffer is a polygon the vertex buffer
+        // must be calculated by applying transformation matrix to model.
+        if( vert.mode == GL_POLYGON ) {
+            CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vert.buf, vert.vboID));
+            applyTransformation(vert);
+            CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vert.vboID ));
+        
+            glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
+            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
+        
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glDrawArrays(GL_TRIANGLES, 0, vert.numIndices);
+        }
+        else {
+            glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
+            glPointSize(2);
+            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glDrawArrays(vert.mode, 0, vert.numIndices);
+        }
+
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState( GL_COLOR_ARRAY );
+        
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        //glBindBufferARB(GL_ARRAY_BUFFER, 0);
+
+        glDisable(GL_DEPTH_TEST);
+        CHECK_FOR_GL_ERROR();
+    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
