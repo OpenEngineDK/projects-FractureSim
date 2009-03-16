@@ -5,7 +5,6 @@ VboManager::VboManager() {
 }
 
 VboManager::~VboManager() {
-
     for (int i = 0; i<NUM_BUFFERS; i++ )
         cudaGLUnregisterBufferObject(vb[i].vboID);
     CHECK_FOR_CUDA_ERROR();
@@ -90,28 +89,34 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
     cudaMemset(vb[id].matBuf, 0, matByteSize);
 
     // ------------------ MODEL BUFFER --------------- //
-    // Upload the original model once. 
-    //float4* vertices = ps.vertices;
-    
-
+    int byteSize = ps.numVertices * sizeof(float4);
+    cudaMalloc((void**)&(vb[id].modelBuf), byteSize); 
+    // Copy the poly shape once to cuda.
+    cudaError_t stat;
+    //stat = cudaMemcpy(vb[id].modelBuf, ps.vertices, byteSize, cudaMemcpyHostToDevice);
+    if( stat == cudaSuccess )
+        printf("PolyShape uploaded successfully\n");
+ 
+ 
     // ----------- VERTEX BUFFER ------------------- //            
     // Each element has a float4 pr. vertex
     vb[id].byteSize = numElm * ps.numVertices * sizeof(float4); 
           
     // Register with cuda
     RegisterBufferObject(vb[id]);
- 
+    
     // Map VBO id to buffer
     CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[id].buf, vb[id].vboID));    
-    CHECK_FOR_GL_ERROR();
-
-   // Copy the poly shape to cuda, one for each element
-    cudaError_t stat;
-    stat = cudaMemcpy(vb[id].buf, ps.vertices, ps.numVertices * sizeof(float4), cudaMemcpyHostToDevice);
-    if( stat == cudaSuccess )
-        printf("PolyShape copied successfully to gfx\n");
  
+    // Copy the poly shape to cuda, one for each element
+    stat = cudaMemcpy(vb[id].buf, ps.vertices, ps.numVertices * sizeof(float4), cudaMemcpyHostToDevice);
+
+    if( stat == cudaSuccess )
+        printf("PolyShape uploaded successfully\n");
+
     CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb[id].vboID ));
+    
+    CHECK_FOR_GL_ERROR();   
     return vb[id];
 }
 
@@ -133,7 +138,9 @@ void VboManager::MapAllBufferObjects() {
 void VboManager::UnmapAllBufferObjects() {
     // Unmap VBO
     for( int i=0; i<NUM_BUFFERS; i++ )
-        CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb[i].vboID ));
+        if( vb[i].mode != GL_POLYGON ) {
+            CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb[i].vboID ));
+        }
 }
 
 

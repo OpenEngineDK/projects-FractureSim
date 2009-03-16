@@ -22,7 +22,7 @@
 // NOTE: DO NOT CHANGE THE ORDER OF THE MEMBER VARIABLES!
 // The float4 color member *MUST* be in the top due to memory layout.
 struct VisualBuffer {
-    VisualBuffer() : vboID(0), buf(NULL), matBuf(NULL), numElm(0), 
+    VisualBuffer() : vboID(0), buf(NULL), matBuf(NULL), modelBuf(NULL), numElm(0), 
                      byteSize(0), mode(0), enabled(true) { 
         color = make_float4(0.0,1.0,0.0,1.0); 
     }
@@ -86,7 +86,7 @@ struct TriangleShape {
 
 struct PolyShape {
     float4* vertices;
-    int numVertices;
+    unsigned int numVertices;
 
     PolyShape() {}
     PolyShape(std::string name);
@@ -96,14 +96,14 @@ struct PolyShape {
     void CopyToBuf(float4* buf, int idx) {
         // Insert 4x4 transformation matrix into buffer
         float4 row0 = {1, 0, 0, 0}; // move in x direction
-        float4 row1 = {0, 1, 0, 0};
+        /*        float4 row1 = {0, 1, 0, 0};
         float4 row2 = {0, 0, 1, 0};
         float4 row3 = {0, 0, 0, 1};
-        
+        */
         buf[(idx*4)+0] = row0;
-        buf[(idx*4)+1] = row1;
-        buf[(idx*4)+2] = row2;
-        buf[(idx*4)+3] = row3;
+        //buf[(idx*4)+1] = row1;
+        //buf[(idx*4)+2] = row2;
+        //buf[(idx*4)+3] = row3;
     }
 
 };

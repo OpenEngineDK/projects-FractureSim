@@ -30,13 +30,13 @@ float4 calcNormal(float4 *v0, float4 *v1, float4 *v2)
 
 
 __global__
-void applyTransformation_k(float4* vert, float4* mat, unsigned int numVerts) {
+void applyTransformation_k(float4* model, float4* vert, float4* mat, unsigned int numVerts, unsigned int numThreads) {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (me_idx>=numVerts)
 		return;
     
-    vert[me_idx].x = vert[me_idx].x + mat[0].x;
+    vert[me_idx].x = model[me_idx].x  + mat[0].x;
     
 }
 
@@ -48,10 +48,13 @@ void applyTransformation_k(float4* vert, float4* mat, unsigned int numVerts) {
 void applyTransformation(VisualBuffer& vb) {
     unsigned int gridSize = vb.numElm;
     unsigned int blockSize = (float)vb.byteSize / sizeof(float4) / (float)vb.numElm;
+
     unsigned int blockSizeCeil = (int)ceil((float)blockSize/128.0f);
-    
+    unsigned int numVerticesInModel = vb.numIndices / vb.numElm; // this is the number of indices in one model.
+
     //printf("Grid: %i  block: %i blockCeil: %i\n", gridSize, blockSize, blockSizeCeil);
-    applyTransformation_k<<<make_uint3(gridSize,1,1), make_uint3(blockSizeCeil,1,1)>>>(vb.buf, vb.matBuf, blockSize);
+    //printf("modelAddr: %i - bufAddr: %i\n", vb.modelBuf, vb.buf);
+    applyTransformation_k<<<make_uint3(gridSize,1,1), make_uint3(blockSizeCeil,1,1)>>>(vb.modelBuf, vb.buf, vb.matBuf, numVerticesInModel, blockSize);
     CUT_CHECK_ERROR("Error applying transformations");
 }
 
@@ -66,22 +69,22 @@ updateSurface_k(float4* vertBuf, float4* normBuf, Surface surface, Point *points
 
 	float4 pos, pos2, pos3, displacement;
 
-	pos = points[triangle.x-1];
-	displacement = displacements[triangle.x-1];
+	pos = points[triangle.x];
+	displacement = displacements[triangle.x];
 	pos.x += displacement.x;  
 	pos.y += displacement.y;  
 	pos.z += displacement.z;  
     vertBuf[(me_idx*3)+0] = pos;
 
-	pos2 = points[triangle.y-1];
-	displacement = displacements[triangle.y-1];
+	pos2 = points[triangle.y];
+	displacement = displacements[triangle.y];
 	pos2.x += displacement.x;  
 	pos2.y += displacement.y;  
 	pos2.z += displacement.z;  
     vertBuf[(me_idx*3)+1] = pos2;
 
-	pos3 = points[triangle.z-1];
-	displacement = displacements[triangle.z-1];
+	pos3 = points[triangle.z];
+	displacement = displacements[triangle.z];
 	pos3.x += displacement.x;  
 	pos3.y += displacement.y;  
 	pos3.z += displacement.z;  
