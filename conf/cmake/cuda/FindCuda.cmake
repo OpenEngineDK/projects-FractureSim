@@ -233,6 +233,7 @@ IF(NOT CUDA_CUT_INCLUDE)
           $ENV{HOME}/NVIDIA_CUDA_SDK/common/inc
           $ENV{HOME}/NVIDIA_CUDA_SDK_MACOSX/common/inc
           $ENV{NVSDKCUDA_ROOT}/common/inc
+	  /Developer/CUDA/common/inc
     DOC "Location of cutil.h"
     )
   IF(FOUND_CUT_INCLUDE)
@@ -255,6 +256,7 @@ IF(NOT CUDA_CUT_TARGET_LINK)
           $ENV{HOME}/NVIDIA_CUDA_SDK/lib
           $ENV{HOME}/NVIDIA_CUDA_SDK_MACOSX/lib
           $ENV{NVSDKCUDA_ROOT}/common/lib
+	  /Developer/CUDA/lib
     NO_DEFAULT_PATH
     NO_CMAKE_ENVIRONMENT_PATH
     NO_CMAKE_PATH

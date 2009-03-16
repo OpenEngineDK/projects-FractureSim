@@ -238,7 +238,7 @@ void VboManager::dumpBufferToFile(char* filename, VisualBuffer& vb) {
     float* data = (float*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_ONLY);
 
     // write file for regression test
-    //CUT_SAFE_CALL( cutWriteFilef( filename, data, vb.byteSize, false));
+    CUT_SAFE_CALL( cutWriteFilef( filename, data, vb.byteSize, false));
  
     // unmap GL buffer object
     if( ! glUnmapBuffer( GL_ARRAY_BUFFER)) {

@@ -27,7 +27,7 @@ CUDA_INCLUDE_DIRECTORIES(
 CUDA_INCLUDE_DIRECTORIES(
   "${OE_SOURCE_DIR}"
   ${FOUND_CUDA_NVCC_INCLUDE}
-  "/Developer/CUDA/common/inc/" #to include cutil.h
+  ${CUDA_CUT_INCLUDE} #to include cutil.h
   ${GLUT_INCLUDE_DIR}
 )
 
