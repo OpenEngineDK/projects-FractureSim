@@ -103,7 +103,14 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->AllocBuffer(SURFACE_VERTICES, solid->surface->numFaces, GL_TRIANGLES);
     vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_POINTS);
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
+    vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
+    /*
+    vbom->Disable(SURFACE_VERTICES);
+    vbom->Disable(SURFACE_NORMALS);
+    vbom->Disable(CENTER_OF_MASS);
+    vbom->Disable(STRESS_TENSORS);
+    */
 
     // Buffer setup
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
@@ -121,8 +128,9 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
 
 	// Update all visualization data
     vbom->MapAllBufferObjects();    
-    updateSurface(solid, vbom);
-    updateCenterOfMass(solid, vbom);
+    //updateSurface(solid, vbom);
+    updateBodyMesh(solid, vbom, 0.0);
+    //updateCenterOfMass(solid, vbom);
     updateStressTensors(solid, vbom);
     vbom->UnmapAllBufferObjects();
 }

@@ -139,6 +139,65 @@ void updateCenterOfMass(Solid* solid, VboManager* vbom) {
 
 }
 
+__global__ void 
+updateBodyMesh_k(float4* buf, Body mesh, Point* points,
+                 float4* displacements, float minX) {
+	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+	if (me_idx>=4) return;
+
+    Tetrahedron tetra = mesh.tetrahedra[me_idx];
+
+	float4 pos0, pos1, pos2, pos3;
+
+    pos0 = points[tetra.x] + displacements[tetra.x];
+    pos1 = points[tetra.y] + displacements[tetra.y];
+    pos2 = points[tetra.z] + displacements[tetra.z];
+    pos3 = points[tetra.w] + displacements[tetra.w];
+
+	me_idx *= 12;
+
+    /*
+    if ( pos0.x < minX ||
+         pos1.x < minX ||
+         pos2.x < minX ||
+         pos3.x < minX ) {
+        for (unsigned int i=0; i<12; i++) {
+            buf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
+        }
+    } else {*/
+        // 0     2     3
+        buf[me_idx++] = pos0;
+        buf[me_idx++] = pos2;
+        buf[me_idx++] = pos3;
+
+        // 0     3     1
+        buf[me_idx++] = pos0;
+        buf[me_idx++] = pos3;
+        buf[me_idx++] = pos1;
+
+        // 0     1     2
+        buf[me_idx++] = pos0;
+        buf[me_idx++] = pos1;
+        buf[me_idx++] = pos2;
+
+        // 1     2     3
+        buf[me_idx++] = pos1;
+        buf[me_idx++] = pos2;
+        buf[me_idx++] = pos3;
+        // }
+}
+
+void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
+	int gridSize = (int)ceil(((float)solid->body->numTetrahedra)/BLOCKSIZE);
+
+    updateBodyMesh_k
+        <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (vbom->GetBuf(CENTER_OF_MASS).buf, 
+         *solid->body, 
+         solid->vertexpool->data, 
+         solid->vertexpool->Ui_t, minX);
+}
 
 __global__ void
 updateStressTensors_k(float4* buf, Body mesh) {
