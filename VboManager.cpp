@@ -240,7 +240,7 @@ void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr) {
         // Use color array
         //glBindBuffer(GL_ARRAY_BUFFER, colr.vboID);
         glBindBufferARB(GL_ARRAY_BUFFER, colr.vboID);
-        glColorPointer( 4, GL_FLOAT, sizeof(float4), colr.buf );
+        glColorPointer( 4, GL_FLOAT, 0, 0 );
         glEnableClientState( GL_COLOR_ARRAY );
              
         // If the visual buffer is a polygon the vertex buffer

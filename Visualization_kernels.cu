@@ -167,9 +167,9 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, Body mesh, Point* points,
             }
             } */
     //else {
-    //float val = (float)me_idx / (float)mesh.numTetrahedra;
-    //float4 col = make_float4(val, val, 0.5, 1.0);
-    float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
+    float val = (float)me_idx / (float)mesh.numTetrahedra;
+    float4 col = make_float4(val, val, 0.5, 1.0);
+    //    float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
 
     // 0     2     3
     vertBuf[me_idx++] = pos0;
