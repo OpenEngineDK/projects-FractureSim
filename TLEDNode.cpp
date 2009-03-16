@@ -23,7 +23,10 @@ TLEDNode::TLEDNode(std::string meshFile, std::string surfaceFile) {
     vertexpool = NULL;
 }
 
-TLEDNode::~TLEDNode() {}
+TLEDNode::~TLEDNode() {
+    // Delete VBO manager
+    delete vbom;
+}
 
 void TLEDNode::Handle(Core::InitializeEventArg arg) {
     INITIALIZE_CUDA();
@@ -67,12 +70,21 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 	precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f);
     logger.info << "TLEDNode initialization done" << logger.end;
 
+    // Load polygon model for visualization
     PolyShape ps("box.obj");
 
     // Initialize the Visualizer
-    visualizer = new Visualizer();
-    //visualizer->AllocBuffer(ELM_CENTER_OF_MASS, solid->body->numTetrahedra, LINES);
-    visualizer->AllocPolyBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
+    vbom = new VboManager();
+
+    // Alloc buffers
+    vbom->AllocBuffer(SURFACE_VERTICES, solid->surface->numFaces, GL_TRIANGLES);
+    vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_POINTS);
+    vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
+    vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
+
+    // Buffer setup
+    vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
+
 }
 
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
@@ -82,6 +94,13 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
 		doTimeStep(solid);
 		applyFloorConstraint(solid, -10); 
 	}
+
+	// Update all visualization data
+    vbom->MapAllBufferObjects();    
+    updateSurface(solid, vbom);
+    updateCenterOfMass(solid, vbom);
+    updateStressTensors(solid, vbom);
+    vbom->UnmapAllBufferObjects();
 }
 
 void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
@@ -91,15 +110,7 @@ void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
 
 void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (!solid->IsInitialized()) return;
-    
-	// Map all visual buffers
-    visualizer->MapAllBufferObjects();
-    //
-    display(0, solid, visualizer->GetBuffer(STRESS_TENSORS));
-    //display(0, solid, visualizer->GetBuffer(ELM_CENTER_OF_MASS));
-	
-    // Unmap all visual buffers
-    visualizer->UnmapAllBufferObjects();
-    // Render all debug information
-    visualizer->Render();
+    // Render all visualization data
+    vbom->Render();
+
 }

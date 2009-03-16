@@ -1,5 +1,5 @@
 
-#include "VisualShapes.h"
+#include "Shapes.h"
 #include <stdio.h>
 #include <vector>
 
@@ -49,18 +49,10 @@ PolyShape::PolyShape(std::string name) {
     numVertices=0;
     std::vector<float4>::iterator it;
     for( it=vList.begin(); it!=vList.end(); it++ ) {
-        printf("[%i] %f %f %f\n", numVertices,(*it).x, (*it).y, (*it).z);
+        //        printf("[%i] %f %f %f\n", numVertices,(*it).x, (*it).y, (*it).z);
         vertices[numVertices++] = *it;
     }
     printf("[PolyShape] numVertices loaded: %i\n", numVertices);
-}
-
-
-void PolyShape::render(){
-    //  glVertexPointer(3, GL_FLOAT, sizeof(float4), vertices);
-    //glEnableClientState(GL_VERTEX_ARRAY);
-    //glDrawArrays(GL_TRIANGLES, 0, size);
-    //glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 

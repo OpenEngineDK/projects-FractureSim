@@ -1,5 +1,7 @@
 #include "TetrahedralMesh.h"
 
+class VboManager;
+
 // pre
 void precompute(Solid* solid, 
                 float density, float smallestAllowedVolume, 
@@ -15,8 +17,7 @@ void doTimeStep(Solid* solid);
 void applyFloorConstraint(Solid* solid, float floorYPosition); 
 
 
-// rendering
-void display(unsigned int object_number, Solid* solid, float4* buf);
+void display(unsigned int object_number, Solid* solid, VboManager* vbom);
 
 // helper functions
 void cleanupDisplay(void);

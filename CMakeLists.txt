@@ -16,6 +16,7 @@ INCLUDE(${CMAKE_SOURCE_DIR}/projects/TLED/conf/cmake/cuda/FindCuda.cmake)
 # Add current directory to the nvcc include line.
 CUDA_INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}
+  
 )
 
 # Use the CUDA_COMPILE macro.
@@ -52,8 +53,8 @@ SET( PROJECT_SOURCES
   CoordSystemNode.cpp
   MshObjLoader.cpp
   TetGenLoader.cpp
-  Visualizer.h
-  VisualShapes.cpp
+  VboManager.cpp
+  Shapes.cpp
 )
 
 # Include needed to use SDL under Mac OS X

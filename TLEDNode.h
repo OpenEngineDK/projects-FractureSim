@@ -5,7 +5,7 @@
 #include <Core/EngineEvents.h>
 #include <Scene/RenderNode.h>
 #include <Renderers/IRenderingView.h>
-#include "Visualizer.h"
+#include "VboManager.h"
 #include <string>
 
 using namespace OpenEngine;
@@ -27,8 +27,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     std::string surfaceFile;
     TetrahedralTLEDState* state;
 
-    // Test
-    Visualizer* visualizer;
+    VboManager* vbom;
     VertexPool* vertexpool;
     Body* body;
     Surface* surface;

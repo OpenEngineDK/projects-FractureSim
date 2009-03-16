@@ -27,8 +27,6 @@
 #include "TLEDNode.h"
 #include "GridNode.h"
 #include "CoordSystemNode.h"
-#include "Visualizer.h"
-#include "VisualShapes.h"
 #include "KeyHandler.h"
 
 // name spaces that we will be using.
@@ -99,11 +97,12 @@ int main(int argc, char** argv) {
     setup->GetEngine().DeinitializeEvent().Attach(*tled);
 
     setup->AddDataDirectory("resources/");
-
     
     // Start the engine.
     setup->GetEngine().Start();
-    
+
+    // delete the entire scene
+    delete setup->GetScene();
     // Return when the engine stops.
     return EXIT_SUCCESS;
 }
