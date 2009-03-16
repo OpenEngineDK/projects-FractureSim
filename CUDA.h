@@ -25,6 +25,9 @@
 
 using namespace OpenEngine;
 
+// Total bytes allocated on graphic card.
+static unsigned int totalByteAlloc = 0;
+
 inline void INITIALIZE_CUDA() {
    cuInit(0);
    //@todo: test that cuda is supported on the platform.

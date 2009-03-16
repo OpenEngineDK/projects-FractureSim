@@ -25,7 +25,7 @@ enum {
 class VboManager {
 private:
     VisualBuffer* vb;
-    
+ 
     void RegisterBufferObject(VisualBuffer& vBuf);
     unsigned int sizeOfElement(GLenum mode);
     unsigned int indicesForMode(GLenum mode);
@@ -46,6 +46,9 @@ public:
     void Disable(int id);
 
     void Render();
+
+    // debug
+    void dumpBufferToFile(char* filename, VisualBuffer& vb);
     
 };
 

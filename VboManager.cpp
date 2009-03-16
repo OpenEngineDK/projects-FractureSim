@@ -1,4 +1,5 @@
 #include "VboManager.h"
+#include "CUDA.h"
 
 VboManager::VboManager() {
     vb = new VisualBuffer[NUM_BUFFERS];
@@ -31,6 +32,8 @@ void VboManager::RegisterBufferObject(VisualBuffer& vBuf) {
     glBindBuffer( GL_ARRAY_BUFFER, 0);
     // Register buffer object with CUDA
     CUDA_SAFE_CALL(cudaGLRegisterBufferObject(vBuf.vboID));
+    // Update total bytes allocated
+    totalByteAlloc += vBuf.byteSize;
     // Check for errors
     CHECK_FOR_GL_ERROR();
 }
@@ -87,10 +90,13 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
     // Cuda malloc array for matrix transformations of the vertices.
     cudaMalloc((void**)&vb[id].matBuf, matByteSize); 
     cudaMemset(vb[id].matBuf, 0, matByteSize);
+    totalByteAlloc += matByteSize;
 
     // ------------------ MODEL BUFFER --------------- //
     int byteSize = ps.numVertices * sizeof(float4);
     cudaMalloc((void**)&(vb[id].modelBuf), byteSize); 
+    totalByteAlloc += byteSize;
+
     // Copy the poly shape once to cuda.
     cudaError_t stat;
     //stat = cudaMemcpy(vb[id].modelBuf, ps.vertices, byteSize, cudaMemcpyHostToDevice);
@@ -106,8 +112,7 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
     RegisterBufferObject(vb[id]);
     
     // Map VBO id to buffer
-    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[id].buf, vb[id].vboID));    
- 
+    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[id].buf, vb[id].vboID));     
     // Copy the poly shape to cuda, one for each element
     stat = cudaMemcpy(vb[id].buf, ps.vertices, ps.numVertices * sizeof(float4), cudaMemcpyHostToDevice);
 
@@ -119,6 +124,7 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
     CHECK_FOR_GL_ERROR();   
     return vb[id];
 }
+
 
 VisualBuffer& VboManager::GetBuf(unsigned int id) {
     //printf("bufAddr: %i\n", vb[id].buf);
@@ -218,4 +224,30 @@ void VboManager::Render() {
             CHECK_FOR_GL_ERROR();
         }
     }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//! Check if the result is correct or write data to file for external
+//! regression testing
+////////////////////////////////////////////////////////////////////////////////
+void VboManager::dumpBufferToFile(char* filename, VisualBuffer& vb) {
+    CUDA_SAFE_CALL(cudaGLUnregisterBufferObject(vb.vboID));
+
+    // map buffer object
+    glBindBuffer( GL_ARRAY_BUFFER_ARB, vb.vboID );
+    float* data = (float*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_ONLY);
+
+    // write file for regression test
+    //CUT_SAFE_CALL( cutWriteFilef( filename, data, vb.byteSize, false));
+ 
+    // unmap GL buffer object
+    if( ! glUnmapBuffer( GL_ARRAY_BUFFER)) {
+        fprintf( stderr, "Unmap buffer failed.\n");
+        fflush( stderr);
+    }
+
+    CUDA_SAFE_CALL(cudaGLRegisterBufferObject(vb.vboID));
+
+    CHECK_FOR_CUDA_ERROR();
+    CHECK_FOR_GL_ERROR();
 }

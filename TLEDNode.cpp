@@ -112,6 +112,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->Disable(STRESS_TENSORS);
     */
 
+    printf("[VboManager] Total Bytes Allocated: %i\n", totalByteAlloc);
     // Buffer setup
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
 }
@@ -122,7 +123,6 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         calculateGravityForces(solid);
         calculateInternalForces(solid);
         updateDisplacement(solid);
-        //applyFloorConstraint(solid, -10); 
         applyFloorConstraint(solid, 0); 
 	}
 
@@ -131,7 +131,7 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     //updateSurface(solid, vbom);
     updateBodyMesh(solid, vbom, 0.0);
     //updateCenterOfMass(solid, vbom);
-    updateStressTensors(solid, vbom);
+    updateStressTensors(solid, vbom);    
     vbom->UnmapAllBufferObjects();
 }
 

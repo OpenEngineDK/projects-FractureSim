@@ -28,7 +28,7 @@ CUDA_INCLUDE_DIRECTORIES(
   "${OE_SOURCE_DIR}"
   ${FOUND_CUDA_NVCC_INCLUDE}
   "/Developer/CUDA/common/inc/" #to include cutil.h
-#  ${GLUT_INCLUDE_DIR}
+  ${GLUT_INCLUDE_DIR}
 )
 
 # Link cuda code in a library to something else.
@@ -37,7 +37,7 @@ CUDA_ADD_LIBRARY(cuda_kernels
   Visualization_kernels.cu
   Precompute_kernels.cu
   TetrahedralMesh.cu
-#  ${CUDA_CUT_TARGET_LINK}
+  ${CUDA_CUT_TARGET_LINK}
 )
   
 INCLUDE_DIRECTORIES(
@@ -48,8 +48,8 @@ INCLUDE_DIRECTORIES(
 # Project source code list
 SET( PROJECT_SOURCES
   # Add all the cpp source files here
-#  ${CUDA_CUT_TARGET_LINK}
-#  ${CUDA_TARGET_LINK}
+  ${CUDA_CUT_TARGET_LINK}
+  ${CUDA_TARGET_LINK}
   main.cpp
   TLEDNode.cpp
   GridNode.cpp
@@ -85,7 +85,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME}
   Extensions_GenericHandlers
   Extensions_OpenGLRenderer
  # Project libs
- # ${CUDA_CUT_TARGET_LINK}
- # ${CUDA_TARGET_LINK}
+  ${CUDA_CUT_TARGET_LINK}
+  ${CUDA_TARGET_LINK}
   cuda_kernels
 )
