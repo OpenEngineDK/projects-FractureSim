@@ -53,7 +53,7 @@ void MshObjLoader::Load() {
 		case 'f': case 'F': {
             Math::Vector<3, unsigned int> sid;
 			fscanf (sFile, " %i %i %i", &(sid[0]), &(sid[1]), &(sid[2]));
-            surface.push_back(sid);
+            surface.push_back(sid - 1); //obj indexes from 1
 			numTriangles++; }
             break;
 		default:

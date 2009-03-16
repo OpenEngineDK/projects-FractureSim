@@ -6,15 +6,11 @@
 #ifndef _VBO_MANAGER_H_
 #define _VBO_MANAGER_H_
 
+#include "CUDA.h"
+
 #include <map>
 #include "Shapes.h"
 #include "Visualization_kernels.h"
-#include <cufft.h>
-#include <cutil.h>
-#include <cuda.h>
-#include <driver_types.h> // includes cudaError_t
-#include <cuda_gl_interop.h>
-#include <cuda_runtime_api.h> // includes cudaMalloc and cudaMemset
 
 enum {
     SURFACE_VERTICES = 0,

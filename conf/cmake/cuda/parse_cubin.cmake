@@ -30,7 +30,7 @@
 
 FILE(READ ${input_file} file_text)
 
-IF (${file_text} MATCHES ".+")
+IF (${depend_text} MATCHES ".+")
 
   # Remember, four backslashes is escaped to one backslash in the string.
   STRING(REGEX REPLACE ";" "\\\\;" file_text ${file_text})

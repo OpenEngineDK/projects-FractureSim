@@ -2,6 +2,9 @@
 
 #include <Core/Exceptions.h>
 #include <Logging/Logger.h>
+#include <Resources/File.h>
+#include <Utils/Convert.h>
+#include <iostream>
 
 TetGenLoader::TetGenLoader(std::string vertexfile, std::string bodyfile,
                            std::string surfacefile) {
@@ -15,74 +18,94 @@ TetGenLoader::~TetGenLoader() {
 
 void TetGenLoader::Load() {
 	unsigned int temp;
+	unsigned int dim;
     unsigned int index;
     {
-    // Load body, surface and vertexpool from file
-	FILE* vFile = fopen(vertexfile.c_str(),"r");
-	if (!vFile)
-        throw Core::Exception("vertex file not found: " + vertexfile);
-
-	unsigned int numVertices;
-	fscanf (vFile, "%i\n", &numVertices);
-	fscanf (vFile, "%i\n", &temp);//dimension
-	fscanf (vFile, "%i\n", &temp);
-	fscanf (vFile, "%i\n", &temp);
-
-    logger.info << "---- vertex pool ----"  << logger.end;
-	for (unsigned int i=0; i<numVertices && !feof(vFile); i++) {
-        Math::Vector<3,float> point;
-		fscanf (vFile, "%i %f %f %f\n", 
-                &index, &(point[0]), &(point[1]), &(point[2]));
-        logger.info << point << logger.end;
+        // Load body, surface and vertexpool from file
+        FILE* vFile = fopen(vertexfile.c_str(),"r");
+        if (!vFile)
+            throw Core::Exception("vertex file not found: " + vertexfile);
+        
+        unsigned int numVertices;
+        fscanf (vFile, "%i %i %i %i\n", &numVertices, &dim, &temp, &temp);
+        
+        //logger.info << "---- vertex pool ----"  << logger.end;
+        for (unsigned int i=0; i<numVertices && !feof(vFile); i++) {
+            Math::Vector<3,float> point;
+            fscanf (vFile, "%i %f %f %f\n", 
+                    &index, &(point[0]), &(point[1]), &(point[2]));
+            //logger.info << point << logger.end;
         vertexPool.push_back(point);
-	}
-	fclose (vFile);
-    if (numVertices != vertexPool.size())
-        throw Core::Exception("wrong number of vertex in vertexpool");
+        }
+        fclose (vFile);
+        if (numVertices != vertexPool.size())
+            throw Core::Exception("wrong number of vertex in vertexpool");
     }
     {
-	FILE* bFile = fopen(bodyfile.c_str(),"r");
-	if (!bFile)
-        throw Core::Exception("body index file not found: " + bodyfile);
-
-	unsigned int numTetrahedra;
-	fscanf (bFile, "%i\n", &numTetrahedra);
-	fscanf (bFile, "%i\n", &temp);
-	fscanf (bFile, "%i\n", &temp);
-
-    logger.info << "---- body indices ----"  << logger.end;
-	for (unsigned int i=0; i<numTetrahedra && !feof(bFile); i++) {
-        Math::Vector<4,unsigned int> bid;
-		fscanf (bFile, "%i %i %i %i %i %i\n", 
-                &index, &(bid[0]), &(bid[1]), &(bid[2]), &(bid[3]), &temp);
-        logger.info << bid << logger.end;
-        body.push_back(bid);
-	}
-	fclose (bFile);
-    if (numTetrahedra != body.size())
-        throw Core::Exception("wrong number of body indices");
+        FILE* bFile = fopen(bodyfile.c_str(),"r");
+        if (!bFile)
+            throw Core::Exception("body index file not found: " + bodyfile);
+        
+        unsigned int numTetrahedra;
+        fscanf (bFile, "%i %i %i\n", &numTetrahedra, &dim, &temp);
+        
+        //logger.info << "---- body indices ----"  << logger.end;
+        for (unsigned int i=0; i<numTetrahedra && !feof(bFile); i++) {
+            Math::Vector<4,unsigned int> bid;
+            fscanf (bFile, "%i %i %i %i %i %i\n", 
+                    &index, &(bid[0]), &(bid[1]), &(bid[2]), &(bid[3]), &temp);
+            //logger.info << bid << logger.end;
+            body.push_back(bid);
+        }
+        fclose (bFile);
+        if (numTetrahedra != body.size())
+            throw Core::Exception("wrong number of body indices");
     }
     {
-	FILE* sFile = fopen(surfacefile.c_str(),"r");
-	if (!sFile)
-        throw Core::Exception("surface index file not found: " + surfacefile);
+        std::ifstream* in = Resources::File::Open(surfacefile);
+        char buffer[255];
+        int line = 0;
+        bool done = false;
+        while (!done) {
+            in->getline(buffer, 255);
+            line++;
+            if (sscanf(buffer, "%i %i %i %i", &temp, &dim, &temp, &temp) == 4)
+                done = true;
+            if (in->eof()) 
+                throw Core::Exception("invalid surface file header on line: " +
+                                      Utils::Convert::ToString(line));
+        }
 
-	unsigned int numTriangles;
-	fscanf (sFile, "%i\n", &numTriangles);
-	fscanf (sFile, "%i\n", &temp);
+        unsigned int numTriangles;
+        done = false;
+        while (!done) {
+            in->getline(buffer, 255);
+            line++;
+            if (sscanf (buffer, "%i %i\n", &numTriangles, &temp) == 2)
+                done = true;
+            if (in->eof()) 
+                throw Core::Exception("invalid surface file header on line: " +
+                                      Utils::Convert::ToString(line));
+        }
 
-    logger.info << "---- surface indices ----"  << logger.end;
-    for (unsigned int i=0; i<numTriangles && !feof(sFile); i++) {
-        Math::Vector<3, unsigned int> sid;
-        fscanf (sFile, "%i %i %i %i", &temp, &(sid[0]), &(sid[1]), &(sid[2]));
-        logger.info << sid << logger.end;
-        surface.push_back(sid);
+        //logger.info << "---- surface indices ----"  << logger.end;
+        for (unsigned int i=0; i<numTriangles && !in->eof(); i++) {
+            Math::Vector<3, unsigned int> sid;
+            in->getline(buffer, 255);
+            line++;
+            if (sscanf (buffer, "%i %i %i %i", 
+                        &temp, &(sid[0]), &(sid[1]), &(sid[2])) != 4)
+                throw Core::Exception("invalid line in surface file: line " +
+                                      Utils::Convert::ToString(line));
+            //logger.info << sid << logger.end;
+            surface.push_back(sid);
 	}
-	fclose (sFile);
+    in->close();
+    delete in;
     if (numTriangles != surface.size())
         throw Core::Exception("wrong number of surface indices");
     }
-    logger.info << "---- -------------- ----"  << logger.end;
+    //logger.info << "---- -------------- ----"  << logger.end;
 }
 
 std::list< Math::Vector<3,float> > TetGenLoader::GetVertexPool() {

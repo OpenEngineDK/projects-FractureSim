@@ -2,7 +2,9 @@
 #include "MshObjLoader.h"
 #include "TetGenLoader.h"
 #include "TypeConverter.h"
-#include "CUDA.h"
+#include "Precompute.h"
+
+#include "Physics_kernels.h"
 
 #include <string>
 #include <iostream>
@@ -35,8 +37,29 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     ISolidLoader* loader = NULL;
     loader = new MshObjLoader(meshFile, surfaceFile);
-    //loader = new TetGenLoader("./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.node", "./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.ele", "./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.smesh");
-    //loader = new TetGenLoader("./projects/TLED/data/RegistrationShapes/box.ascii.1.node", "./projects/TLED/data/RegistrationShapes/box.ascii.1.ele", "./projects/TLED/data/RegistrationShapes/box.ascii.1.smesh");
+    /*
+    std::string dataDir = "projects/TLED/data/RegistrationShapes/";
+    loader = new MshObjLoader( dataDir + "sphere.msh", 
+                               dataDir + "sphere.obj");
+    */
+    /*
+    loader = new TetGenLoader
+    ("./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.node",
+     "./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.ele",
+     "./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.smesh");
+
+    loader = new TetGenLoader
+        ("./projects/TLED/data/RegistrationShapes/box.ascii.1.node", 
+         "./projects/TLED/data/RegistrationShapes/box.ascii.1.ele", 
+         "./projects/TLED/data/RegistrationShapes/box.ascii.1.smesh");
+*/
+    /*
+    loader = new TetGenLoader
+        ("/Users/cpvc/bunny.ascii.1.node", 
+         "/Users/cpvc/bunny.ascii.1.ele", 
+         "/Users/cpvc/bunny.ascii.1.smesh");
+    */
+
     loader->Load();
 
     logger.info << "number of vertices: "
@@ -48,9 +71,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     vertexpool = TypeConverter
         ::ConvertToVertexPool(loader->GetVertexPool());
-    //vertexpool->Scale(1.1);
-    //vertexpool->Move(10,10,10);
-    vertexpool->ConvertToCuda();
+    //vertexpool->Scale(30);
+    //vertexpool->Move(0,10,0);
 
     body = TypeConverter
         ::ConvertToBody(loader->GetBody());
@@ -67,7 +89,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     solid->vertexpool = vertexpool;
 
     logger.info << "pre computing" << logger.end;
-	precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f);
+	//precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f);
+    precompute(solid, 0.001f, 0.0f, 0.0f, 10007.0f, 5500.0f, 0.5f, 10.0f);
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
@@ -84,15 +107,16 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     // Buffer setup
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
-
 }
 
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if (!solid->IsInitialized()) return;
 	for (unsigned int i=0; i<25; i++) {
-		calculateGravityForces(solid);
-		doTimeStep(solid);
-		applyFloorConstraint(solid, -10); 
+        calculateGravityForces(solid);
+        calculateInternalForces(solid);
+        updateDisplacement(solid);
+        //applyFloorConstraint(solid, -10); 
+        applyFloorConstraint(solid, 0); 
 	}
 
 	// Update all visualization data
@@ -105,12 +129,12 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
 
 void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
     if (solid != NULL)
-        delete solid;
+        solid->DeAlloc();
+    //cleanupDisplay();
 }
 
 void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (!solid->IsInitialized()) return;
-    // Render all visualization data
-    vbom->Render();
 
+    vbom->Render();
 }

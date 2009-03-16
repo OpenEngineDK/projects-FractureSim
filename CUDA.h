@@ -1,8 +1,21 @@
 #ifndef _CUDA_HEADERS_
 #define _CUDA_HEADERS_
 
+#include "../extensions/OpenGLRenderer/Meta/OpenGL.h"
+
 #include <cuda.h>
+#include <cutil.h>
+#include <cufft.h>
+
 #include <cuda_runtime.h>
+#include <cuda_runtime_api.h> // includes cudaMalloc and cudaMemset
+
+#include <driver_types.h> // includes cudaError_t
+
+#include <cuda_gl_interop.h>
+
+//#include <cutil_gl_error.h>
+//@todo: generetes linker errors, but includes CUT_CHECK_ERROR_GL()
 
 #include <iostream>
 #include <string>
@@ -15,6 +28,14 @@ using namespace OpenEngine;
 inline void INITIALIZE_CUDA() {
    cuInit(0);
    //@todo: test that cuda is supported on the platform.
+
+   //@todo: print installed cuda version, and info like opengl.
+
+    #ifdef _DEBUG
+    printf("CUDA_SAFE_CALL: enabled\n");
+    #else
+    printf("CUDA_SAFE_CALL: disabled\n");
+    #endif
 }
 
 inline std::string PRINT_CUDA_DEVICE_INFO() {
@@ -80,16 +101,25 @@ inline std::string PRINT_CUDA_DEVICE_INFO() {
 
 /**
  *  Should never be used in the code, use CHECK_FOR_CUDA_ERROR(); instead
+ *  inspired by cutil.h: CUT_CHECK_ERROR
  */
 inline void CHECK_FOR_CUDA_ERROR(const std::string file, const int line) {
-	cudaError_t errorCode = cudaGetLastError();
-	if (errorCode != cudaSuccess) {
+    cudaError_t errorCode = cudaGetLastError();
+    if (errorCode != cudaSuccess) {
         const char* errorString = cudaGetErrorString(errorCode);
         throw Core::Exception("[file:" + file +
                               " line:" + Utils::Convert::ToString(line) +
                               "] CUDA Error: " +
                               std::string(errorString));
-	}
+    }
+    errorCode = cudaThreadSynchronize();
+    if (errorCode != cudaSuccess) { 
+        const char* errorString = cudaGetErrorString(errorCode);
+        throw Core::Exception("[file:" + file +
+                              " line:" + Utils::Convert::ToString(line) +
+                              "] CUDA Error: " +
+                              std::string(errorString));
+    } 
 }
 
 /**

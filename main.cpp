@@ -76,8 +76,8 @@ int main(int argc, char** argv) {
     setup->GetKeyboard().KeyEvent().Attach(*rsh);
 
     KeyHandler* kh = new KeyHandler(*camera);
-    kh->SetEye(Vector<3,float>(0.0,10.0,-10.0f));
-    kh->SetPoint(Vector<3,float>(0.0,10.0,0.0));
+    kh->SetEye(Vector<3,float>(0.0,10.0,0.0));
+    kh->SetPoint(Vector<3,float>(10.0,10.0,0.0));
     setup->GetKeyboard().KeyEvent().Attach(*kh);
 
     std::string dataDir = "projects/TLED/data/RegistrationShapes/";

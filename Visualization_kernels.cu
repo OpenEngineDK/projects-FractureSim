@@ -1,19 +1,15 @@
 #define BLOCKSIZE 128
 
+#include <CUDA.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "TetrahedralMesh.h"
+
 //#include "cutil_math.h"
 #include "float_utils.h"
 #include "Shapes.h"
 #include "VboManager.h"
-#include <cufft.h>
-#include <cutil.h>
-//#include <cutil_interop.h>
-#include <cuda_gl_interop.h>
-//#include <cutil_gl_error.h>
-#include <cuda.h>
-
 
 // cross product
 inline __host__ __device__ float4 cross(float4 a, float4 b)
@@ -281,7 +277,6 @@ extractSurfaceWithDisplacements_k(float3 *tris, Tetrahedron *tetrahedra, Point *
 	}
 }
 
-
 /*
 __global__ void
 updateSurfacePositionsFromDisplacements_k(float3 *tris, float3 *normals, Surface surface, Point *points, float4 *displacements) {
@@ -293,22 +288,23 @@ updateSurfacePositionsFromDisplacements_k(float3 *tris, float3 *normals, Surface
 
 	float4 pos, pos2, pos3, displacement;
 
-	pos = points[triangle.x-1];
-	displacement = displacements[triangle.x-1];
+	pos = points[triangle.x];
+	pos2 = points[triangle.y];
+	pos3 = points[triangle.z];
+
+	displacement = displacements[triangle.x];
 	pos.x += displacement.x;  
 	pos.y += displacement.y;  
 	pos.z += displacement.z;  
 	tris[(3*me_idx)+0] = crop_last_dim(pos);
 
-	pos2 = points[triangle.y-1];
-	displacement = displacements[triangle.y-1];
+	displacement = displacements[triangle.y];
 	pos2.x += displacement.x;  
 	pos2.y += displacement.y;  
 	pos2.z += displacement.z;  
 	tris[(3*me_idx)+1] = crop_last_dim(pos2);
 
-	pos3 = points[triangle.z-1];
-	displacement = displacements[triangle.z-1];
+	displacement = displacements[triangle.z];
 	pos3.x += displacement.x;  
 	pos3.y += displacement.y;  
 	pos3.z += displacement.z;  

@@ -8,7 +8,7 @@ VboManager::~VboManager() {
 
     for (int i = 0; i<NUM_BUFFERS; i++ )
         cudaGLUnregisterBufferObject(vb[i].vboID);
-    CUT_CHECK_ERROR("cudaGLUnregisterBufferObject failed");
+    CHECK_FOR_CUDA_ERROR();
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
     for (int i = 0; i<NUM_BUFFERS; i++ )
@@ -33,7 +33,7 @@ void VboManager::RegisterBufferObject(VisualBuffer& vBuf) {
     // Register buffer object with CUDA
     CUDA_SAFE_CALL(cudaGLRegisterBufferObject(vBuf.vboID));
     // Check for errors
-    CUT_CHECK_ERROR_GL();
+    CHECK_FOR_GL_ERROR();
 }
     
 unsigned int VboManager::sizeOfElement(GLenum mode){
@@ -103,8 +103,9 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
  
     // Map VBO id to buffer
     CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[id].buf, vb[id].vboID));    
- 
-    // Copy the poly shape to cuda, one for each element
+    CHECK_FOR_GL_ERROR();
+
+   // Copy the poly shape to cuda, one for each element
     cudaError_t stat;
     stat = cudaMemcpy(vb[id].buf, ps.vertices, ps.numVertices * sizeof(float4), cudaMemcpyHostToDevice);
     if( stat == cudaSuccess )
@@ -207,7 +208,7 @@ void VboManager::Render() {
             glBindBuffer(GL_ARRAY_BUFFER, 0);
 
             glDisable(GL_DEPTH_TEST);
-            CUT_CHECK_ERROR_GL();
+            CHECK_FOR_GL_ERROR();
         }
     }
 }

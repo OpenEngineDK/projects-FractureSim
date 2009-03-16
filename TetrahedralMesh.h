@@ -2,7 +2,7 @@
 #define TETRAHEDRALMESH
 
 #include <vector_types.h>
-#include <cuda_runtime.h>
+#include "CUDA.h"
 
 typedef float4 Point;
 typedef int4 Tetrahedron; 
@@ -12,12 +12,12 @@ typedef uint3 Triangle;
 typedef float4 Point<3>;
 */
 struct VertexPool {
-    Point* data;
     unsigned int size;
-	float4 *ABC, *Ui_t, *Ui_tminusdt, *externalForces;
-	float* mass;
 	unsigned int maxNumForces;
-    float4* pointForces;
+
+    Point* data;
+	float4 *ABC, *Ui_t, *Ui_tminusdt, *externalForces, *pointForces;
+	float* mass;
 
     VertexPool() {}
     VertexPool(unsigned int size);
@@ -40,6 +40,13 @@ struct VertexPool {
     void ConvertToCuda();
     //void ConvertToCPU() {    }
     void DeAlloc();
+
+    void Print() {
+        for (unsigned int i=0; i<size; i++) {
+            Point id = data[i];
+            printf("v[%i] = (%f,%f,%f)\n", i, id.x, id.y, id.z);
+        }
+    }
 };
 
 class Surface {
@@ -55,6 +62,13 @@ class Surface {
 
     void ConvertToCuda();
     void DeAlloc();
+
+    void Print() {
+        for (unsigned int i=0; i<numFaces; i++) {
+            Triangle id = faces[i];
+            printf("s[%i] = (%i,%i,%i)\n", i, id.x, id.y, id.z);
+        }
+    }
 };
 
 struct ShapeFunctionDerivatives {
@@ -66,19 +80,26 @@ struct ShapeFunctionDerivatives {
 
 class Body {
  public:
-	Tetrahedron* tetrahedra;
 	unsigned int numTetrahedra;
+	int numWriteIndices;
 
+	Tetrahedron* tetrahedra;
 	float* volume;
 	ShapeFunctionDerivatives* shape_function_deriv;
 	int4 *writeIndices;
-	int numWriteIndices;
 
     Body() {}
     Body(unsigned int size);
 
     void ConvertToCuda();
     void DeAlloc();
+
+    void Print() {
+        for (unsigned int i=0; i<numTetrahedra; i++) {
+            Tetrahedron id = tetrahedra[i];
+            printf("b[%i] = (%i,%i,%i,%i)\n", i, id.x, id.y, id.z, id.w);
+        }
+    }
 };
 
 struct TetrahedralTLEDState {
@@ -102,7 +123,7 @@ class Solid {
         state = NULL;
     }
 
-    virtual ~Solid() {
+    void DeAlloc() {
         if (state != NULL)
             state->DeAlloc();
         if (body != NULL)
@@ -115,6 +136,17 @@ class Solid {
         body = NULL;
         surface = NULL;
         state = NULL;
+    }
+
+    void Print() {
+        printf("--------- vertexpool --------\n");
+        vertexpool->Print();
+        printf("--------- body indices --------\n");
+        body->Print();
+        printf("--------- surface indecies --------\n");
+        surface->Print();
+        printf("--------- end  --------\n");
+
     }
 
     bool IsInitialized() {

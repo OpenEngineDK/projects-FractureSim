@@ -13,7 +13,7 @@ class TypeConverter {
         VertexPool* vp = new VertexPool(vertexpool.size());
         Point* points = vp->data;
         std::list< Math::Vector<3,float> >::iterator itr2 = vertexpool.begin();
-        for(unsigned int i=0; itr2 != vertexpool.end(); itr2++, i++) {
+        for (unsigned int i=0; itr2 != vertexpool.end(); itr2++, i++) {
             Math::Vector<3,float> vert = *itr2;
             points[i].x = vert[0];
             points[i].y = vert[1];
@@ -26,13 +26,12 @@ class TypeConverter {
         Surface* surface = new Surface(sid.size());
         Triangle* faces = surface->faces;
         std::list< Math::Vector<3,unsigned int> >::iterator itr = sid.begin();
-        for(unsigned int i=0; itr != sid.end(); itr++, i++) {
+        for (unsigned int i=0; itr != sid.end(); itr++, i++) {
             Math::Vector<3,unsigned int> ids = *itr;
             faces[i].x = ids[0];
             faces[i].y = ids[1];
             faces[i].z = ids[2];
         }
-        surface->ConvertToCuda();
         return surface;
     }
 
@@ -41,14 +40,13 @@ class TypeConverter {
 
         Tetrahedron* tets = body->tetrahedra;
         std::list< Math::Vector<4,unsigned int> >::iterator itr = bid.begin();
-        for(unsigned int i=0; itr != bid.end(); itr++, i++) {
+        for (unsigned int i=0; itr != bid.end(); itr++, i++) {
             Math::Vector<4,unsigned int> ids = *itr;
             tets[i].x = ids[0];
             tets[i].y = ids[1];
             tets[i].z = ids[2];
             tets[i].w = ids[3];
         }
-        body->ConvertToCuda();
         return body;
     }
 };
