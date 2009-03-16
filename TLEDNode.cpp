@@ -109,9 +109,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->Disable(SURFACE_VERTICES);
     vbom->Disable(SURFACE_NORMALS);
     vbom->Disable(CENTER_OF_MASS);
-    vbom->Disable(STRESS_TENSORS);
     */
-
+ 
     printf("[VboManager] Total Bytes Allocated: %i\n", totalByteAlloc);
     // Buffer setup
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);

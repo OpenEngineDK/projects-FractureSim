@@ -144,8 +144,8 @@ updateBodyMesh_k(float4* buf, Body mesh, Point* points,
                  float4* displacements, float minX) {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (me_idx>=4) return;
-
+	if (me_idx>=mesh.numTetrahedra) return;
+    
     Tetrahedron tetra = mesh.tetrahedra[me_idx];
 
 	float4 pos0, pos1, pos2, pos3;
@@ -157,15 +157,16 @@ updateBodyMesh_k(float4* buf, Body mesh, Point* points,
 
 	me_idx *= 12;
 
-    /*
-    if ( pos0.x < minX ||
+    
+    /*    if ( pos0.x < minX ||
          pos1.x < minX ||
          pos2.x < minX ||
          pos3.x < minX ) {
         for (unsigned int i=0; i<12; i++) {
             buf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
-        }
-    } else {*/
+            }
+            } */
+    //else {
         // 0     2     3
         buf[me_idx++] = pos0;
         buf[me_idx++] = pos2;
@@ -186,6 +187,7 @@ updateBodyMesh_k(float4* buf, Body mesh, Point* points,
         buf[me_idx++] = pos2;
         buf[me_idx++] = pos3;
         // }
+
 }
 
 void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
@@ -193,7 +195,7 @@ void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
 
     updateBodyMesh_k
         <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
-        (vbom->GetBuf(CENTER_OF_MASS).buf, 
+        (vbom->GetBuf(BODY_MESH).buf, 
          *solid->body, 
          solid->vertexpool->data, 
          solid->vertexpool->Ui_t, minX);
