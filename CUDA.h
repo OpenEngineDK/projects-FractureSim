@@ -107,7 +107,7 @@ inline std::string PRINT_CUDA_DEVICE_INFO() {
  *  inspired by cutil.h: CUT_CHECK_ERROR
  */
 inline void CHECK_FOR_CUDA_ERROR(const std::string file, const int line) {
-    /* cudaError_t errorCode = cudaGetLastError();
+    cudaError_t errorCode = cudaGetLastError();
     if (errorCode != cudaSuccess) {
         const char* errorString = cudaGetErrorString(errorCode);
         throw Core::Exception("[file:" + file +
@@ -122,7 +122,7 @@ inline void CHECK_FOR_CUDA_ERROR(const std::string file, const int line) {
                               " line:" + Utils::Convert::ToString(line) +
                               "] CUDA Error: " +
                               std::string(errorString));
-                              } */
+                              }
 }
 
 /**
