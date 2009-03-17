@@ -1,12 +1,14 @@
 #include "Precompute.h"
 
+#include "CUDA.h"
 #include "Vector3D.h"
-#include "float_utils.h"
 #include "Precompute_kernels.h"
+
+#define crop_last_dim make_float3
 
 Tetrahedron fixTetrahedronOrientation(Tetrahedron tet, Point *hpoints) {
     Tetrahedron res = tet;
- 
+
     //the x,y,z and w points are called a,b,c and d
     Vector3D a = crop_last_dim(hpoints[tet.x]);
     Vector3D b = crop_last_dim(hpoints[tet.y]);

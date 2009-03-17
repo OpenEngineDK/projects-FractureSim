@@ -10,7 +10,7 @@
 #include <Renderers/IRenderingView.h>
 
 #include "VboManager.h"
-#include "TetrahedralMesh.h"
+#include "Solid.h"
 #include <string>
 
 using namespace OpenEngine;

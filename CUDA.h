@@ -7,6 +7,9 @@
 #include <cutil.h>
 #include <cufft.h>
 
+#include <vector_types.h>
+#include <cutil_math.h>
+
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h> // includes cudaMalloc and cudaMemset
 
@@ -17,9 +20,6 @@
 //#include <cutil_gl_error.h>
 //@todo: generetes linker errors, but includes CUT_CHECK_ERROR_GL()
 
-#include <iostream>
-#include <string>
-
 #include <Core/Exceptions.h>
 #include <Utils/Convert.h>
 
@@ -29,10 +29,10 @@ using namespace OpenEngine;
 static unsigned int totalByteAlloc = 0;
 
 inline void INITIALIZE_CUDA() {
-   cuInit(0);
-   //@todo: test that cuda is supported on the platform.
+    cuInit(0);
+    //@todo: test that cuda is supported on the platform.
 
-   //@todo: print installed cuda version, and info like opengl.
+    //@todo: print installed cuda version, and info like opengl.
 
     #ifdef _DEBUG
     printf("CUDA_SAFE_CALL: enabled\n");
@@ -101,13 +101,13 @@ inline std::string PRINT_CUDA_DEVICE_INFO() {
     str += "------------------------\n";
     return str;
 }
-
+ 
 /**
  *  Should never be used in the code, use CHECK_FOR_CUDA_ERROR(); instead
  *  inspired by cutil.h: CUT_CHECK_ERROR
  */
 inline void CHECK_FOR_CUDA_ERROR(const std::string file, const int line) {
-    cudaError_t errorCode = cudaGetLastError();
+    /* cudaError_t errorCode = cudaGetLastError();
     if (errorCode != cudaSuccess) {
         const char* errorString = cudaGetErrorString(errorCode);
         throw Core::Exception("[file:" + file +
@@ -122,7 +122,7 @@ inline void CHECK_FOR_CUDA_ERROR(const std::string file, const int line) {
                               " line:" + Utils::Convert::ToString(line) +
                               "] CUDA Error: " +
                               std::string(errorString));
-    } 
+                              } */
 }
 
 /**
@@ -130,9 +130,9 @@ inline void CHECK_FOR_CUDA_ERROR(const std::string file, const int line) {
  *  an error was detected, is only available in debug mode.
  */
 //#if OE_DEBUG_GL
-#define CHECK_FOR_CUDA_ERROR(); CHECK_FOR_CUDA_ERROR(__FILE__,__LINE__);
+//#define CHECK_FOR_CUDA_ERROR(); CHECK_FOR_CUDA_ERROR(__FILE__,__LINE__);
 //#else
-//#define CHECK_FOR_CUDA_ERROR();
+#define CHECK_FOR_CUDA_ERROR();
 //#endif
 
 #endif

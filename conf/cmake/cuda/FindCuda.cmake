@@ -193,6 +193,7 @@ IF (NOT CUDA_TARGET_LINK)
   FIND_LIBRARY(FOUND_CUDA
     cuda
     PATHS ${CUDA_INSTALL_PREFIX}/lib
+          "/usr/lib/"
     DOC "\"cuda\" library (older versions only)."
     NO_DEFAULT_PATH
     NO_CMAKE_ENVIRONMENT_PATH

@@ -7,17 +7,10 @@
 #ifndef _SHAPES_H_
 #define _SHAPES_H_
 
-#include <OpenGL/gl.h>
-#include <vector_types.h>
 #include <vector>
 #include <string>
-#include <cufft.h>
-#include <cutil.h>
-#include <cuda.h>
-#include <driver_types.h> // includes cudaError_t
-#include <cuda_gl_interop.h>
-#include <cuda_runtime_api.h> // includes cudaMalloc and cudaMemset
-#include "float_utils.h"
+
+#include "CUDA.h"
 
 // NOTE: DO NOT CHANGE THE ORDER OF THE MEMBER VARIABLES!
 // The float4 color member *MUST* be in the top due to memory layout.
@@ -109,7 +102,4 @@ struct PolyShape {
 
 };
 
-
-
-
-#endif _SHAPES_H_
+#endif // _SHAPES_H_

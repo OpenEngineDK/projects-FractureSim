@@ -1,4 +1,5 @@
-#pragma once
+#ifndef _FLOAT_UTILS_
+#define _FLOAT_UTILS_
 
 /*******************************************************
  *
@@ -406,3 +407,5 @@ inline __host__ __device__ void one(float4 *z)
   z->z = 1.0f;
   z->w = 1.0f;
 }
+
+#endif _FLOAT_UTILS_

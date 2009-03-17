@@ -1,7 +1,7 @@
 #ifndef _TYPE_CONVERTER_
 #define _TYPE_CONVERTER_
 
-#include "TetrahedralMesh.h"
+#include "Solid.h"
 #include <Math/Vector.h>
 #include <list>
 

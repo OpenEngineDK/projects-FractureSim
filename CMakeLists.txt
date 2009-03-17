@@ -2,7 +2,7 @@
 # will become the name of the binary target.
 SET( PROJECT_NAME "TLED")
 
-cmake_policy(SET CMP0011 OLD) #inlcuded to supress warning
+#cmake_policy(SET CMP0011 OLD) #inlcuded to supress warning
 
 #SET(CMAKE_BUILD_TYPE debug)
 #SET(CMAKE_BUILD_TYPE "release")
@@ -23,12 +23,18 @@ CUDA_INCLUDE_DIRECTORIES(
   ${CMAKE_CURRENT_SOURCE_DIR}  
 )
 
+
+MESSAGE("cuda include dir: ${CUDA_INCLUDE}")
+MESSAGE("cuda lib dir (cuda and cudart): ${CUDA_TARGET_LINK}")
+
+MESSAGE("cuda sdk include dir: ${CUDA_CUT_INCLUDE}")
+MESSAGE("cuda sdk lib dir: ${CUDA_CUT_TARGET_LINK}")
+
 # Use the CUDA_COMPILE macro.
 CUDA_INCLUDE_DIRECTORIES(
   "${OE_SOURCE_DIR}"
-  ${FOUND_CUDA_NVCC_INCLUDE}
+  ${CUDA_INCLUDE}
   ${CUDA_CUT_INCLUDE} #to include cutil.h
-  ${GLUT_INCLUDE_DIR}
 )
 
 # Link cuda code in a library to something else.
@@ -36,20 +42,21 @@ CUDA_ADD_LIBRARY(cuda_kernels
   Physics_kernels.cu
   Visualization_kernels.cu
   Precompute_kernels.cu
-  TetrahedralMesh.cu
+  Surface.cu
+  Body.cu
+  VertexPool.cu
+  ${CUDA_TARGET_LINK}
   ${CUDA_CUT_TARGET_LINK}
 )
   
 INCLUDE_DIRECTORIES(
-  ${FOUND_CUDA_NVCC_INCLUDE}
-  "/Developer/CUDA/common/inc/" #to include cutil.h
+  ${CUDA_INCLUDE} 
+  ${CUDA_CUT_INCLUDE} #to include cutil.h
 )
 
 # Project source code list
 SET( PROJECT_SOURCES
   # Add all the cpp source files here
-  ${CUDA_CUT_TARGET_LINK}
-  ${CUDA_TARGET_LINK}
   main.cpp
   TLEDNode.cpp
   GridNode.cpp
@@ -79,13 +86,13 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME}
   OpenEngine_Display
   OpenEngine_Devices
   OpenEngine_Scene
- # Extension dependencies
+  # Extension dependencies
   Extensions_SDL
   Extensions_SetupHelpers
   Extensions_GenericHandlers
   Extensions_OpenGLRenderer
- # Project libs
-  ${CUDA_CUT_TARGET_LINK}
+  # Project libs
   ${CUDA_TARGET_LINK}
+  ${CUDA_CUT_TARGET_LINK}
   cuda_kernels
 )

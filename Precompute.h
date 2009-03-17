@@ -1,7 +1,7 @@
 #ifndef _PRECALCULATE_
 #define _PRECALCULATE_
 
-#include "TetrahedralMesh.h"
+#include "Solid.h"
 
 void precompute(Solid* solid, 
                 float density, float smallestAllowedVolume, 

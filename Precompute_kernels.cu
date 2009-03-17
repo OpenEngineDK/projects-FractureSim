@@ -1,4 +1,6 @@
-#include "Precompute_kernels.h"
+#include <CUDA.h>
+
+#include "Solid.h"
 
 #define BLOCKSIZE 128
 

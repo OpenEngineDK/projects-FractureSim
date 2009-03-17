@@ -1,6 +1,5 @@
-#include "Physics_kernels.h"
-
-#include <cutil_math.h> //#include <float_utils.h>
+#include "CUDA.h"
+#include "Solid.h"
 
 #define BLOCKSIZE 128
 

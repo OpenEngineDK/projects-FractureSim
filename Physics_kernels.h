@@ -1,4 +1,4 @@
-#include "TetrahedralMesh.h"
+#include "Solid.h"
 
 void calculateGravityForces(Solid* solid);
 void applyFloorConstraint(Solid* solid, float floorYPosition);

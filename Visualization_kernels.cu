@@ -4,12 +4,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "TetrahedralMesh.h"
 
-//#include "cutil_math.h"
-#include "float_utils.h"
+#include "Solid.h"
 #include "Shapes.h"
 #include "VboManager.h"
+
+#define crop_last_dim make_float3
 
 // cross product
 inline __host__ __device__ float4 cross(float4 a, float4 b)
