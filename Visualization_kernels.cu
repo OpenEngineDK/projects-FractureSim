@@ -33,12 +33,19 @@ float4 calcNormal(float4 *v0, float4 *v1, float4 *v2)
 
 __global__
 void applyTransformation_k(float4* model, float4* vert, float4* mat, unsigned int numVerts, unsigned int numThreads) {
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+	int me_idx = (numVerts*blockIdx.x) + threadIdx.x;
 
-	if (me_idx>=numVerts)
+	if (threadIdx.x>=numVerts)
 		return;
     
-    vert[me_idx].x = model[me_idx].x  + mat[0].x;
+    int m_idx = 4*blockIdx.x;
+
+    vert[me_idx].x = dot(mat[m_idx + 0], model[threadIdx.x]);
+    vert[me_idx].y = dot(mat[m_idx + 1], model[threadIdx.x]);
+    vert[me_idx].z = dot(mat[m_idx + 2], model[threadIdx.x]);
+    vert[me_idx].w = dot(mat[m_idx + 3], model[threadIdx.x]);
+    
+    
     
 }
 
@@ -49,14 +56,14 @@ void applyTransformation_k(float4* model, float4* vert, float4* mat, unsigned in
  */
 void applyTransformation(VisualBuffer& vb) {
     unsigned int gridSize = vb.numElm;
-    unsigned int blockSize = (float)vb.byteSize / sizeof(float4) / (float)vb.numElm;
-
-    unsigned int blockSizeCeil = (int)ceil((float)blockSize/128.0f);
     unsigned int numVerticesInModel = vb.numIndices / vb.numElm; // this is the number of indices in one model.
+    //unsigned int blockSize = numVerticesInModel; // number of indices pr. elm (box=36)
+    unsigned int blockSize = (int)ceil((float)numVerticesInModel/BLOCKSIZE) * BLOCKSIZE;
 
-    //printf("Grid: %i  block: %i blockCeil: %i\n", gridSize, blockSize, blockSizeCeil);
+    //printf("Grid: %i  block: %i - numThreads: %i - numVerts: %i\n", gridSize, blockSize, vb.numIndices, numVerticesInModel);
     //printf("modelAddr: %i - bufAddr: %i\n", vb.modelBuf, vb.buf);
-    applyTransformation_k<<<make_uint3(gridSize,1,1), make_uint3(blockSizeCeil,1,1)>>>(vb.modelBuf, vb.buf, vb.matBuf, numVerticesInModel, blockSize);
+   
+    applyTransformation_k<<<make_uint3(gridSize,1,1), make_uint3(blockSize,1,1)>>>(vb.modelBuf, vb.buf, vb.matBuf, numVerticesInModel, vb.numIndices);
     CUT_CHECK_ERROR("Error applying transformations");
 }
 
@@ -142,9 +149,10 @@ void updateCenterOfMass(Solid* solid, VboManager* vbom) {
 }
 
 __global__ void 
-updateBodyMesh_k(float4* vertBuf, float4* colrBuf, Body mesh, Point* points,
-                 float4* displacements, float minX) {
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
+                 Body mesh, Point* points, float4* displacements, float minX) {
+	
+    int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (me_idx>=mesh.numTetrahedra) return;
     
@@ -157,15 +165,21 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, Body mesh, Point* points,
     pos2 = points[tetra.z] + displacements[tetra.z];
     pos3 = points[tetra.w] + displacements[tetra.w];
 
+    int color_ramp_idx = me_idx;
+
+    // Jump index with 12 since there is 4 faces pr. tetrahedra each with 3 vertices.
 	me_idx *= 12;
-    int col_idx = me_idx;
-    
+    int colr_idx = me_idx;
+    int norm_idx = me_idx;
+
     if ( pos0.x < minX ||
          pos1.x < minX ||
          pos2.x < minX ||
          pos3.x < minX ) {
         for (unsigned int i=0; i<12; i++) {
             vertBuf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
+            normBuf[norm_idx++] = make_float4(0.0,0.0,0.0,0.0);
+            colrBuf[colr_idx++] = make_float4(0.0,0.0,0.0,0.0);
         }
     } else {
         /*
@@ -180,7 +194,7 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, Body mesh, Point* points,
 
         int maxEigValue = max(d[0], max(d[1],d[2]));
         */
-        float4 col = GetColor(me_idx, 0.0, mesh.numTetrahedra);
+        float4 col = GetColor(color_ramp_idx, 0.0, mesh.numTetrahedra);
         //float4 col = make_float4(val, 0.0, 0.0, 1.0);
         //float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
 
@@ -189,36 +203,60 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, Body mesh, Point* points,
         vertBuf[me_idx++] = pos2;
         vertBuf[me_idx++] = pos3;
 
-        colrBuf[col_idx++] = col;
-        colrBuf[col_idx++] = col;
-        colrBuf[col_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+
+        // Calculate hard normals
+        float4 normal = calcNormal(&pos0,&pos2,&pos3);
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
+        
 
         // 0     3     1
         vertBuf[me_idx++] = pos0;
         vertBuf[me_idx++] = pos3;
         vertBuf[me_idx++] = pos1;
     
-        colrBuf[col_idx++] = col;
-        colrBuf[col_idx++] = col;
-        colrBuf[col_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        // Calculate hard normals
+        normal = calcNormal(&pos0,&pos3,&pos1);
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
 
         // 0     1     2
         vertBuf[me_idx++] = pos0;
         vertBuf[me_idx++] = pos1;
         vertBuf[me_idx++] = pos2;
 
-        colrBuf[col_idx++] = col;
-        colrBuf[col_idx++] = col;
-        colrBuf[col_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        // Calculate hard normals
+        normal = calcNormal(&pos0,&pos1,&pos2);
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
 
         // 1     2     3
         vertBuf[me_idx++] = pos1;
         vertBuf[me_idx++] = pos2;
         vertBuf[me_idx++] = pos3;
 
-        colrBuf[col_idx++] = col;
-        colrBuf[col_idx++] = col;
-        colrBuf[col_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        // Calculate hard normals
+        normal = calcNormal(&pos1,&pos2,&pos3);
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
+
+        
     }
 
 }
@@ -230,6 +268,7 @@ void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
         <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
         (vbom->GetBuf(BODY_MESH).buf, 
          vbom->GetBuf(BODY_COLORS).buf,
+         vbom->GetBuf(BODY_NORMALS).buf,
          *solid->body, 
          solid->vertexpool->data, 
          solid->vertexpool->Ui_t, minX);
@@ -241,21 +280,23 @@ updateStressTensors_k(float4* buf, Body mesh) {
 
 	if (me_idx>=mesh.numTetrahedra) return;
 
-    PolyShape p;
-    p.CopyToBuf(buf, me_idx);
+    Matrix4f m;
+    m.SetPos(me_idx, me_idx,0);
+    m.SetScale(1, 1, 1);
+    
+
+    m.CopyToBuf(buf, me_idx);
 }
 
 void updateStressTensors(Solid* solid, VboManager* vbom) {
 	int gridSize = (int)ceil(((float)solid->body->numTetrahedra)/BLOCKSIZE);
-
-    
 
     updateStressTensors_k<<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>(vbom->GetBuf(STRESS_TENSORS).matBuf, 
                                                                                    *solid->body);
 }
 
 
-
+/*
 __global__ void
 updateMeshCentersFromDisplacements2_k(float4* buffer, Body mesh, 
                                       Point* points, float4 *displacements)
@@ -277,17 +318,17 @@ updateMeshCentersFromDisplacements2_k(float4* buffer, Body mesh,
 
     //PointShape p(center);
     //p.CopyToBuf(bufArray, me_idx);
-    /*
+
     float4 pos = center;
     float4 dir = {0, 1.0, 0, 0};
     VectorShape v(pos, pos + dir);
     v.CopyToBuf(buffer, me_idx);
-    */
+
     
     PolyShape p;
     p.CopyToBuf(buffer, me_idx);
 }
-
+*/
 
 __global__ void
 extractSurface_k(float3 *tris, Tetrahedron *tetrahedra, Point *points, unsigned int numTets)
@@ -374,47 +415,6 @@ extractSurfaceWithDisplacements_k(float3 *tris, Tetrahedron *tetrahedra, Point *
 			tris[(3*me_idx)+i] = make_float3(0,0,0);
 	}
 }
-
-/*
-__global__ void
-updateSurfacePositionsFromDisplacements_k(float3 *tris, float3 *normals, Surface surface, Point *points, float4 *displacements) {
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (me_idx>=surface.numFaces) return;
-
-	Triangle triangle = surface.faces[me_idx];
-
-	float4 pos, pos2, pos3, displacement;
-
-	pos = points[triangle.x];
-	pos2 = points[triangle.y];
-	pos3 = points[triangle.z];
-
-	displacement = displacements[triangle.x];
-	pos.x += displacement.x;  
-	pos.y += displacement.y;  
-	pos.z += displacement.z;  
-	tris[(3*me_idx)+0] = crop_last_dim(pos);
-
-	displacement = displacements[triangle.y];
-	pos2.x += displacement.x;  
-	pos2.y += displacement.y;  
-	pos2.z += displacement.z;  
-	tris[(3*me_idx)+1] = crop_last_dim(pos2);
-
-	displacement = displacements[triangle.z];
-	pos3.x += displacement.x;  
-	pos3.y += displacement.y;  
-	pos3.z += displacement.z;  
-	tris[(3*me_idx)+2] = crop_last_dim(pos3);
-
-	float3 normal = calcNormal(&pos,&pos2,&pos3);
-
-	normals[(3*me_idx)+0] = normal;
-	normals[(3*me_idx)+1] = normal;
-	normals[(3*me_idx)+2] = normal;
-}
-*/
 
 
 __global__ void updateMeshCentersFromDisplacements_k

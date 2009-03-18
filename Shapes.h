@@ -85,21 +85,38 @@ struct PolyShape {
     PolyShape() {}
     PolyShape(std::string name);
 
-    
+};
+
+
+struct Matrix4f {
+    float4 t;
+    float4 s;
+
+    Matrix4f() { 
+        t = make_float4(0,0,0,0);
+        s = make_float4(1,1,1,0); 
+    }
+
+    Matrix4f(float4 pos) : t(pos) {
+        s = make_float4(1,1,1,0);   
+    }
+
+    __device__
+    void SetPos(float x, float y, float z) { t = make_float4(x,y,z,0); }
+    __device__
+    void SetScale(float x, float y, float z) { s = make_float4(x,y,z,0); }
+
     __device__
     void CopyToBuf(float4* buf, int idx) {
-        // Insert 4x4 transformation matrix into buffer
-        float4 row0 = {1, 0, 0, 0}; // move in x direction
-        /*        float4 row1 = {0, 1, 0, 0};
-        float4 row2 = {0, 0, 1, 0};
-        float4 row3 = {0, 0, 0, 1};
-        */
-        buf[(idx*4)+0] = row0;
-        //buf[(idx*4)+1] = row1;
-        //buf[(idx*4)+2] = row2;
-        //buf[(idx*4)+3] = row3;
+        // Insert 4x4 transformation matrix into buffer        
+        buf[(idx*4)+0] = make_float4( 1+s.x, 0,     0,     t.x   );
+        buf[(idx*4)+1] = make_float4( 0,     1+s.y, 0,     t.y   );
+        buf[(idx*4)+2] = make_float4( 0,     0,     1+s.z, t.z   );
+        buf[(idx*4)+3] = make_float4( 0,     0,     0,     1     );
     }
 
 };
 
-#endif // _SHAPES_H_
+
+#endif //_SHAPES_H_
+

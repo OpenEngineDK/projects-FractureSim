@@ -37,7 +37,7 @@ PolyShape::PolyShape(std::string name) {
             float4 v = { face->vert[i][0], 
                          face->vert[i][1],
                          face->vert[i][2],
-                         0};
+                         1.0};
 
              vList.push_back(v);
         }

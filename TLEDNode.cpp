@@ -103,22 +103,22 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // Alloc buffers
     vbom->AllocBuffer(SURFACE_VERTICES, solid->surface->numFaces, GL_TRIANGLES);
     vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_POINTS);
-
+    
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
+
     vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*4, GL_TRIANGLES);
+    vbom->AllocBuffer(BODY_NORMALS, solid->body->numTetrahedra*4, GL_TRIANGLES);
+
     vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
     
 
     // Disabled to bypass normal rendering
-    vbom->Disable(BODY_MESH);
-    vbom->Disable(BODY_COLORS);
-
-    /*vbom->Disable(SURFACE_NORMALS);
+    vbom->Disable(SURFACE_NORMALS);
     vbom->Disable(CENTER_OF_MASS);
-    */
- 
+    
     printf("[VboManager] Total Bytes Allocated: %i\n", totalByteAlloc);
+
     // Buffer setup
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
 }
@@ -135,14 +135,24 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
 
 	// Update all visualization data
-    vbom->MapAllBufferObjects();    
-    //updateSurface(solid, vbom);
-    updateBodyMesh(solid, vbom, minX);
-    //updateCenterOfMass(solid, vbom);
-    updateStressTensors(solid, vbom);    
+    vbom->MapAllBufferObjects();   
+ 
+    if( vbom->IsEnabled(SURFACE_VERTICES) )
+        updateSurface(solid, vbom);
+
+    if( vbom->IsEnabled(BODY_MESH) )
+        updateBodyMesh(solid, vbom, minX);
+
+    if( vbom->IsEnabled(CENTER_OF_MASS) )
+        updateCenterOfMass(solid, vbom);
+    
+    if( vbom->IsEnabled(STRESS_TENSORS) )
+        updateStressTensors(solid, vbom);
+
     vbom->UnmapAllBufferObjects();
     
-    //vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
+    //vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(STRESS_TENSORS));
+    //    vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
     //exit(-1);
 }
 
@@ -157,10 +167,15 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
 
     if (!solid->IsInitialized()) return;
 
-    vbom->Render();
-    vbom->Render(vbom->GetBuf(BODY_MESH), 
-                 vbom->GetBuf(BODY_COLORS));
+    // These buffers will only be rendered if they are enabled.
+    vbom->Render(SURFACE_VERTICES);
+    vbom->Render(CENTER_OF_MASS);
+    vbom->Render(STRESS_TENSORS);
 
+    vbom->Render(vbom->GetBuf(BODY_MESH), 
+                 vbom->GetBuf(BODY_COLORS),
+                 vbom->GetBuf(BODY_NORMALS));
+    
     // needs to be last, because it is transparent
     if (renderPlane) 
         plane->Accept(*view);

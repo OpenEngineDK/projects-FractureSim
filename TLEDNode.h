@@ -17,6 +17,7 @@ using namespace OpenEngine;
 
 class TLEDNode : public Scene::RenderNode, public Core::IModule {
  public:
+    VboManager* vbom;
     unsigned int numIterations;
     bool paused, renderPlane;
     float minX;
@@ -36,7 +37,6 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     std::string surfaceFile;
     TetrahedralTLEDState* state;
 
-    VboManager* vbom;
     VertexPool* vertexpool;
     Body* body;
     Surface* surface;

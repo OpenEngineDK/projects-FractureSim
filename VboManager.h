@@ -18,6 +18,7 @@ enum {
     CENTER_OF_MASS,
     BODY_MESH,
     BODY_COLORS,
+    BODY_NORMALS,
     STRESS_TENSORS,
     NUM_BUFFERS
 };
@@ -43,15 +44,18 @@ public:
     void MapAllBufferObjects();
     void UnmapAllBufferObjects();
 
+    bool IsEnabled(int id);
     void Enable(int id);
     void Disable(int id);
+    void Toggle(int id);
 
-    void Render();
-    void Render(VisualBuffer& vert, VisualBuffer& colr);
+    void Render(int id);
+    
+    void Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm);
 
     // debug
     void dumpBufferToFile(char* filename, VisualBuffer& vb);
-    
+    void dumpBufferToFile(char* filename, GLuint vboID, unsigned int size);
 };
 
 #endif //_VBO_MANAGER_H_

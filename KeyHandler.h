@@ -20,7 +20,9 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
     Math::Vector<3,float> eye;
     Math::Vector<3,float> point;
  public:
- KeyHandler(Camera& camera, TLEDNode& tled) : camera(camera), tled(tled) {}
+
+    KeyHandler(Camera& camera, TLEDNode& tled) : camera(camera), tled(tled) {}
+
     void SetEye(Math::Vector<3,float> eye) {
         this->eye = eye;
     }
@@ -64,6 +66,21 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 break;
             case KEY_p:
                 tled.renderPlane = !tled.renderPlane;
+                break;
+            case KEY_1:
+                tled.vbom->Toggle(SURFACE_VERTICES);
+                tled.vbom->Toggle(SURFACE_NORMALS);
+                break;
+            case KEY_2:
+                tled.vbom->Toggle(BODY_MESH);
+                //                tled.vbom->Toggle(BODY_COLORS);
+                //tled.vbom->Toggle(BODY_NORMALS);
+                break;
+            case KEY_3:
+                tled.vbom->Toggle(CENTER_OF_MASS);
+                break;
+            case KEY_4:
+                tled.vbom->Toggle(STRESS_TENSORS);
                 break;
             default: break;
             }

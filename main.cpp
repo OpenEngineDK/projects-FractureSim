@@ -63,6 +63,7 @@ int main(int argc, char** argv) {
     // Register movement handler to be able to move the camera
     MoveHandler* move_h = 
         new MoveHandler(*camera, setup->GetMouse());
+    move_h->SetObjectMove(false);
     setup->GetKeyboard().KeyEvent().Attach(*move_h);
     setup->GetEngine().InitializeEvent().Attach(*move_h);
     setup->GetEngine().ProcessEvent().Attach(*move_h);
