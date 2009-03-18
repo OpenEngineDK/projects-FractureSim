@@ -8,8 +8,10 @@
 #include "Solid.h"
 #include "Shapes.h"
 #include "VboManager.h"
+#include "ColorRamp.h"
 
 #define crop_last_dim make_float3
+
 
 // cross product
 inline __host__ __device__ float4 cross(float4 a, float4 b)
@@ -178,8 +180,8 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, Body mesh, Point* points,
 
         int maxEigValue = max(d[0], max(d[1],d[2]));
         */
-        float val = (float)me_idx / (float)mesh.numTetrahedra;
-        float4 col = make_float4(val, 0.0, 0.0, 1.0);
+        float4 col = GetColor(me_idx, 0.0, mesh.numTetrahedra);
+        //float4 col = make_float4(val, 0.0, 0.0, 1.0);
         //float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
 
         // 0     2     3

@@ -1,31 +1,41 @@
 #include "Precompute.h"
 
 #include "CUDA.h"
-#include "Vector3D.h"
 #include "Precompute_kernels.h"
 
-#define crop_last_dim make_float3
+#include <Math/Vector.h>
+
+float squaredLength(Math::Vector<3,float> a) {
+    return a * a;
+}
 
 Tetrahedron fixTetrahedronOrientation(Tetrahedron tet, Point *hpoints) {
     Tetrahedron res = tet;
 
     //the x,y,z and w points are called a,b,c and d
-    Vector3D a = crop_last_dim(hpoints[tet.x]);
-    Vector3D b = crop_last_dim(hpoints[tet.y]);
-    Vector3D c = crop_last_dim(hpoints[tet.z]);
-    Vector3D d = crop_last_dim(hpoints[tet.w]);
+    float4 pa = hpoints[tet.x];
+    float4 pb = hpoints[tet.y];
+    float4 pc = hpoints[tet.z];
+    float4 pd = hpoints[tet.w];
 
-    Vector3D ab = b-a;
-    Vector3D ac = c-a;
-    Vector3D ad = d-a;
-		
-    Vector3D abxac = cross(ab,ac);
-		
-    float projection = dot(abxac, ad);
+    Math::Vector<3,float> a(pa.x,pa.y,pa.z);
+    Math::Vector<3,float> b(pb.x,pb.y,pb.z);
+    Math::Vector<3,float> c(pc.x,pc.y,pc.z);
+    Math::Vector<3,float> d(pd.x,pd.y,pd.z);
 
+    // center of mass
+    Math::Vector<3,float> com = (a+b+c+d)/4;
+
+    Math::Vector<3,float> ab = b-a;
+    Math::Vector<3,float> ac = c-a;
+    Math::Vector<3,float> ad = d-a;
+		
+    Math::Vector<3,float> abxac = ab % ac; // cross product
+		
+    float projection = abxac * ad; // dot product
     static unsigned int number = 0;
 
-    if (projection<0) {
+    if (projection < 0) {
 
         printf("Switching a and b on tetra with id = %i\n", number);
         res.x = tet.y;
@@ -96,30 +106,35 @@ float CPUPrecalculation
             //printf(" %i ", writeIndices[counter].w);
 
             // calculate volume and smallest length
-            Vector3D a = crop_last_dim(hpoints[htetrahedra[i].x]);
-            Vector3D b = crop_last_dim(hpoints[htetrahedra[i].y]);
-            Vector3D c = crop_last_dim(hpoints[htetrahedra[i].z]);
-            Vector3D d = crop_last_dim(hpoints[htetrahedra[i].w]);
+            float4 pa = hpoints[htetrahedra[i].x];
+            float4 pb = hpoints[htetrahedra[i].y];
+            float4 pc = hpoints[htetrahedra[i].z];
+            float4 pd = hpoints[htetrahedra[i].w];
 
-            Vector3D ab = b-a; // these 3 are used for volume calc
-            Vector3D ac = c-a;
-            Vector3D ad = d-a;
+            Math::Vector<3,float> a(pa.x,pa.y,pa.z);
+            Math::Vector<3,float> b(pb.x,pb.y,pb.z);
+            Math::Vector<3,float> c(pc.x,pc.y,pc.z);
+            Math::Vector<3,float> d(pd.x,pd.y,pd.z);
 
-            Vector3D bc = c-b;
-            Vector3D cd = d-c;
-            Vector3D bd = d-a;
+            Math::Vector<3,float> ab = b-a; // these 3 are used for volume calc
+            Math::Vector<3,float> ac = c-a;
+            Math::Vector<3,float> ad = d-a;
 
-            float smallestLengthSquared = ab.squaredLength();
-            
-            float sql = ac.squaredLength();
+            Math::Vector<3,float> bc = c-b;
+            Math::Vector<3,float> cd = d-c;
+            Math::Vector<3,float> bd = d-a;
+
+            float smallestLengthSquared = squaredLength(ab);
+            float sql = squaredLength(ac);
+
             if (sql<smallestLengthSquared) smallestLengthSquared = sql;
-            sql = ad.squaredLength();
+            sql = squaredLength(ad);
             if (sql<smallestLengthSquared) smallestLengthSquared = sql;
-            sql = bc.squaredLength();
+            sql = squaredLength(bc);
             if (sql<smallestLengthSquared) smallestLengthSquared = sql;
-            sql = cd.squaredLength();
+            sql = squaredLength(cd);
             if (sql<smallestLengthSquared) smallestLengthSquared = sql;
-            sql = bd.squaredLength();
+            sql = squaredLength(bd);
             if (sql<smallestLengthSquared) smallestLengthSquared = sql;
             
             if (smallestLengthSquared < 
@@ -130,10 +145,10 @@ float CPUPrecalculation
             if (smallestLengthSquared<totalSmallestLengthSquared) 
                 totalSmallestLengthSquared = smallestLengthSquared;
 
-            Vector3D cross_product = cross(ab,ac);
-            float cross_length = cross_product.length();
+            Math::Vector<3,float> cross_product = ab % ac; // cross product
+            float cross_length = cross_product.GetLength();
             //Length of vector ad projected onto cross product normal
-            float projected_length = dot(ad, cross_product/cross_length);
+            float projected_length = ad * cross_product.GetNormalize();
             float volume = (1.0f/6.0f) * projected_length*cross_length;
             //printf("calc-volume[%i]=%f\n", i, volume);
             if (volume<smallestAllowedVolume) {
