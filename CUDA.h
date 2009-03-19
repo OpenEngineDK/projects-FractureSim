@@ -20,9 +20,6 @@
 //#include <cutil_gl_error.h>
 //@todo: generetes linker errors, but includes CUT_CHECK_ERROR_GL()
 
-#include <Core/Exceptions.h>
-#include <Utils/Convert.h>
-
 using namespace OpenEngine;
 
 // Total bytes allocated on graphic card.
@@ -102,27 +99,36 @@ inline std::string PRINT_CUDA_DEVICE_INFO() {
     return str;
 }
  
+inline void THROW_ERROR(const char* file, const int line,
+                        const char* errorString) {
+    const int bLength = 256;
+    char buffer[bLength];
+    int n = sprintf (buffer,"[file: %s line: %i] CUDA Error: %s\n",
+                     file, line,
+                     errorString);
+    printf( buffer );
+    if (n < 0)
+        printf("error when writing error CUDA message\n");
+    if (n >= bLength)
+        printf("error message buffer was to small\n");
+    exit(-1);
+}
+
 /**
  *  Should never be used in the code, use CHECK_FOR_CUDA_ERROR(); instead
  *  inspired by cutil.h: CUT_CHECK_ERROR
  */
-inline void CHECK_FOR_CUDA_ERROR(const std::string file, const int line) {
+inline void CHECK_FOR_CUDA_ERROR(const char* file, const int line) {
     cudaError_t errorCode = cudaGetLastError();
     if (errorCode != cudaSuccess) {
         const char* errorString = cudaGetErrorString(errorCode);
-        throw Core::Exception("[file:" + file +
-                              " line:" + Utils::Convert::ToString(line) +
-                              "] CUDA Error: " +
-                              std::string(errorString));
+        THROW_ERROR(file, line, errorString);
     }
     errorCode = cudaThreadSynchronize();
     if (errorCode != cudaSuccess) { 
         const char* errorString = cudaGetErrorString(errorCode);
-        throw Core::Exception("[file:" + file +
-                              " line:" + Utils::Convert::ToString(line) +
-                              "] CUDA Error: " +
-                              std::string(errorString));
-                              }
+        THROW_ERROR(file, line, errorString);
+    }
 }
 
 /**
@@ -130,9 +136,9 @@ inline void CHECK_FOR_CUDA_ERROR(const std::string file, const int line) {
  *  an error was detected, is only available in debug mode.
  */
 //#if OE_DEBUG_GL
-//#define CHECK_FOR_CUDA_ERROR(); CHECK_FOR_CUDA_ERROR(__FILE__,__LINE__);
+#define CHECK_FOR_CUDA_ERROR(); CHECK_FOR_CUDA_ERROR(__FILE__,__LINE__);
 //#else
-#define CHECK_FOR_CUDA_ERROR();
+//#define CHECK_FOR_CUDA_ERROR();
 //#endif
 
 #endif
