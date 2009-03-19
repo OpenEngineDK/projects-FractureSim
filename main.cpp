@@ -84,12 +84,7 @@ int main(int argc, char** argv) {
     bn->AddNode(new GridNode(1000,20,color));
     bn->AddNode(new CoordSystemNode());
 
-    std::string dataDir = "projects/TLED/data/RegistrationShapes/";
-    //std::string meshFile = dataDir + "tand2.msh";
-    //std::string surfaceFile = dataDir + "tand2.obj";
-    std::string meshFile = dataDir + "PROSTATE.msh";
-    std::string surfaceFile = dataDir + "PROSTATE.obj";
-    TLEDNode* tled = new TLEDNode(meshFile, surfaceFile);
+    TLEDNode* tled = new TLEDNode();
     bn->AddNode(tled);
     setup->GetEngine().InitializeEvent().Attach(*tled);
     setup->GetEngine().ProcessEvent().Attach(*tled);

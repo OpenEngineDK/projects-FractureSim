@@ -67,6 +67,10 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
             case KEY_p:
                 tled.renderPlane = !tled.renderPlane;
                 break;
+            case KEY_t:
+                if (tled.paused)
+                    tled.StepPhysics();
+                break;
             case KEY_1:
                 tled.vbom->Toggle(SURFACE_VERTICES);
                 tled.vbom->Toggle(SURFACE_NORMALS);

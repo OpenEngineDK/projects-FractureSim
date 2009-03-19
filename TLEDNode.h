@@ -22,7 +22,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     bool paused, renderPlane;
     float minX;
 
-    TLEDNode(std::string meshFile, std::string surfaceFile);
+    TLEDNode();
     virtual ~TLEDNode();
 
     virtual void Apply(Renderers::IRenderingView* view);
@@ -30,16 +30,9 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     virtual void Handle(Core::ProcessEventArg arg);
     virtual void Handle(Core::DeinitializeEventArg arg);
 
+    void TLEDNode::StepPhysics();
  private:
     Scene::TransformationNode* plane;
-
-    std::string meshFile;
-    std::string surfaceFile;
-    TetrahedralTLEDState* state;
-
-    VertexPool* vertexpool;
-    Body* body;
-    Surface* surface;
     Solid* solid;
 };
 

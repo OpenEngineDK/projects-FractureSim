@@ -12,13 +12,8 @@
 #include <Math/Vector.h>
 #include <Logging/Logger.h>
 
-TLEDNode::TLEDNode(std::string meshFile, std::string surfaceFile) {
-    this->meshFile = meshFile;
-    this->surfaceFile = surfaceFile;
-    state = NULL;
-    body = NULL;
-    surface = NULL;
-    vertexpool = NULL;
+TLEDNode::TLEDNode() {
+    solid = NULL;
     numIterations = 25;
     paused = false;
     renderPlane = true;
@@ -37,28 +32,37 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "TLEDNode initialization start" << logger.end;
 
     ISolidLoader* loader = NULL;
-    loader = new MshObjLoader(meshFile, surfaceFile);
-    /*
     std::string dataDir = "projects/TLED/data/RegistrationShapes/";
-    loader = new MshObjLoader( dataDir + "sphere.msh", 
-                               dataDir + "sphere.obj");
+
+    // PROSTATE: vpool: 3386, body tetrahedra: 16068, surface triangles: 2470
+    loader = new MshObjLoader(dataDir + "PROSTATE.msh",
+                              dataDir + "PROSTATE.obj");
+
+    /*
+    //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
+    loader = new MshObjLoader(dataDir + "tand2.msh",
+                              dataDir + "tand2.obj");
     */
     /*
+    //tetrahedra: vpool: 4, body tetrahedra: 1, surface triangles: 4
     loader = new TetGenLoader
-    ("./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.node",
-     "./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.ele",
-     "./projects/TLED/data/RegistrationShapes/tetrahedron.ascii.1.smesh");
-
-    loader = new TetGenLoader
-        ("./projects/TLED/data/RegistrationShapes/box.ascii.1.node", 
-         "./projects/TLED/data/RegistrationShapes/box.ascii.1.ele", 
-         "./projects/TLED/data/RegistrationShapes/box.ascii.1.smesh");
-*/
+    (dataDir + "tetrahedron.ascii.1.node",
+     dataDir + "tetrahedron.ascii.1.ele",
+     dataDir + "tetrahedron.ascii.1.smesh");
+    */
     /*
+    //tetrahedra: vpool: 14, body tetrahedra: 17, surface triangles: 24
     loader = new TetGenLoader
-        ("/Users/cpvc/bunny.ascii.1.node", 
-         "/Users/cpvc/bunny.ascii.1.ele", 
-         "/Users/cpvc/bunny.ascii.1.smesh");
+    (dataDir + "box.ascii.1.node",
+     dataDir + "box.ascii.1.ele",
+     dataDir + "box.ascii.1.smesh");
+    */
+    /*
+    //tetrahedra: vpool: 119, body tetrahedra: 328, surface triangles: 212
+    loader = new TetGenLoader
+        (dataDir + "sphere.ascii.1.node", 
+         dataDir + "sphere.ascii.1.ele", 
+         dataDir + "sphere.ascii.1.smesh");
     */
 
     loader->Load();
@@ -70,27 +74,26 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "number of surface triangles: " 
                 << loader->GetSurface().size() << logger.end;
 
-    vertexpool = TypeConverter
+    solid = new Solid();
+	solid->state = new TetrahedralTLEDState(); 
+    solid->vertexpool = TypeConverter
         ::ConvertToVertexPool(loader->GetVertexPool());
-    body = TypeConverter
+    solid->body = TypeConverter
         ::ConvertToBody(loader->GetBody());
-    surface = TypeConverter
+    solid->surface = TypeConverter
         ::ConvertToSurface(loader->GetSurface());
 
-	state = new TetrahedralTLEDState(); 
-
-    solid = new Solid();
-    solid->state = state;
-    solid->body = body;
-    solid->surface = surface;
-    solid->vertexpool = vertexpool;
+    // scaling factors for the different models
+    solid->vertexpool->Scale(1.1); // blob
+    //solid->vertexpool->Scale(5); // tand2, tetrahedra and box
+    //solid->vertexpool->Scale(30); // bunny
+    //solid->vertexpool->Scale(0.3); // sphere
 
     logger.info << "pre computing" << logger.end;
-	//precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f);
-    vertexpool->Scale(1.1);
     moveAccordingToBoundingBox(solid);
-    vertexpool->Move(0,30,0);
-    precompute(solid, 0.001f, 0.0f, 0.0f, 10007.0f, 5500.0f, 0.5f, 10.0f);
+    solid->vertexpool->Move(0,30,0);
+    precompute(solid, 0.001f, 0.0f, 0.0f, 10007.0f, 5500.0f, 0.5f, 10.0f); //stiff
+	//precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f); //soft
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
@@ -124,6 +127,20 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
 }
 
+void TLEDNode::StepPhysics() {
+	// Update all visualization data
+    vbom->MapAllBufferObjects();   
+
+    for (unsigned int i=0; i<numIterations; i++) {
+        calculateGravityForces(solid);
+        calculateInternalForces(solid, vbom);
+        updateDisplacement(solid);
+        applyFloorConstraint(solid, 0);
+    }
+
+    vbom->UnmapAllBufferObjects();
+}
+
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if (!solid->IsInitialized()) return;
 
@@ -135,7 +152,7 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
             calculateGravityForces(solid);
             calculateInternalForces(solid, vbom);
             updateDisplacement(solid);
-            applyFloorConstraint(solid, 0); 
+            applyFloorConstraint(solid, 0);
         }
 
     plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
