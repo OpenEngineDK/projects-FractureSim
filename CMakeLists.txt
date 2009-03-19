@@ -2,7 +2,7 @@
 # will become the name of the binary target.
 SET( PROJECT_NAME "TLED")
 
-#cmake_policy(SET CMP0011 OLD) #inlcuded to supress warning
+# cmake_policy(SET CMP0011 OLD) #inlcuded to supress warning
 
 #SET(CMAKE_BUILD_TYPE debug)
 #SET(CMAKE_BUILD_TYPE "release")

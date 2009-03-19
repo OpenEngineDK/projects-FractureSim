@@ -46,7 +46,10 @@ unsigned int VboManager::sizeOfElement(GLenum mode){
         return 2 * sizeof(float4);
     case GL_TRIANGLES: 
         return 3 * sizeof(float4); // NOTE: float3 here!
-    default: break;
+    default: 
+        printf("[VboManager] ERROR: unknown buffer mode, use GL_POINTS, GL_LINES og GL_TRIANGLES\n");
+        exit(-1);
+        break;
     }
     return 0;
 }
@@ -239,8 +242,14 @@ void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& no
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_AUTO_NORMAL); 
         */
+
+        //       glEnable(GL_CULL_FACE);
         glEnable(GL_NORMALIZE); 
+        glEnable(GL_COLOR_MATERIAL);
         glShadeModel(GL_FLAT);
+
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
 
         // Enable color array
         glBindBufferARB(GL_ARRAY_BUFFER, colr.vboID);

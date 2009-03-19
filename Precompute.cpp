@@ -7,20 +7,39 @@
 #include <Geometry/Face.h>
 #include <Logging/Logger.h>
 
+using namespace Math;
+
 float squaredLength(Math::Vector<3,float> a) {
     return a * a;
 }
 
 bool checkTriangle(Math::Vector<3,float> a, Math::Vector<3,float> b,
                    Math::Vector<3,float> c, Math::Vector<3,float> com) {
-    Geometry::Face face(a,b,c);
-    int result = face.ComparePointPlane(com, Math::EPS);
-    //logger.info << "pointplane: " << result << logger.end;
-    if (result == -1)
-        return false;
-    else if( result == 1)
+    //    Geometry::Face face(a,b,c);
+    //int result = face.ComparePointPlane(com, Math::EPS);
+
+    // Calculate face normal - we need normals perpendicular to the face
+    // so we can't use the loaded face normals because they might be soft.
+    Math::Vector<3,double> v1 = b.ToDouble() - a.ToDouble();
+    Math::Vector<3,double> v2 = c.ToDouble() - a.ToDouble();
+    Math::Vector<3,float> h = (v1 % v2).ToFloat();
+
+	if (h.GetLength() == 0.0f) {
+		logger.warning << "hardNorm is 0.0f: " << a << ","
+                       << b << "," << c << logger.end;
+    }
+
+    // Calculate the distance from constraint p1 to plane.
+    float distance = (h * (com - a));
+
+    // If the distance is behind the plane correct p1
+    if (distance > Math::EPS) 
         return true;
-    throw Core::Exception("center of mass is located on one of the triangles");
+    else 
+        if (distance < -Math::EPS) 
+            return false;
+	else 
+        throw Core::Exception("center of mass is located on one of the triangles");
 }
 
 bool checkPositiveVolume(Math::Vector<3,float> a, Math::Vector<3,float> b,

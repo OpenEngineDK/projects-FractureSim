@@ -19,6 +19,7 @@ enum {
     BODY_MESH,
     BODY_COLORS,
     BODY_NORMALS,
+    EIGEN_VALUES,
     STRESS_TENSORS,
     NUM_BUFFERS
 };

@@ -1,5 +1,9 @@
 #include "CUDA.h"
 #include "Solid.h"
+#include "VboManager.h"
+#include "eig3.h"
+#include "ColorRamp.h"
+
 
 #define BLOCKSIZE 128
 
@@ -55,7 +59,21 @@ void applyFloorConstraint(Solid* solid, float floorYPosition) {
 
 //note: supposed to be castable to a ShapeFunctionDerivatives object
 struct Matrix4x3 { float e[12]; };
-struct Matrix3x3 { float e[9]; };
+struct Matrix3x3 { 
+    float e[9]; 
+
+    // Matrix3x3 *Must* be symmetric. Returns eigenvectors in columns of V
+    // and corresponding eigenvalues in d.
+    __device__
+    void calcEigenDecomposition(double V[3][3], double d[3]) {
+        double A[3][3];
+        for(int i=0; i<3; i++)
+            for(int j=0; j<3; j++)
+                A[i][j] = e[j+i*3];
+        // decompose
+        eigen_decomposition(A,V,d);
+    }
+};
 struct Matrix6x3 { float e[6*3]; };
 
 texture<float4,  1, cudaReadModeElementType> Ui_t_1d_tex;
@@ -71,7 +89,9 @@ texture<float4,  1, cudaReadModeElementType> _tex;
 #define S(i,j) (s_tensor.e[(i-1)*3+(j-1)])
 
 __global__ void
-calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, int4 *writeIndices, float4 *pointForces, int maxPointForces, float mu, float lambda, unsigned int numTets)
+calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
+                  int4 *writeIndices, float4 *pointForces, int maxPointForces, float mu, float lambda, 
+                  unsigned int numTets, float4* colrBuf, float4* eigBuf)
 {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -219,7 +239,41 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 	S(1,3) = mu*(-CI(1,3)) + lambda*J*(J-1.0f)*CI(1,3); // IS THIS RIGHT?? (3,1) instead?
 //	S(1,3) = mu*(-CI(3,1)) + lambda*J*(J-1.0f)*CI(3,1); // IS THIS RIGHT?? (1,3) instead?
 
+    double eigenVector[3][3];
+    double eigenValue[3];
+    s_tensor.calcEigenDecomposition(eigenVector, eigenValue);
 
+    double maxEv = max( max( eigenValue[0], eigenValue[1]), eigenValue[2] );
+    
+    int sign = 1;
+    if( maxEv < 0 ) sign = -1;
+ 
+    maxEv *= maxEv;
+    maxEv /= 4;
+    maxEv *= sign;
+
+    //float4 col = make_float4(0.2, 0.5, 0.1, 1.0);
+    float4 col = GetColor(maxEv, -500.0, 500.0);
+    int colr_idx = me_idx*12;
+
+    // ---------- COLORS -------------------
+    colrBuf[colr_idx++] = col;
+    colrBuf[colr_idx++] = col;
+    colrBuf[colr_idx++] = col;
+    
+    colrBuf[colr_idx++] = col;
+    colrBuf[colr_idx++] = col;
+    colrBuf[colr_idx++] = col;
+    
+    colrBuf[colr_idx++] = col;
+    colrBuf[colr_idx++] = col;
+    colrBuf[colr_idx++] = col;
+
+    colrBuf[colr_idx++] = col;
+    colrBuf[colr_idx++] = col;
+    colrBuf[colr_idx++] = col;
+    
+ 
 /*	printf("\nHyper-elastic stresses for tetrahedron %i: \n", me_idx);
 	printf("%f, %f, %f \n", S(1,1), S(1,2), S(1,3));
 	printf("%f, %f, %f \n", S(2,1), S(2,2), S(2,3));
@@ -315,7 +369,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 //	printf("%i, %i, %i, %i \n", writeIndices[me_idx].x, writeIndices[me_idx].y, writeIndices[me_idx].z, writeIndices[me_idx].w );
 }
 
-void calculateInternalForces(Solid* solid)  {
+void calculateInternalForces(Solid* solid, VboManager* vbom)  {
     Body* mesh = solid->body;
     TetrahedralTLEDState *state = solid->state;
 	
@@ -339,7 +393,9 @@ void calculateInternalForces(Solid* solid)  {
 		solid->vertexpool->maxNumForces,
 		state->mu,
 		state->lambda,
-		mesh->numTetrahedra);
+		mesh->numTetrahedra,
+        vbom->GetBuf(BODY_COLORS).buf,
+        vbom->GetBuf(EIGEN_VALUES).buf);
 
 	// free textures
 	cudaUnbindTexture( V0_1d_tex );

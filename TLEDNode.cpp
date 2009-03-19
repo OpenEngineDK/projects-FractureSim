@@ -100,22 +100,24 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // Initialize the Visualizer
     vbom = new VboManager();
 
-    // Alloc buffers
+    // Surface
     vbom->AllocBuffer(SURFACE_VERTICES, solid->surface->numFaces, GL_TRIANGLES);
-    vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_POINTS);
-    
+    vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_TRIANGLES);
+    // Center of mass points
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
-
+    // Body mesh is all tetrahedron faces with colors and normals
     vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(BODY_NORMALS, solid->body->numTetrahedra*4, GL_TRIANGLES);
+    vbom->AllocBuffer(EIGEN_VALUES, solid->body->numTetrahedra, GL_POINTS);
 
+    // Stress tensors visualizes stress planes.
     vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
     
 
-    // Disabled to bypass normal rendering
-    vbom->Disable(SURFACE_NORMALS);
+    // Disabled to bypass rendering
     vbom->Disable(CENTER_OF_MASS);
+    vbom->Disable(STRESS_TENSORS);
     
     printf("[VboManager] Total Bytes Allocated: %i\n", totalByteAlloc);
 
@@ -124,18 +126,20 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 }
 
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
-    if (!solid->IsInitialized() || paused) return;
-	for (unsigned int i=0; i<numIterations; i++) {
-        calculateGravityForces(solid);
-        calculateInternalForces(solid);
-        updateDisplacement(solid);
-        applyFloorConstraint(solid, 0); 
-	}
-
-    plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
+    if (!solid->IsInitialized()) return;
 
 	// Update all visualization data
     vbom->MapAllBufferObjects();   
+
+    if( !paused )
+        for (unsigned int i=0; i<numIterations; i++) {
+            calculateGravityForces(solid);
+            calculateInternalForces(solid, vbom);
+            updateDisplacement(solid);
+            applyFloorConstraint(solid, 0); 
+        }
+
+    plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
  
     if( vbom->IsEnabled(SURFACE_VERTICES) )
         updateSurface(solid, vbom);
@@ -151,9 +155,11 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
 
     vbom->UnmapAllBufferObjects();
     
-    //vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(STRESS_TENSORS));
+    //    if( paused ) {
+    //    vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(EIGEN_VALUES));
     //    vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
-    //exit(-1);
+    //    exit(-1);
+    // }
 }
 
 void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
@@ -168,10 +174,14 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (!solid->IsInitialized()) return;
 
     // These buffers will only be rendered if they are enabled.
-    vbom->Render(SURFACE_VERTICES);
+    //vbom->Render(SURFACE_VERTICES);
     vbom->Render(CENTER_OF_MASS);
     vbom->Render(STRESS_TENSORS);
 
+    vbom->Render(vbom->GetBuf(SURFACE_VERTICES),
+                 vbom->GetBuf(BODY_COLORS),
+                 vbom->GetBuf(SURFACE_NORMALS));
+    
     vbom->Render(vbom->GetBuf(BODY_MESH), 
                  vbom->GetBuf(BODY_COLORS),
                  vbom->GetBuf(BODY_NORMALS));

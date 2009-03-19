@@ -27,7 +27,7 @@ float4 calcNormal(float4 *v0, float4 *v1, float4 *v2)
     float4 edge1 = *v2 - *v0;
 
     // note - it's faster to perform normalization in vertex shader rather than here
-    return cross(edge0, edge1);
+    return cross(edge1, edge0);
 }
 
 
@@ -44,9 +44,6 @@ void applyTransformation_k(float4* model, float4* vert, float4* mat, unsigned in
     vert[me_idx].y = dot(mat[m_idx + 1], model[threadIdx.x]);
     vert[me_idx].z = dot(mat[m_idx + 2], model[threadIdx.x]);
     vert[me_idx].w = dot(mat[m_idx + 3], model[threadIdx.x]);
-    
-    
-    
 }
 
 /**
@@ -98,20 +95,18 @@ updateSurface_k(float4* vertBuf, float4* normBuf, Surface surface, Point *points
 	pos3.y += displacement.y;  
 	pos3.z += displacement.z;  
 	vertBuf[(me_idx*3)+2] = pos3;
-    /*
-    float4 normal = calcNormal(&pos,&pos2,&pos3);
-
+    
+    float4 normal = calcNormal(&pos,&pos3,&pos2);
 	normBuf[(3*me_idx)+0] = normal;
 	normBuf[(3*me_idx)+1] = normal;
 	normBuf[(3*me_idx)+2] = normal;
-    */
 }
 
 void updateSurface(Solid* solid, VboManager* vbom) {
 	int gridSize = (int)ceil(((float)solid->surface->numFaces)/BLOCKSIZE);
 
     updateSurface_k<<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>(vbom->GetBuf(SURFACE_VERTICES).buf, 
-                                                                             vbom->GetBuf(SURFACE_VERTICES).buf,
+                                                                             vbom->GetBuf(SURFACE_NORMALS).buf,
                                                                              *solid->surface, 
                                                                              solid->vertexpool->data, 
                                                                              solid->vertexpool->Ui_t);
@@ -158,12 +153,12 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
     
     Tetrahedron tetra = mesh.tetrahedra[me_idx];
 
-	float4 pos0, pos1, pos2, pos3;
+	float4 a, b, c, d;
 
-    pos0 = points[tetra.x] + displacements[tetra.x];
-    pos1 = points[tetra.y] + displacements[tetra.y];
-    pos2 = points[tetra.z] + displacements[tetra.z];
-    pos3 = points[tetra.w] + displacements[tetra.w];
+    a = points[tetra.x] + displacements[tetra.x];
+    b = points[tetra.y] + displacements[tetra.y];
+    c = points[tetra.z] + displacements[tetra.z];
+    d = points[tetra.w] + displacements[tetra.w];
 
     int color_ramp_idx = me_idx;
 
@@ -172,14 +167,12 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
     int colr_idx = me_idx;
     int norm_idx = me_idx;
 
-    if ( pos0.x < minX ||
-         pos1.x < minX ||
-         pos2.x < minX ||
-         pos3.x < minX ) {
+    if ( a.x < minX ||
+         b.x < minX ||
+         c.x < minX ||
+         d.x < minX ) {
         for (unsigned int i=0; i<12; i++) {
             vertBuf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
-            normBuf[norm_idx++] = make_float4(0.0,0.0,0.0,0.0);
-            colrBuf[colr_idx++] = make_float4(0.0,0.0,0.0,0.0);
         }
     } else {
         /*
@@ -194,71 +187,71 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
 
         int maxEigValue = max(d[0], max(d[1],d[2]));
         */
-        float4 col = GetColor(color_ramp_idx, 0.0, mesh.numTetrahedra);
+        //float4 col = GetColor(color_ramp_idx, 0.0, mesh.numTetrahedra);
         //float4 col = make_float4(val, 0.0, 0.0, 1.0);
-        //float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
+        float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
 
         // 0     2     3
-        vertBuf[me_idx++] = pos0;
-        vertBuf[me_idx++] = pos2;
-        vertBuf[me_idx++] = pos3;
-
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-
-        // Calculate hard normals
-        float4 normal = calcNormal(&pos0,&pos2,&pos3);
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-        
+        vertBuf[me_idx++] = a;
+        vertBuf[me_idx++] = b;
+        vertBuf[me_idx++] = c;
 
         // 0     3     1
-        vertBuf[me_idx++] = pos0;
-        vertBuf[me_idx++] = pos3;
-        vertBuf[me_idx++] = pos1;
+        vertBuf[me_idx++] = a;
+        vertBuf[me_idx++] = c;
+        vertBuf[me_idx++] = d;
+
+        // 0     1     2
+        vertBuf[me_idx++] = b;
+        vertBuf[me_idx++] = d;
+        vertBuf[me_idx++] = c;
+
+        // 1     2     3
+        vertBuf[me_idx++] = a;
+        vertBuf[me_idx++] = d;
+        vertBuf[me_idx++] = b;
+
+        /*        // ---------- COLORS -------------------
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
     
         colrBuf[colr_idx++] = col;
         colrBuf[colr_idx++] = col;
         colrBuf[colr_idx++] = col;
+
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        colrBuf[colr_idx++] = col;
+        */
+        // -----------  HARD NORMALS  -------------
+        float4 normal = calcNormal(&a,&b,&c);
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
+        normBuf[norm_idx++] = normal;
+
         // Calculate hard normals
-        normal = calcNormal(&pos0,&pos3,&pos1);
+        normal = calcNormal(&a,&c,&d);
         normBuf[norm_idx++] = normal;
         normBuf[norm_idx++] = normal;
         normBuf[norm_idx++] = normal;
 
-        // 0     1     2
-        vertBuf[me_idx++] = pos0;
-        vertBuf[me_idx++] = pos1;
-        vertBuf[me_idx++] = pos2;
-
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
         // Calculate hard normals
-        normal = calcNormal(&pos0,&pos1,&pos2);
+        normal = calcNormal(&b,&d,&c);
         normBuf[norm_idx++] = normal;
         normBuf[norm_idx++] = normal;
         normBuf[norm_idx++] = normal;
 
-        // 1     2     3
-        vertBuf[me_idx++] = pos1;
-        vertBuf[me_idx++] = pos2;
-        vertBuf[me_idx++] = pos3;
-
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
         // Calculate hard normals
-        normal = calcNormal(&pos1,&pos2,&pos3);
+        normal = calcNormal(&a,&d,&b);
         normBuf[norm_idx++] = normal;
         normBuf[norm_idx++] = normal;
         normBuf[norm_idx++] = normal;
-
-        
     }
-
 }
 
 void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
