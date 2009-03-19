@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     // Create simple setup
     SimpleSetup* setup = new SimpleSetup("TLED", new Viewport(0,0,800,600));
 
-   // Print usage info.
+    // Print usage info.
     logger.info << "========= Running OpenEngine Test Project =========";
     logger.info << logger.end;
    
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
     // Get root node of scene
     ISceneNode* root = setup->GetScene();
     RenderStateNode* rsn = new RenderStateNode();
-    rsn->EnableOption(RenderStateNode::WIREFRAME);
+    rsn->DisableOption(RenderStateNode::WIREFRAME);
     root->AddNode(rsn);
     RenderStateHandler* rsh = new RenderStateHandler(*rsn);
     setup->GetKeyboard().KeyEvent().Attach(*rsh);

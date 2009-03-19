@@ -175,18 +175,6 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
             vertBuf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
         }
     } else {
-        /*
-        double A[3][3];
-        for(int i=0; i<3; i++)
-            for(int j=0; j<3; j++)
-                A[i][j] = rotT(i,j);
-
-        double V[3][3];
-        double d[3];
-        eigen_decomposition(A,V,d);
-
-        int maxEigValue = max(d[0], max(d[1],d[2]));
-        */
         //float4 col = GetColor(color_ramp_idx, 0.0, mesh.numTetrahedra);
         //float4 col = make_float4(val, 0.0, 0.0, 1.0);
         float4 col = make_float4(0.2, 0.1, 0.5, 1.0);

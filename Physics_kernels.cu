@@ -88,6 +88,7 @@ texture<float4,  1, cudaReadModeElementType> _tex;
 #define CI(i,j) (c_inverted.e[(i-1)*3+(j-1)])
 #define S(i,j) (s_tensor.e[(i-1)*3+(j-1)])
 
+
 __global__ void
 calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
                   int4 *writeIndices, float4 *pointForces, int maxPointForces, float mu, float lambda, 
@@ -239,21 +240,36 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 	S(1,3) = mu*(-CI(1,3)) + lambda*J*(J-1.0f)*CI(1,3); // IS THIS RIGHT?? (3,1) instead?
 //	S(1,3) = mu*(-CI(3,1)) + lambda*J*(J-1.0f)*CI(3,1); // IS THIS RIGHT?? (1,3) instead?
 
+    // Calculate eigen vectors and values and map to colors
     double eigenVector[3][3];
     double eigenValue[3];
     s_tensor.calcEigenDecomposition(eigenVector, eigenValue);
+    
+    eigBuf[me_idx] = make_float4(eigenValue[0], eigenValue[1], eigenValue[2], 0);
+
+    int maxSign = 1;
+    int minSign = 1;
 
     double maxEv = max( max( eigenValue[0], eigenValue[1]), eigenValue[2] );
-    
-    int sign = 1;
-    if( maxEv < 0 ) sign = -1;
- 
-    maxEv *= maxEv;
-    maxEv /= 4;
-    maxEv *= sign;
+    double minEv = min( min( eigenValue[0], eigenValue[1]), eigenValue[2] );
 
+    if( maxEv < 0 ){
+        maxSign = -1;
+        maxEv *= -1;
+    }
+    if( minEv < 0 ) {
+        minSign = -1;
+        minEv *= -1;
+    }
+    double longestEv = maxEv > minEv ? maxEv : minEv;
+
+    //longestEv *= longestEv;
+    //longestEv /= 4;
+
+    longestEv *= maxEv > minEv ? maxSign : minSign;
+ 
     //float4 col = make_float4(0.2, 0.5, 0.1, 1.0);
-    float4 col = GetColor(maxEv, -500.0, 500.0);
+    float4 col = GetColor(-longestEv, -1000.0, 500.0);
     int colr_idx = me_idx*12;
 
     // ---------- COLORS -------------------

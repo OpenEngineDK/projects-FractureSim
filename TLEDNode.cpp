@@ -118,9 +118,11 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     
 
     // Disabled to bypass rendering
+    vbom->Disable(SURFACE_VERTICES);
     vbom->Disable(CENTER_OF_MASS);
     vbom->Disable(STRESS_TENSORS);
     
+
     printf("[VboManager] Total Bytes Allocated: %i\n", totalByteAlloc);
 
     // Buffer setup
@@ -169,13 +171,19 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if( vbom->IsEnabled(STRESS_TENSORS) )
         updateStressTensors(solid, vbom);
 
-    vbom->UnmapAllBufferObjects();
+   vbom->UnmapAllBufferObjects();
+     
     
-    //    if( paused ) {
-    //    vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(EIGEN_VALUES));
-    //    vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
-    //    exit(-1);
-    // }
+   /*   if( paused ) {
+       //float* data;
+       //vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VALUES), data);    
+
+            vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(EIGEN_VALUES));
+        //    vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
+                exit(-1);
+        }
+   */
+
 }
 
 void TLEDNode::Handle(Core::DeinitializeEventArg arg) {

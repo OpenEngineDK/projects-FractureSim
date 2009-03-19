@@ -57,6 +57,9 @@ public:
     // debug
     void dumpBufferToFile(char* filename, VisualBuffer& vb);
     void dumpBufferToFile(char* filename, GLuint vboID, unsigned int size);
+
+    void CopyBufferDeviceToHost(VisualBuffer& vb, float* data);
+
 };
 
 #endif //_VBO_MANAGER_H_

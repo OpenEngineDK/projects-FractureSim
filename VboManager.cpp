@@ -325,3 +325,45 @@ void VboManager::dumpBufferToFile(char* filename, GLuint vboID, unsigned int siz
     CHECK_FOR_CUDA_ERROR();
     CHECK_FOR_GL_ERROR();
 }
+
+void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, float* data) {
+
+    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb.buf, vb.vboID));
+
+    // Alloc buffer
+    data = (float*)malloc(vb.byteSize);
+    // Cop
+    cudaMemcpy(data, vb.buf, vb.byteSize, cudaMemcpyDeviceToHost);
+
+    float minVal = 0;
+    float maxVal = 0;
+
+    static float totalMinVal = 0;
+    static float totalMaxVal = 0;
+
+    float avgMin = 0;
+    float avgMax = 0;
+
+    for( int i=0; i<vb.numIndices; i++ ) {
+        //printf("[%i] %f ", i, data[i]);
+        if( data[i] > maxVal ) maxVal = data[i];
+        if( data[i] < minVal ) minVal = data[i];
+        
+        if( data[i] > 0 ) avgMax += data[i];
+        if( data[i] < 0 ) avgMin += data[i]; 
+    }
+    if( maxVal > totalMaxVal ) totalMaxVal = maxVal;
+    if( minVal < totalMinVal ) totalMinVal = minVal;
+
+    avgMin /= vb.numIndices;
+    avgMax /= vb.numIndices;
+
+    printf("Max: %f, min: %f  -  overall max: %f, min: %f  - average max: %f, min %f\n", maxVal, minVal, totalMaxVal, totalMinVal, avgMax, avgMin);
+
+    free(data);
+
+    CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb.vboID ));
+    
+    CHECK_FOR_CUDA_ERROR();
+    CHECK_FOR_GL_ERROR();
+}
