@@ -4,14 +4,41 @@
 #include "Precompute_kernels.h"
 
 #include <Math/Vector.h>
+#include <Geometry/Face.h>
+#include <Logging/Logger.h>
 
 float squaredLength(Math::Vector<3,float> a) {
     return a * a;
 }
 
-Tetrahedron fixTetrahedronOrientation(Tetrahedron tet, Point *hpoints) {
-    Tetrahedron res = tet;
+bool checkTriangle(Math::Vector<3,float> a, Math::Vector<3,float> b,
+                   Math::Vector<3,float> c, Math::Vector<3,float> com) {
+    Geometry::Face face(a,b,c);
+    int result = face.ComparePointPlane(com, Math::EPS);
+    //logger.info << "pointplane: " << result << logger.end;
+    if (result == -1)
+        return false;
+    else if( result == 1)
+        return true;
+    throw Core::Exception("center of mass is located on one of the triangles");
+}
 
+bool checkPositiveVolume(Math::Vector<3,float> a, Math::Vector<3,float> b,
+                         Math::Vector<3,float> c, Math::Vector<3,float> d) {
+    Math::Vector<3,float> ab = b-a;
+    Math::Vector<3,float> ac = c-a;
+    Math::Vector<3,float> ad = d-a;
+
+    Math::Vector<3,float> abxac = ab % ac; // cross product
+    float projection = abxac * ad; // dot product
+    if (projection < 0) {
+        logger.info << "volume is negative" << logger.end;
+        return false;
+    }
+    return true;
+}
+
+bool checkTetrahedron(Tetrahedron tet, Point* hpoints) {
     //the x,y,z and w points are called a,b,c and d
     float4 pa = hpoints[tet.x];
     float4 pb = hpoints[tet.y];
@@ -26,23 +53,63 @@ Tetrahedron fixTetrahedronOrientation(Tetrahedron tet, Point *hpoints) {
     // center of mass
     Math::Vector<3,float> com = (a+b+c+d)/4;
 
-    Math::Vector<3,float> ab = b-a;
-    Math::Vector<3,float> ac = c-a;
-    Math::Vector<3,float> ad = d-a;
-		
-    Math::Vector<3,float> abxac = ab % ac; // cross product
-		
-    float projection = abxac * ad; // dot product
-    static unsigned int number = 0;
+    //logger.info << "checking tri: abc" << logger.end;
+    if ( !checkTriangle(a,b,c,com) ) return false;
+    //logger.info << "checking tri: acd" << logger.end;
+    if ( !checkTriangle(a,c,d,com) ) return false;
+    //logger.info << "checking tri: adc " << logger.end;
+    if ( !checkTriangle(b,d,c,com) ) return false;
+    //logger.info << "checking tri: adb " << logger.end;
+    if ( !checkTriangle(a,d,b,com) ) return false;
+    //logger.info << "checking volume " << logger.end;
+    if ( !checkPositiveVolume(a,b,c,d) ) return false;
+    return true;
+}
 
-    if (projection < 0) {
+Tetrahedron fixTetrahedronOrientation(Tetrahedron tet, Point* hpoints) {
+    int a = tet.x;
+    int b = tet.y;
+    int c = tet.z;
+    int d = tet.w;
+    Tetrahedron res;
 
-        printf("Switching a and b on tetra with id = %i\n", number);
-        res.x = tet.y;
-        res.y = tet.x;
-    }
-    number++;
-    return res; 
+    static int index = -1;
+    index++;
+    /*
+    char chr = getchar();
+    if (chr == 'q')
+        exit(-1);
+    */
+    //logger.info << "------------ tetra ---------" << logger.end;
+    //logger.info << "checking tretra: abcd" << logger.end;
+    res = make_int4(a,b,c,d);
+    if ( checkTetrahedron(res,hpoints) )
+        return res;
+    logger.info << "tetra with index:" << index << logger.end;
+    logger.info << "checking tretra: abdc" << logger.end;
+    res = make_int4(a,b,d,c);
+    if ( checkTetrahedron(res,hpoints) )
+        return res;
+
+    logger.info << "checking tretra: acbd" << logger.end;
+    res = make_int4(a,c,b,d);
+    if ( checkTetrahedron(res,hpoints) )
+        return res;
+    logger.info << "checking tretra: acdb" << logger.end;
+    res = make_int4(a,c,d,b);
+    if ( checkTetrahedron(res,hpoints) )
+        return res;
+
+    logger.info << "checking tretra: adbc" << logger.end;
+    res = make_int4(a,d,b,c);
+    if ( checkTetrahedron(res,hpoints) )
+        return res;
+    logger.info << "checking tretra: adcb" << logger.end;
+    res = make_int4(a,d,c,b);
+    if ( checkTetrahedron(res,hpoints) )
+        return res;
+
+    throw Core::Exception("invalid tetrahedron");
 }
 
 //must return smallest length encountered
