@@ -326,22 +326,60 @@ float CPUPrecalculation
     return sqrtf(totalSmallestLengthSquared);
 }
 
+void moveAccordingToBoundingBox(Solid* solid) {
+
+    float4 a = solid->vertexpool->data
+        [solid->surface->faces[0].x ];
+
+    Math::Vector<3,float> max(a.x,a.y,a.z);
+    Math::Vector<3,float> min(max);
+
+    // find the boundary values
+    for (unsigned int k=0; k<solid->surface->numFaces; k++) {
+            float4 a = solid->vertexpool->data
+                [solid->surface->faces[k].x ];
+            Math::Vector<3,float> v(a.x,a.y,a.z);
+            for (int j=0; j<3; j++)
+                if (v[j] < min[j]) min[j] = v[j];
+                else if (v[j] > max[j]) max[j] = v[j];
+
+            float4 b = solid->vertexpool->data
+                [solid->surface->faces[k].y ];
+            v = Math::Vector<3,float>(b.x,b.y,b.z);
+            for (int j=0; j<3; j++)
+                if (v[j] < min[j]) min[j] = v[j];
+                else if (v[j] > max[j]) max[j] = v[j];
+
+            float4 c = solid->vertexpool->data
+                [solid->surface->faces[k].z ];
+            v = Math::Vector<3,float>(c.x,c.y,c.z);
+            for (int j=0; j<3; j++)
+                if (v[j] < min[j]) min[j] = v[j];
+                else if (v[j] > max[j]) max[j] = v[j];
+    }
+
+    Math::Vector<3,float> center = (max - min) / 2 + min;
+    logger.info << "bounding box: min=" << min 
+                << " max=" << max 
+                << " center=" << center 
+                << logger.end;
+
+    solid->vertexpool->Move(-center[0], -min[1], -center[2]);
+}
+
 void precompute(Solid* solid, 
                 float density, float smallestAllowedVolume, 
                 float smallestAllowedLength, float mu,
                 float lambda, float timeStepFactor, float damping) {
 
-    //TetrahedralTLEDState *state = solid->state;
-    //CUT_DEVICE_INIT(1, "");
 
-    //solid->Print();
+    moveAccordingToBoundingBox(solid);
+
 
 	float smallestLength =
         CPUPrecalculation(solid, solid->vertexpool->maxNumForces,
                           density, smallestAllowedVolume,
                           smallestAllowedLength);
-
-    //solid->Print();
 
     CHECK_FOR_CUDA_ERROR();
     solid->vertexpool->ConvertToCuda();

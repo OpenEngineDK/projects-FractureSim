@@ -16,9 +16,10 @@ void Surface::DeAlloc() {
 
 void Surface::ConvertToCuda() {
     CHECK_FOR_CUDA_ERROR();
-    Triangle* dTriangles;
-	cudaMalloc((void**)&dTriangles, sizeof(Triangle) *numFaces);
-	cudaMemcpy(dTriangles, faces, 
+    Triangle* dTriangles = NULL;
+	CUDA_SAFE_CALL(cudaMalloc( (void**)(&dTriangles), sizeof(Triangle) *numFaces));
+
+    cudaMemcpy(dTriangles, faces, 
                sizeof(Triangle) *numFaces, cudaMemcpyHostToDevice);
 	free(faces);
     this->faces = dTriangles;
