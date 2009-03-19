@@ -327,7 +327,6 @@ float CPUPrecalculation
 }
 
 void moveAccordingToBoundingBox(Solid* solid) {
-
     float4 a = solid->vertexpool->data
         [solid->surface->faces[0].x ];
 
@@ -371,10 +370,6 @@ void precompute(Solid* solid,
                 float density, float smallestAllowedVolume, 
                 float smallestAllowedLength, float mu,
                 float lambda, float timeStepFactor, float damping) {
-
-
-    moveAccordingToBoundingBox(solid);
-
 
 	float smallestLength =
         CPUPrecalculation(solid, solid->vertexpool->maxNumForces,

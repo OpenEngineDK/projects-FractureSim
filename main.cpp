@@ -57,8 +57,8 @@ int main(int argc, char** argv) {
    
     // Move the camera
     Camera* camera = setup->GetCamera();
-    camera->SetPosition(Vector<3,float>(10,0,10));
-    camera->LookAt(Vector<3,float>(0,0,0));
+    camera->SetPosition(Vector<3,float>(-100,30,0));
+    camera->LookAt(Vector<3,float>(0,30,0));
 
     // Register movement handler to be able to move the camera
     MoveHandler* move_h = 
@@ -96,8 +96,8 @@ int main(int argc, char** argv) {
     setup->GetEngine().DeinitializeEvent().Attach(*tled);
 
     KeyHandler* kh = new KeyHandler(*camera, *tled);
-    kh->SetEye(Vector<3,float>(0.0,10.0,0.0));
-    kh->SetPoint(Vector<3,float>(10.0,10.0,0.0));
+    kh->SetEye(Vector<3,float>(-100.0,30.0,0.0));
+    kh->SetPoint(Vector<3,float>(0.0,30.0,0.0));
     setup->GetKeyboard().KeyEvent().Attach(*kh);
 
 

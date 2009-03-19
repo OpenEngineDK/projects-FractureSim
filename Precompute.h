@@ -3,6 +3,8 @@
 
 #include "Solid.h"
 
+void moveAccordingToBoundingBox(Solid* solid);
+
 void precompute(Solid* solid, 
                 float density, float smallestAllowedVolume, 
                 float smallestAllowedLength, float mu,

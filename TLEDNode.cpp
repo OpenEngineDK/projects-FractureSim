@@ -22,7 +22,7 @@ TLEDNode::TLEDNode(std::string meshFile, std::string surfaceFile) {
     numIterations = 25;
     paused = false;
     renderPlane = true;
-    minX = 220.0;
+    minX = 0.0;
     plane = Create(10,40,10, Vector<4,float>(0.5,0.5,0.0,0.2));
 }
 
@@ -72,12 +72,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     vertexpool = TypeConverter
         ::ConvertToVertexPool(loader->GetVertexPool());
-    //vertexpool->Scale(30);
-    //vertexpool->Move(0,10,0);
-
     body = TypeConverter
         ::ConvertToBody(loader->GetBody());
-
     surface = TypeConverter
         ::ConvertToSurface(loader->GetSurface());
 
@@ -91,6 +87,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     logger.info << "pre computing" << logger.end;
 	//precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f);
+    vertexpool->Scale(1.1);
+    moveAccordingToBoundingBox(solid);
+    vertexpool->Move(0,30,0);
     precompute(solid, 0.001f, 0.0f, 0.0f, 10007.0f, 5500.0f, 0.5f, 10.0f);
     logger.info << "TLEDNode initialization done" << logger.end;
 
