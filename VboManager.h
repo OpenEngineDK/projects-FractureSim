@@ -16,6 +16,7 @@ enum {
     SURFACE_VERTICES = 0,
     SURFACE_NORMALS,
     CENTER_OF_MASS,
+    //CENTER_OF_MASS_COLR,
     BODY_MESH,
     BODY_COLORS,
     BODY_NORMALS,
@@ -32,6 +33,11 @@ private:
     void RegisterBufferObject(VisualBuffer& vBuf);
     unsigned int sizeOfElement(GLenum mode);
     unsigned int indicesForMode(GLenum mode);
+
+    void UseColorArray(VisualBuffer& colr);
+    void UseNormalArray(VisualBuffer& norm);
+
+
 
 public:
     VboManager();
@@ -51,8 +57,11 @@ public:
     void Toggle(int id);
 
     void Render(int id);
-    
+    void Render(VisualBuffer& vertBuf);
     void Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm);
+    void RenderWithNormals(VisualBuffer& vertBuf, VisualBuffer& normBuf);    
+    void RenderWithColor(VisualBuffer& vertBuf, VisualBuffer& colrBuf);
+
 
     // debug
     void dumpBufferToFile(char* filename, VisualBuffer& vb);

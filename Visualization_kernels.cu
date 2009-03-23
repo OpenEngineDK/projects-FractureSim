@@ -114,15 +114,13 @@ void updateSurface(Solid* solid, VboManager* vbom) {
 
 
 __global__ void 
-updateCenterOfMass_k(float4* buf, Body mesh, Point* points, float4* displacements) {
+updateCenterOfMass_k(float4* buf, Body body, Point* points, float4* displacements) {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (me_idx>=mesh.numTetrahedra) return;
+	if (me_idx>=body.numTetrahedra) return;
 
-    Tetrahedron tetra = mesh.tetrahedra[me_idx];
-
+    Tetrahedron tetra = body.tetrahedra[me_idx];
 	float4 pos0, pos1, pos2, pos3;
-
     pos0 = points[tetra.x] + displacements[tetra.x];
     pos1 = points[tetra.y] + displacements[tetra.y];
     pos2 = points[tetra.z] + displacements[tetra.z];
@@ -160,21 +158,21 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
     c = points[tetra.z] + displacements[tetra.z];
     d = points[tetra.w] + displacements[tetra.w];
 
-    int color_ramp_idx = me_idx;
-
     // Jump index with 12 since there is 4 faces pr. tetrahedra each with 3 vertices.
 	me_idx *= 12;
-    int colr_idx = me_idx;
+    //   int colr_idx = me_idx;
     int norm_idx = me_idx;
 
-    if ( a.x < minX ||
+    /*    if ( a.x < minX ||
          b.x < minX ||
          c.x < minX ||
          d.x < minX ) {
         for (unsigned int i=0; i<12; i++) {
             vertBuf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
         }
-    } else {
+    } else 
+    */
+{
         //float4 col = GetColor(color_ramp_idx, 0.0, mesh.numTetrahedra);
         //float4 col = make_float4(val, 0.0, 0.0, 1.0);
         float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
@@ -199,6 +197,7 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
         vertBuf[me_idx++] = d;
         vertBuf[me_idx++] = b;
 
+        // Colors are applied in Physics_k.cu
         /*        // ---------- COLORS -------------------
         colrBuf[colr_idx++] = col;
         colrBuf[colr_idx++] = col;
@@ -252,7 +251,8 @@ void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
          vbom->GetBuf(BODY_NORMALS).buf,
          *solid->body, 
          solid->vertexpool->data, 
-         solid->vertexpool->Ui_t, minX);
+         solid->vertexpool->Ui_t, 
+         minX);
 }
 
 __global__ void
@@ -277,148 +277,58 @@ void updateStressTensors(Solid* solid, VboManager* vbom) {
 }
 
 
-/*
 __global__ void
-updateMeshCentersFromDisplacements2_k(float4* buffer, Body mesh, 
-                                      Point* points, float4 *displacements)
-{
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+planeClipping_k(Body body, Point* points, float4* displacements, 
+                float4* bodyMesh, float4* bodyColr, 
+                float4* com, float minX) {
 
-	if (me_idx>=mesh.numTetrahedra) return;
+    int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+	if (me_idx>=body.numTetrahedra) return;    
 
-    Tetrahedron tetra = mesh.tetrahedra[me_idx];
+    Tetrahedron tetra = body.tetrahedra[me_idx];
+	float4 a, b, c, d;
+    a = points[tetra.x] + displacements[tetra.x];
+    b = points[tetra.y] + displacements[tetra.y];
+    c = points[tetra.z] + displacements[tetra.z];
+    d = points[tetra.w] + displacements[tetra.w];
 
-	float4 pos0, pos1, pos2, pos3;
+    // Jump index with 12 since there is 4 faces pr. tetrahedra each with 3 vertices.
+	int vert_idx = me_idx * 12;
 
-    pos0 = points[tetra.x] + displacements[tetra.x];
-    pos1 = points[tetra.y] + displacements[tetra.y];
-    pos2 = points[tetra.z] + displacements[tetra.z];
-    pos3 = points[tetra.w] + displacements[tetra.w];
+    if ( a.x < minX ||
+         b.x < minX ||
+         c.x < minX ||
+         d.x < minX ) {
+        for (unsigned int i=0; i<12; i++) {
+            bodyMesh[vert_idx++] = make_float4(0.0,0.0,0.0,0.0);
+        }
+        com[me_idx] = make_float4(0.0,0.0,0.0,0.0);
+    } else {
+        for (unsigned int i=0; i<12; i++) {
+            //            float dist = com[me_idx].x;// / 10.0f;//((minX - com[me_idx].x));
+            /*if( dist < 0 ) { 
+                dist *= -1.0f;
+            }
+            if( dist > 1.0 ) dist = 1.0;
+            */
+            bodyColr[vert_idx++].w = 1.0f;//dist;//1.0 - dist;
+        } 
+    }
+}
 
-    float4 center = (pos0 + pos1 + pos2 + pos3) / 4.0;
+void planeClipping(Solid* solid, VboManager* vbom, float minX) {
+	int gridSize = (int)ceil(((float)solid->body->numTetrahedra)/BLOCKSIZE);
 
-    //PointShape p(center);
-    //p.CopyToBuf(bufArray, me_idx);
-
-    float4 pos = center;
-    float4 dir = {0, 1.0, 0, 0};
-    VectorShape v(pos, pos + dir);
-    v.CopyToBuf(buffer, me_idx);
-
+    planeClipping_k<<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (*solid->body,
+         solid->vertexpool->data,
+         solid->vertexpool->Ui_t,
+         vbom->GetBuf(BODY_MESH).buf,
+         vbom->GetBuf(BODY_COLORS).buf,
+         vbom->GetBuf(CENTER_OF_MASS).buf,
+         minX);
     
-    PolyShape p;
-    p.CopyToBuf(buffer, me_idx);
+    CHECK_FOR_CUDA_ERROR();
+
+
 }
-*/
-
-__global__ void
-extractSurface_k(float3 *tris, Tetrahedron *tetrahedra, Point *points, unsigned int numTets)
-{
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (me_idx>=numTets)
-		return;
-
-	int zeroVertices[4];
-	int numZeroVertices = 0;
-
-	Tetrahedron tet = tetrahedra[me_idx];
-
-	if (tet.x<0) return; // illegal tetrahedron
-
-//	if (points[tet.x].distance==0)
-			zeroVertices[numZeroVertices++] = tet.x;
-//	if (points[tet.y].distance==0)
-			zeroVertices[numZeroVertices++] = tet.y;
-//	if (points[tet.z].distance==0)
-			zeroVertices[numZeroVertices++] = tet.z;
-//	if (points[tet.w].distance==0)
-			zeroVertices[numZeroVertices++] = tet.w;
-
-//	printf("numZeroes: %i", numZeroVertices);
-
-	if (numZeroVertices>=3 )
-	{
-		for (int i=0; i<3; i++)
-			tris[(3*me_idx)+i] = crop_last_dim(points[zeroVertices[i]]);
-	}
-	else
-	{
-		for (int i=0; i<3; i++)
-			tris[(3*me_idx)+i] = make_float3(0,0,0);
-	}
-}
-
-
-__global__ void
-extractSurfaceWithDisplacements_k(float3 *tris, Tetrahedron *tetrahedra, Point *points, float4 *displacements, unsigned int numTets)
-{
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (me_idx>=numTets)
-		return;
-
-	int4 tet = tetrahedra[me_idx];
-
-	if (tet.x<0) return; // illegal tetrahedron
-
-	int zeroVertices[4];
-	int numZeroVertices = 0;
-
-
-//	if (points[tetrahedra[me_idx].x].distance==0)
-			zeroVertices[numZeroVertices++] = tet.x;
-//	if (points[tetrahedra[me_idx].y].distance==0)
-			zeroVertices[numZeroVertices++] = tet.y;
-//	if (points[tetrahedra[me_idx].z].distance==0)
-			zeroVertices[numZeroVertices++] = tet.z;
-//	if (points[tetrahedra[me_idx].w].distance==0)
-			zeroVertices[numZeroVertices++] = tet.w;
-
-	//	printf("numZeroes: %i", numZeroVertices);
-
-	if (numZeroVertices>=3)
-	{
-		for (int i=0; i<3; i++)
-		{
-			float3 pos = crop_last_dim(points[zeroVertices[i]]);
-			float3 displacement = crop_last_dim(displacements[zeroVertices[i]]);
-			pos.x += displacement.x;  
-			pos.y += displacement.y;  
-			pos.z += displacement.z;  
-			tris[(3*me_idx)+i] = pos;
-		}
-
-	}
-	else
-	{
-		for (int i=0; i<3; i++)
-			tris[(3*me_idx)+i] = make_float3(0,0,0);
-	}
-}
-
-
-__global__ void updateMeshCentersFromDisplacements_k
-(float3 *centers, Body mesh, Point* points, float4 *displacements) {
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
-
-	if (me_idx>=mesh.numTetrahedra) return;
-
-    Tetrahedron tetra = mesh.tetrahedra[me_idx];
-
-	float4 pos0, pos1, pos2, pos3;
-
-    pos0 = points[tetra.x] + displacements[tetra.x];
-    pos1 = points[tetra.y] + displacements[tetra.y];
-    pos2 = points[tetra.z] + displacements[tetra.z];
-    pos3 = points[tetra.w] + displacements[tetra.w];
-
-    float4 center = (pos0 + pos1 + pos2 + pos3) / 4.0;
-
-    centers[me_idx] = crop_last_dim(center);
-    //centers[me_idx*2+1] = crop_last_dim(center);
-}
-
-
-
-

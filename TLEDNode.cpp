@@ -19,6 +19,7 @@ TLEDNode::TLEDNode() {
     renderPlane = true;
     minX = 0.0;
     plane = Create(10,40,10, Vector<4,float>(0.5,0.5,0.0,0.2));
+    dump = false;
 }
 
 TLEDNode::~TLEDNode() {
@@ -37,10 +38,10 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // PROSTATE: vpool: 3386, body tetrahedra: 16068, surface triangles: 2470
     loader = new MshObjLoader(dataDir + "PROSTATE.msh",
                               dataDir + "PROSTATE.obj");
-
-    /*
+    
+    
     //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
-    loader = new MshObjLoader(dataDir + "tand2.msh",
+    /*    loader = new MshObjLoader(dataDir + "tand2.msh",
                               dataDir + "tand2.obj");
     */
     /*
@@ -57,9 +58,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
      dataDir + "box.ascii.1.ele",
      dataDir + "box.ascii.1.smesh");
     */
-    /*
+    
     //tetrahedra: vpool: 119, body tetrahedra: 328, surface triangles: 212
-    loader = new TetGenLoader
+    /*    loader = new TetGenLoader
         (dataDir + "sphere.ascii.1.node", 
          dataDir + "sphere.ascii.1.ele", 
          dataDir + "sphere.ascii.1.smesh");
@@ -107,6 +108,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_TRIANGLES);
     // Center of mass points
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
+    //vbom->AllocBuffer(CENTER_OF_MASS_COLR, solid->body->numTetrahedra, GL_POINTS);
     // Body mesh is all tetrahedron faces with colors and normals
     vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*4, GL_TRIANGLES);
@@ -116,17 +118,16 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // Stress tensors visualizes stress planes.
     vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
     
-
     // Disabled to bypass rendering
     vbom->Disable(SURFACE_VERTICES);
+    vbom->Disable(SURFACE_NORMALS);
     vbom->Disable(CENTER_OF_MASS);
     vbom->Disable(STRESS_TENSORS);
     
-
     printf("[VboManager] Total Bytes Allocated: %i\n", totalByteAlloc);
 
     // Buffer setup
-    vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
+    //vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
 }
 
 void TLEDNode::StepPhysics() {
@@ -161,28 +162,28 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
  
     if( vbom->IsEnabled(SURFACE_VERTICES) )
         updateSurface(solid, vbom);
-
+    
     if( vbom->IsEnabled(BODY_MESH) )
         updateBodyMesh(solid, vbom, minX);
-
+    
     if( vbom->IsEnabled(CENTER_OF_MASS) )
         updateCenterOfMass(solid, vbom);
     
-    if( vbom->IsEnabled(STRESS_TENSORS) )
-        updateStressTensors(solid, vbom);
+    //if( vbom->IsEnabled(STRESS_TENSORS) )
+    //    updateStressTensors(solid, vbom);
+    
+    planeClipping(solid, vbom, minX);
 
-   vbom->UnmapAllBufferObjects();
+    vbom->UnmapAllBufferObjects();
      
     
-   /*   if( paused ) {
-       //float* data;
-       //vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VALUES), data);    
-
-            vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(EIGEN_VALUES));
-        //    vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
-                exit(-1);
-        }
-   */
+    if( dump ) {
+        //float* data;
+        //vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VALUES), data);    
+        vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
+        dump = false;
+    }
+    
 
 }
 
@@ -198,13 +199,11 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (!solid->IsInitialized()) return;
 
     // These buffers will only be rendered if they are enabled.
-    //vbom->Render(SURFACE_VERTICES);
     vbom->Render(CENTER_OF_MASS);
-    vbom->Render(STRESS_TENSORS);
+    //vbom->Render(STRESS_TENSORS);
 
-    vbom->Render(vbom->GetBuf(SURFACE_VERTICES),
-                 vbom->GetBuf(BODY_COLORS),
-                 vbom->GetBuf(SURFACE_NORMALS));
+    vbom->RenderWithNormals(vbom->GetBuf(SURFACE_VERTICES),
+                            vbom->GetBuf(SURFACE_NORMALS));
     
     vbom->Render(vbom->GetBuf(BODY_MESH), 
                  vbom->GetBuf(BODY_COLORS),

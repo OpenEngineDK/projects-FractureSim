@@ -6,16 +6,33 @@ VboManager::VboManager() {
 }
 
 VboManager::~VboManager() {
+    // Unregister all vbo's
     for (int i = 0; i<NUM_BUFFERS; i++ )
-        cudaGLUnregisterBufferObject(vb[i].vboID);
+        if( vb[i].vboID > 0 )
+            cudaGLUnregisterBufferObject(vb[i].vboID);
+
+    // Free matrix and model buffers on polygon buffers
+    for (int i = 0; i<NUM_BUFFERS; i++ )
+        if( vb[i].mode == GL_POLYGON && vb[i].vboID > 0 ) {
+            cudaFree(vb[i].matBuf);
+            cudaFree(vb[i].modelBuf);
+        }
+            
     CHECK_FOR_CUDA_ERROR();
+    
+    // Unbind buffer
+    glBindBuffer( GL_ARRAY_BUFFER, 0);
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
     for (int i = 0; i<NUM_BUFFERS; i++ )
-        glDeleteBuffersARB(1, &vb[i].vboID);
+        glDeleteBuffers(1, &vb[i].vboID);
+
+    // Check for errors
+    CHECK_FOR_GL_ERROR();
+    CHECK_FOR_CUDA_ERROR();
 
     delete[] vb;
-    printf("[VboManger] all cleaned up\n");
+    printf("[VboManger] Cleaned up\n");
 }
 
 
@@ -179,10 +196,73 @@ void VboManager::Toggle(int id) {
 }
 
 
+
+void VboManager::RenderWithNormals(VisualBuffer& vertBuf, VisualBuffer& normBuf) {
+    UseNormalArray(normBuf);
+    Render(vertBuf);
+    glDisableClientState( GL_NORMAL_ARRAY );
+}
+
+void VboManager::RenderWithColor(VisualBuffer& vertBuf, VisualBuffer& colrBuf) {
+    UseColorArray(colrBuf);
+    Render(vertBuf);
+    glDisableClientState( GL_COLOR_ARRAY );
+}
+
+void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm) {
+    UseColorArray(colr);  
+    UseNormalArray(norm);
+    Render(vert);
+    glDisableClientState( GL_COLOR_ARRAY );
+    glDisableClientState( GL_NORMAL_ARRAY );
+}
+
+void VboManager::Render(int id) {
+    VisualBuffer& buf = vb[id];
+    if( buf.enabled )
+        Render(buf);
+}
+
+void VboManager::Render(VisualBuffer& vert) {
+    if( vert.enabled && vert.vboID > 0 ) {
+        glEnable(GL_NORMALIZE); 
+        glEnable(GL_COLOR_MATERIAL);
+        //glShadeModel(GL_FLAT);
+        glEnable(GL_LIGHTING);
+        glEnable(GL_LIGHT0);
+
+        // If the visual buffer is a polygon the vertex buffer
+        // must be calculated by applying transformation matrix to model.
+        if( vert.mode == GL_POLYGON ) {
+            CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vert.buf, vert.vboID));
+            applyTransformation(vert);
+            CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vert.vboID ));
+ 
+            glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
+            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glDrawArrays(GL_TRIANGLES, 0, vert.numIndices);
+            //                printf("numIndices: %i\n", buf.numIndices);
+            CHECK_FOR_GL_ERROR();
+        }
+        else {
+            glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
+            glPointSize(2);
+            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glDrawArrays(vert.mode, 0, vert.numIndices);
+            CHECK_FOR_GL_ERROR();
+        }
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+}
+
+
 /**
  * Render all visual buffers that are enabled for rendering.
  */
-void VboManager::Render(int id) {
+/*void VboManager::Render(int id) {
     VisualBuffer& buf = vb[id];
     if( buf.enabled && buf.vboID > 0 ) {
         // Set color
@@ -197,12 +277,6 @@ void VboManager::Render(int id) {
         glColor4f(color.x,color.y,color.z,color.w);
      
         // Draw VBO
-        /*
-          glShadeModel(GL_FLAT);
-          glEnable(GL_DEPTH_TEST);
-          glEnable(GL_AUTO_NORMAL); 
-          glEnable(GL_NORMALIZE); 
-        */
         // If the visual buffer is a polygon the vertex buffer
         // must be calculated by applying transformation matrix to model.
         if( buf.mode == GL_POLYGON ) {
@@ -233,34 +307,23 @@ void VboManager::Render(int id) {
         CHECK_FOR_GL_ERROR();
     }
 }
-
-
+*/
+/*
 void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm) {
-    if( vert.enabled && vert.vboID > 0 && colr.vboID > 0 && norm.vboID > 0 ) {
+    if( vert.enabled && vert.vboID ) {
         // Draw VBO
-        /*glShadeModel(GL_FLAT);
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_AUTO_NORMAL); 
-        */
-
-        //       glEnable(GL_CULL_FACE);
+ 
+        // glEnable(GL_CULL_FACE);
         glEnable(GL_NORMALIZE); 
         glEnable(GL_COLOR_MATERIAL);
-        glShadeModel(GL_FLAT);
-
+        //glShadeModel(GL_FLAT);
+        
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
-
-        // Enable color array
-        glBindBufferARB(GL_ARRAY_BUFFER, colr.vboID);
-        glColorPointer( 3, GL_FLOAT, sizeof(float4), 0 );
-        glEnableClientState( GL_COLOR_ARRAY );
-            
-        // Enable normal array
-        glBindBufferARB(GL_ARRAY_BUFFER, norm.vboID);
-        glNormalPointer(GL_FLOAT, sizeof(float4), 0);
-        glEnableClientState(GL_NORMAL_ARRAY);
  
+        UseColorArray(colr);
+        UseNormalArray(norm);
+
         // If the visual buffer is a polygon the vertex buffer
         // must be calculated by applying transformation matrix to model.
         if( vert.mode == GL_POLYGON ) {
@@ -275,8 +338,9 @@ void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& no
             glDrawArrays(GL_TRIANGLES, 0, vert.numIndices);
         }
         else {
+            glPointSize(4);
+
             glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
-            glPointSize(2);
             glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
             glEnableClientState(GL_VERTEX_ARRAY);
  
@@ -295,6 +359,26 @@ void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& no
     }
 
 }
+*/
+void VboManager::UseColorArray(VisualBuffer& colr) {
+    // Enable normal array
+    if( colr.vboID > 0 ) {
+        glBindBufferARB(GL_ARRAY_BUFFER, colr.vboID);
+        glColorPointer(4, GL_FLOAT, sizeof(float4), 0);
+        glEnableClientState(GL_COLOR_ARRAY);
+    }
+}
+
+void VboManager::UseNormalArray(VisualBuffer& norm) {
+    // Enable normal array
+    if( norm.vboID > 0 ) {
+        glBindBufferARB(GL_ARRAY_BUFFER, norm.vboID);
+        glNormalPointer(GL_FLOAT, sizeof(float4), 0);
+        glEnableClientState(GL_NORMAL_ARRAY);
+    }
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //! Check if the result is correct or write data to file for external
@@ -344,7 +428,7 @@ void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, float* data) {
     float avgMin = 0;
     float avgMax = 0;
 
-    for( int i=0; i<vb.numIndices; i++ ) {
+    for( unsigned int i=0; i<vb.numIndices; i++ ) {
         //printf("[%i] %f ", i, data[i]);
         if( data[i] > maxVal ) maxVal = data[i];
         if( data[i] < minVal ) minVal = data[i];

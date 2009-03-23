@@ -30,7 +30,7 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
         this->point = point;
     }
     void Handle(KeyboardEventArg arg) {
-        float xStep = 5.0f;
+        float xStep = 1.0f;
         if (arg.type == EVENT_PRESS) {
             switch (arg.sym) {
             case KEY_r:
@@ -66,6 +66,9 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 break;
             case KEY_p:
                 tled.renderPlane = !tled.renderPlane;
+                break;
+            case KEY_x:
+                tled.dump = true;
                 break;
             case KEY_t:
                 if (tled.paused)

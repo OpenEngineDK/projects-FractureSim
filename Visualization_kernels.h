@@ -14,5 +14,7 @@ void updateSurface(Solid* solid, VboManager* vbom);
 void updateCenterOfMass(Solid* solid, VboManager* vbom);
 void updateBodyMesh(Solid* solid, VboManager* vbom, float minX);
 void updateStressTensors(Solid* solid, VboManager* vbom);
+void planeClipping(Solid* solid, VboManager* vbom, float minX);
+
 
 #endif // _VISUALIZATION_KERNELS_H_

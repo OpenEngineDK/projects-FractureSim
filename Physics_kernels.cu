@@ -268,7 +268,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 
     longestEv *= maxEv > minEv ? maxSign : minSign;
  
-    //float4 col = make_float4(0.2, 0.5, 0.1, 1.0);
+    //    float4 col = make_float4(0.2, 0.5, 0.1, 1.0);
     float4 col = GetColor(-longestEv, -1000.0, 500.0);
     int colr_idx = me_idx*12;
 
