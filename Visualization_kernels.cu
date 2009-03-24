@@ -302,7 +302,7 @@ planeClipping_k(Body body, Point* points, float4* displacements,
         for (unsigned int i=0; i<12; i++) {
             bodyMesh[vert_idx++] = make_float4(0.0,0.0,0.0,0.0);
         }
-        com[me_idx] = make_float4(0.0,0.0,0.0,0.0);
+        //com[me_idx] = make_float4(0.0,0.0,0.0,0.0);
     } else {
         for (unsigned int i=0; i<12; i++) {
             //            float dist = com[me_idx].x;// / 10.0f;//((minX - com[me_idx].x));

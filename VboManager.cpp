@@ -105,24 +105,28 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
     vb[id].mode = GL_POLYGON;
     vb[id].numIndices = numElm * ps.numVertices;
 
+
     // ------------------ MATRIX BUFFER ----------------- //
+    cudaError_t stat;
     int matByteSize = numElm * sizeof(float4) * 4; // float4 x 4 = 16 (4x4 matix) 
     // Cuda malloc array for matrix transformations of the vertices.
-    cudaMalloc((void**)&vb[id].matBuf, matByteSize); 
-    cudaMemset(vb[id].matBuf, 0, matByteSize);
-    totalByteAlloc += matByteSize;
+    stat = cudaMalloc((void**)&(vb[id].matBuf), matByteSize);
+    if( stat == cudaSuccess )
+        cudaMemset(vb[id].matBuf, 0, matByteSize);
+    else printf("[VboManager] Error: could not allocate matrix buffer\n");
+    
 
     // ------------------ MODEL BUFFER --------------- //
     int byteSize = ps.numVertices * sizeof(float4);
-    cudaMalloc((void**)&(vb[id].modelBuf), byteSize); 
-    totalByteAlloc += byteSize;
-
+    stat = cudaMalloc((void**)&(vb[id].modelBuf), byteSize); 
+    if( stat != cudaSuccess )
+        printf("[VboManager] Error: could not allocate model buffer\n");
     // Copy the poly shape once to cuda.
-    cudaError_t stat;
     stat = cudaMemcpy(vb[id].modelBuf, ps.vertices, byteSize, cudaMemcpyHostToDevice);
     if( stat == cudaSuccess )
         printf("PolyShape uploaded successfully\n");
- 
+
+
     // ----------- VERTEX BUFFER ------------------- //            
     // Each element has a float4 pr. vertex
     vb[id].byteSize = numElm * ps.numVertices * sizeof(float4); 
@@ -144,7 +148,7 @@ VisualBuffer& VboManager::GetBuf(unsigned int id) {
 void VboManager::MapAllBufferObjects() {   
     // Map VBO id to buffer
     for( int i=0; i<NUM_BUFFERS; i++ ) 
-        if( vb[i].mode != GL_POLYGON ) {
+        if( vb[i].mode != GL_POLYGON && vb[i].vboID > 0 ) {
             //printf("mapping bufferAddress %i -  with ID: %i \n", vb[i].buf, vb[i].vboID);
             CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[i].buf, vb[i].vboID));
         }
@@ -153,7 +157,7 @@ void VboManager::MapAllBufferObjects() {
 void VboManager::UnmapAllBufferObjects() {
     // Unmap VBO
     for( int i=0; i<NUM_BUFFERS; i++ )
-        if( vb[i].mode != GL_POLYGON ) {
+        if( vb[i].mode != GL_POLYGON && vb[i].vboID > 0 ) {
             CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb[i].vboID ));
         }
 }

@@ -98,7 +98,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
-    PolyShape ps("box.obj");
+    PolyShape ps("Box12.obj");
 
     // Initialize the Visualizer
     vbom = new VboManager();
@@ -114,7 +114,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(BODY_NORMALS, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(EIGEN_VALUES, solid->body->numTetrahedra, GL_POINTS);
-
+    
     // Stress tensors visualizes stress planes.
     vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
     
@@ -127,7 +127,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     printf("[VboManager] Total Bytes Allocated: %i\n", totalByteAlloc);
 
     // Buffer setup
-    //vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
+    vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
 }
 
 void TLEDNode::StepPhysics() {
@@ -169,8 +169,8 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if( vbom->IsEnabled(CENTER_OF_MASS) )
         updateCenterOfMass(solid, vbom);
     
-    //if( vbom->IsEnabled(STRESS_TENSORS) )
-    //    updateStressTensors(solid, vbom);
+    if( vbom->IsEnabled(STRESS_TENSORS) )
+        updateStressTensors(solid, vbom);
     
     planeClipping(solid, vbom, minX);
 
@@ -200,7 +200,7 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
 
     // These buffers will only be rendered if they are enabled.
     vbom->Render(CENTER_OF_MASS);
-    //vbom->Render(STRESS_TENSORS);
+    vbom->Render(STRESS_TENSORS);
 
     vbom->RenderWithNormals(vbom->GetBuf(SURFACE_VERTICES),
                             vbom->GetBuf(SURFACE_NORMALS));

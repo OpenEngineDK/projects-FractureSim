@@ -96,7 +96,7 @@ int main(int argc, char** argv) {
     setup->GetKeyboard().KeyEvent().Attach(*kh);
 
 
-    setup->AddDataDirectory("resources/");
+    setup->AddDataDirectory("projects/TLED/data/models/");
     
     // Start the engine.
     setup->GetEngine().Start();
