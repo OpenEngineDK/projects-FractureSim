@@ -1,6 +1,8 @@
 #ifndef _SURFACE_
 #define _SURFACE_
 
+#include "CUDA.h"
+
 typedef uint3 Triangle;
 
 class Surface {

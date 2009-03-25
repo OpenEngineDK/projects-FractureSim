@@ -16,13 +16,15 @@ enum {
     SURFACE_VERTICES = 0,
     SURFACE_NORMALS,
     CENTER_OF_MASS,
-    //CENTER_OF_MASS_COLR,
+    //    CENTER_OF_MASS_COLR,
 
     BODY_MESH,
     BODY_COLORS,
     BODY_NORMALS,
+    EIGEN_VECTORS,
     EIGEN_VALUES,
     STRESS_TENSORS,
+    STRESS_TENSOR_COLORS,
     NUM_BUFFERS
 };
 
@@ -35,7 +37,7 @@ private:
     unsigned int sizeOfElement(GLenum mode);
     unsigned int indicesForMode(GLenum mode);
 
-    void UseColorArray(VisualBuffer& colr);
+    void UseColorArray(VisualBuffer& colr, bool useAlpha);
     void UseNormalArray(VisualBuffer& norm);
 
 
@@ -60,8 +62,9 @@ public:
     void Render(int id);
     void Render(VisualBuffer& vertBuf);
     void Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm);
+    void Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm, bool useAlpha);
     void RenderWithNormals(VisualBuffer& vertBuf, VisualBuffer& normBuf);    
-    void RenderWithColor(VisualBuffer& vertBuf, VisualBuffer& colrBuf);
+    void RenderWithColors(VisualBuffer& vertBuf, VisualBuffer& colrBuf, bool useAlpha);
 
 
     // debug

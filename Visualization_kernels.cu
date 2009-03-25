@@ -159,86 +159,53 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
     d = points[tetra.w] + displacements[tetra.w];
 
     // Jump index with 12 since there is 4 faces pr. tetrahedra each with 3 vertices.
+    int norm_idx = me_idx*12;
 	me_idx *= 12;
-    //   int colr_idx = me_idx;
-    int norm_idx = me_idx;
 
-    /*    if ( a.x < minX ||
-         b.x < minX ||
-         c.x < minX ||
-         d.x < minX ) {
-        for (unsigned int i=0; i<12; i++) {
-            vertBuf[me_idx++] = make_float4(0.0,0.0,0.0,0.0);
-        }
-    } else 
-    */
-{
-        //float4 col = GetColor(color_ramp_idx, 0.0, mesh.numTetrahedra);
-        //float4 col = make_float4(val, 0.0, 0.0, 1.0);
-        float4 col = make_float4(0.2, 0.1, 0.5, 1.0);
 
-        // 0     2     3
-        vertBuf[me_idx++] = a;
-        vertBuf[me_idx++] = b;
-        vertBuf[me_idx++] = c;
-
-        // 0     3     1
-        vertBuf[me_idx++] = a;
-        vertBuf[me_idx++] = c;
-        vertBuf[me_idx++] = d;
-
-        // 0     1     2
-        vertBuf[me_idx++] = b;
-        vertBuf[me_idx++] = d;
-        vertBuf[me_idx++] = c;
-
-        // 1     2     3
-        vertBuf[me_idx++] = a;
-        vertBuf[me_idx++] = d;
-        vertBuf[me_idx++] = b;
-
-        // Colors are applied in Physics_k.cu
-        /*        // ---------- COLORS -------------------
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
+    // 0     2     3
+    vertBuf[me_idx++] = a;
+    vertBuf[me_idx++] = b;
+    vertBuf[me_idx++] = c;
     
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-        colrBuf[colr_idx++] = col;
-        */
-        // -----------  HARD NORMALS  -------------
-        float4 normal = calcNormal(&a,&b,&c);
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-
-        // Calculate hard normals
-        normal = calcNormal(&a,&c,&d);
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-
-        // Calculate hard normals
-        normal = calcNormal(&b,&d,&c);
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-
-        // Calculate hard normals
-        normal = calcNormal(&a,&d,&b);
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-        normBuf[norm_idx++] = normal;
-    }
+    // 0     3     1
+    vertBuf[me_idx++] = a;
+    vertBuf[me_idx++] = c;
+    vertBuf[me_idx++] = d;
+    
+    // 0     1     2
+    vertBuf[me_idx++] = b;
+    vertBuf[me_idx++] = d;
+    vertBuf[me_idx++] = c;
+    
+    // 1     2     3
+    vertBuf[me_idx++] = a;
+    vertBuf[me_idx++] = d;
+    vertBuf[me_idx++] = b;
+ 
+   // -----------  HARD NORMALS  -------------
+    float4 normal = calcNormal(&a,&b,&c);
+    normBuf[norm_idx++] = normal;
+    normBuf[norm_idx++] = normal;
+    normBuf[norm_idx++] = normal;
+    
+    // Calculate hard normals
+    normal = calcNormal(&a,&c,&d);
+    normBuf[norm_idx++] = normal;
+    normBuf[norm_idx++] = normal;
+    normBuf[norm_idx++] = normal;
+    
+    // Calculate hard normals
+    normal = calcNormal(&b,&d,&c);
+    normBuf[norm_idx++] = normal;
+    normBuf[norm_idx++] = normal;
+    normBuf[norm_idx++] = normal;
+    
+    // Calculate hard normals
+    normal = calcNormal(&a,&d,&b);
+    normBuf[norm_idx++] = normal;
+    normBuf[norm_idx++] = normal;
+    normBuf[norm_idx++] = normal;
 }
 
 void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
@@ -256,24 +223,37 @@ void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
 }
 
 __global__ void
-updateStressTensors_k(float4* buf, Body mesh) {
+updateStressTensors_k(Body body, 
+                      float4* matBuf,
+                      float4* com, 
+                      float4* eigenVectors) {
+
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (me_idx>=mesh.numTetrahedra) return;
+	if (me_idx>=body.numTetrahedra) return;
+
+    float4 center = com[me_idx];
 
     Matrix4f m;
-    m.SetPos(me_idx, me_idx,0);
-    m.SetScale(1, 1, 1);
+    m.SetPos(center.x, center.y, center.z);
+    m.SetScale(1.0, 1.0, 1.0);
     
+    m.row0 = eigenVectors[me_idx+0];
+    m.row1 = eigenVectors[me_idx+1];
+    m.row2 = eigenVectors[me_idx+2];
 
-    m.CopyToBuf(buf, me_idx);
+    m.CopyToBuf(matBuf, me_idx);
 }
 
 void updateStressTensors(Solid* solid, VboManager* vbom) {
 	int gridSize = (int)ceil(((float)solid->body->numTetrahedra)/BLOCKSIZE);
 
-    updateStressTensors_k<<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>(vbom->GetBuf(STRESS_TENSORS).matBuf, 
-                                                                                   *solid->body);
+    updateStressTensors_k
+        <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (*solid->body,
+         vbom->GetBuf(STRESS_TENSORS).matBuf,
+         vbom->GetBuf(CENTER_OF_MASS).buf,
+         vbom->GetBuf(EIGEN_VECTORS).buf);
 }
 
 
@@ -302,16 +282,17 @@ planeClipping_k(Body body, Point* points, float4* displacements,
         for (unsigned int i=0; i<12; i++) {
             bodyMesh[vert_idx++] = make_float4(0.0,0.0,0.0,0.0);
         }
-        //com[me_idx] = make_float4(0.0,0.0,0.0,0.0);
+        com[me_idx] = make_float4(0.0,0.0,0.0,0.0);
     } else {
         for (unsigned int i=0; i<12; i++) {
-            //            float dist = com[me_idx].x;// / 10.0f;//((minX - com[me_idx].x));
-            /*if( dist < 0 ) { 
+            float dist = (minX - com[me_idx].x);// / 10.0f;//((minX - com[me_idx].x));
+            if( dist < 0 ) { 
                 dist *= -1.0f;
             }
-            if( dist > 1.0 ) dist = 1.0;
-            */
-            bodyColr[vert_idx++].w = 1.0f;//dist;//1.0 - dist;
+            
+            //if( dist > 1.0 ) dist = 1.0;
+            
+            bodyColr[vert_idx++].w = 2.0f / dist;//dist;//1.0 - dist;
         } 
     }
 }

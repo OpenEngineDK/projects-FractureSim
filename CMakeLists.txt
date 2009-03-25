@@ -42,9 +42,7 @@ CUDA_ADD_LIBRARY(cuda_kernels
   Physics_kernels.cu
   Visualization_kernels.cu
   Precompute_kernels.cu
-  Surface.cu
-  Body.cu
-  VertexPool.cu
+  CudaMem.cu
   ${CUDA_TARGET_LINK}
   ${CUDA_CUT_TARGET_LINK}
 )
@@ -59,6 +57,9 @@ SET( PROJECT_SOURCES
   # Add all the cpp source files here
   main.cpp
   TLEDNode.cpp
+  VertexPool.cpp
+  Surface.cpp
+  Body.cpp
   GridNode.cpp
   CoordSystemNode.cpp
   MshObjLoader.cpp

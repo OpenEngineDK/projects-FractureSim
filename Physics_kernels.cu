@@ -92,7 +92,8 @@ texture<float4,  1, cudaReadModeElementType> _tex;
 __global__ void
 calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
                   int4 *writeIndices, float4 *pointForces, int maxPointForces, float mu, float lambda, 
-                  unsigned int numTets, float4* colrBuf, float4* eigBuf)
+                  unsigned int numTets, float4* colrBuf, float4* tensorColr, 
+                  float4* eigenVectors, float4* eigenValues)
 {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -241,17 +242,22 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 //	S(1,3) = mu*(-CI(3,1)) + lambda*J*(J-1.0f)*CI(3,1); // IS THIS RIGHT?? (1,3) instead?
 
     // Calculate eigen vectors and values and map to colors
-    double eigenVector[3][3];
-    double eigenValue[3];
-    s_tensor.calcEigenDecomposition(eigenVector, eigenValue);
-    
-    eigBuf[me_idx] = make_float4(eigenValue[0], eigenValue[1], eigenValue[2], 0);
+    double eVector[3][3];
+    double eValue[3];
+    s_tensor.calcEigenDecomposition(eVector, eValue);
+
+    // Eigen value one corresponds to eigen vector one, etc.. 
+    eigenValues[me_idx] = make_float4(eValue[0], eValue[1], eValue[2], 0);
+
+    eigenVectors[me_idx+0] = make_float4(eVector[0][0],eVector[0][1],eVector[0][2], 0);
+    eigenVectors[me_idx+1] = make_float4(eVector[1][0],eVector[1][1],eVector[1][2], 0);
+    eigenVectors[me_idx+2] = make_float4(eVector[2][0],eVector[2][1],eVector[2][2], 0);
 
     int maxSign = 1;
     int minSign = 1;
 
-    double maxEv = max( max( eigenValue[0], eigenValue[1]), eigenValue[2] );
-    double minEv = min( min( eigenValue[0], eigenValue[1]), eigenValue[2] );
+    double maxEv = max( max( eValue[0], eValue[1]), eValue[2] );
+    double minEv = min( min( eValue[0], eValue[1]), eValue[2] );
 
     if( maxEv < 0 ){
         maxSign = -1;
@@ -262,14 +268,13 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
         minEv *= -1;
     }
     double longestEv = maxEv > minEv ? maxEv : minEv;
-
-    //longestEv *= longestEv;
-    //longestEv /= 4;
-
     longestEv *= maxEv > minEv ? maxSign : minSign;
  
-    //    float4 col = make_float4(0.2, 0.5, 0.1, 1.0);
-    float4 col = GetColor(-longestEv, -1000.0, 500.0);
+    //float4 col = make_float4((numTets/me_idx), 0.5, 0.1, 1.0);
+    float4 col = GetColor(-longestEv, -1000.0, 1500.0);
+
+    //    tensorColr[me_idx] = col;
+    
     int colr_idx = me_idx*12;
 
     // ---------- COLORS -------------------
@@ -284,7 +289,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
-
+    
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
@@ -411,6 +416,8 @@ void calculateInternalForces(Solid* solid, VboManager* vbom)  {
 		state->lambda,
 		mesh->numTetrahedra,
         vbom->GetBuf(BODY_COLORS).buf,
+        vbom->GetBuf(STRESS_TENSOR_COLORS).buf,
+        vbom->GetBuf(EIGEN_VECTORS).buf,
         vbom->GetBuf(EIGEN_VALUES).buf);
 
 	// free textures

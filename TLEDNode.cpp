@@ -17,6 +17,7 @@ TLEDNode::TLEDNode() {
     numIterations = 25;
     paused = false;
     renderPlane = true;
+    useAlphaBlending = false;
     minX = 0.0;
     plane = Create(10,40,10, Vector<4,float>(0.5,0.5,0.0,0.2));
     dump = false;
@@ -41,9 +42,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     
     
     //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
-    /*    loader = new MshObjLoader(dataDir + "tand2.msh",
-                              dataDir + "tand2.obj");
-    */
+    //        loader = new MshObjLoader(dataDir + "tand2.msh",
+    //                          dataDir + "tand2.obj");
+    
     /*
     //tetrahedra: vpool: 4, body tetrahedra: 1, surface triangles: 4
     loader = new TetGenLoader
@@ -89,16 +90,18 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     //solid->vertexpool->Scale(5); // tand2, tetrahedra and box
     //solid->vertexpool->Scale(30); // bunny
     //solid->vertexpool->Scale(0.3); // sphere
-
+    
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
     solid->vertexpool->Move(0,30,0);
-    precompute(solid, 0.001f, 0.0f, 0.0f, 10007.0f, 5500.0f, 0.5f, 10.0f); //stiff
+    precompute(solid, 0.001f, 0.0f, 0.0f, 10007.0f, 5500.0f, 0.3f, 10.0f); //stiff
 	//precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f); //soft
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
+    //PolyShape ps("FlightArrow7.obj");
     PolyShape ps("Box12.obj");
+    //PolyShape ps("Sphere80.obj");
 
     // Initialize the Visualizer
     vbom = new VboManager();
@@ -108,15 +111,17 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_TRIANGLES);
     // Center of mass points
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
-    //vbom->AllocBuffer(CENTER_OF_MASS_COLR, solid->body->numTetrahedra, GL_POINTS);
+    //    vbom->AllocBuffer(CENTER_OF_MASS_COLR, solid->body->numTetrahedra, GL_POINTS);
     // Body mesh is all tetrahedron faces with colors and normals
     vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
-    vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*4, GL_TRIANGLES);
-    vbom->AllocBuffer(BODY_NORMALS, solid->body->numTetrahedra*4, GL_TRIANGLES);
+    vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*12, GL_POINTS);
+    vbom->AllocBuffer(BODY_NORMALS, solid->body->numTetrahedra*12, GL_POINTS);
+    vbom->AllocBuffer(EIGEN_VECTORS, solid->body->numTetrahedra*3, GL_POINTS);
     vbom->AllocBuffer(EIGEN_VALUES, solid->body->numTetrahedra, GL_POINTS);
     
     // Stress tensors visualizes stress planes.
     vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
+    //vbom->AllocBuffer(STRESS_TENSOR_COLORS, solid->body->numTetrahedra, GL_POINTS);
     
     // Disabled to bypass rendering
     vbom->Disable(SURFACE_VERTICES);
@@ -163,19 +168,19 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if( vbom->IsEnabled(SURFACE_VERTICES) )
         updateSurface(solid, vbom);
     
-    if( vbom->IsEnabled(BODY_MESH) )
-        updateBodyMesh(solid, vbom, minX);
-    
-    if( vbom->IsEnabled(CENTER_OF_MASS) )
+    if( vbom->IsEnabled(CENTER_OF_MASS) || vbom->IsEnabled(STRESS_TENSORS) )
         updateCenterOfMass(solid, vbom);
     
-    if( vbom->IsEnabled(STRESS_TENSORS) )
-        updateStressTensors(solid, vbom);
-    
+    if( vbom->IsEnabled(BODY_MESH) )
+        updateBodyMesh(solid, vbom, minX);
+
+
     planeClipping(solid, vbom, minX);
 
+    if( vbom->IsEnabled(STRESS_TENSORS) )
+        updateStressTensors(solid, vbom);
+       
     vbom->UnmapAllBufferObjects();
-     
     
     if( dump ) {
         //float* data;
@@ -183,8 +188,6 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
         dump = false;
     }
-    
-
 }
 
 void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
@@ -201,13 +204,14 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     // These buffers will only be rendered if they are enabled.
     vbom->Render(CENTER_OF_MASS);
     vbom->Render(STRESS_TENSORS);
+    //vbom->RenderWithColors(vbom->GetBuf(STRESS_TENSORS), vbom->GetBuf(STRESS_TENSOR_COLORS));
 
     vbom->RenderWithNormals(vbom->GetBuf(SURFACE_VERTICES),
                             vbom->GetBuf(SURFACE_NORMALS));
     
     vbom->Render(vbom->GetBuf(BODY_MESH), 
                  vbom->GetBuf(BODY_COLORS),
-                 vbom->GetBuf(BODY_NORMALS));
+                 vbom->GetBuf(BODY_NORMALS), useAlphaBlending);
     
     // needs to be last, because it is transparent
     if (renderPlane) 

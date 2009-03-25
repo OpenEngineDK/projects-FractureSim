@@ -1,4 +1,5 @@
 #include "VboManager.h"
+#include "CudaMem.h"
 #include "CUDA.h"
 
 VboManager::VboManager() {
@@ -110,22 +111,21 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
     cudaError_t stat;
     int matByteSize = numElm * sizeof(float4) * 4; // float4 x 4 = 16 (4x4 matix) 
     // Cuda malloc array for matrix transformations of the vertices.
-    stat = cudaMalloc((void**)&(vb[id].matBuf), matByteSize);
+    stat = CudaMemAlloc((void**)&(vb[id].matBuf), matByteSize);
     if( stat == cudaSuccess )
-        cudaMemset(vb[id].matBuf, 0, matByteSize);
+        CudaMemset(vb[id].matBuf, 0, matByteSize);
     else printf("[VboManager] Error: could not allocate matrix buffer\n");
     
 
     // ------------------ MODEL BUFFER --------------- //
     int byteSize = ps.numVertices * sizeof(float4);
-    stat = cudaMalloc((void**)&(vb[id].modelBuf), byteSize); 
+    stat = CudaMemAlloc((void**)&(vb[id].modelBuf), byteSize);
     if( stat != cudaSuccess )
         printf("[VboManager] Error: could not allocate model buffer\n");
     // Copy the poly shape once to cuda.
-    stat = cudaMemcpy(vb[id].modelBuf, ps.vertices, byteSize, cudaMemcpyHostToDevice);
+    stat = CudaMemcpy(vb[id].modelBuf, ps.vertices, byteSize, cudaMemcpyHostToDevice);
     if( stat == cudaSuccess )
         printf("PolyShape uploaded successfully\n");
-
 
     // ----------- VERTEX BUFFER ------------------- //            
     // Each element has a float4 pr. vertex
@@ -168,7 +168,7 @@ void VboManager::UnmapAllBufferObjects() {
  * @param id of visual buffer.
  */
 bool VboManager::IsEnabled(int id) { 
-    return vb[id].enabled;
+    return vb[id].enabled && vb[id].vboID > 0;
 }
 
 /**
@@ -207,18 +207,30 @@ void VboManager::RenderWithNormals(VisualBuffer& vertBuf, VisualBuffer& normBuf)
     glDisableClientState( GL_NORMAL_ARRAY );
 }
 
-void VboManager::RenderWithColor(VisualBuffer& vertBuf, VisualBuffer& colrBuf) {
-    UseColorArray(colrBuf);
+void VboManager::RenderWithColors(VisualBuffer& vertBuf, VisualBuffer& colrBuf, bool useAlpha) {
+    if( useAlpha )
+        glDisable(GL_DEPTH_TEST);
+
+    UseColorArray(colrBuf, useAlpha);
     Render(vertBuf);
-    glDisableClientState( GL_COLOR_ARRAY );
+    glDisableClientState(GL_COLOR_ARRAY);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm) {
-    UseColorArray(colr);  
+    Render(vert, colr, norm, false);
+}
+
+void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm, bool useAlpha) {
+    if( useAlpha )
+        glDisable(GL_DEPTH_TEST);
+
+    UseColorArray(colr, useAlpha);  
     UseNormalArray(norm);
     Render(vert);
-    glDisableClientState( GL_COLOR_ARRAY );
-    glDisableClientState( GL_NORMAL_ARRAY );
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void VboManager::Render(int id) {
@@ -234,6 +246,11 @@ void VboManager::Render(VisualBuffer& vert) {
         //glShadeModel(GL_FLAT);
         glEnable(GL_LIGHTING);
         glEnable(GL_LIGHT0);
+       
+        //glDisable(GL_CULL_FACE);
+        //glEnable(GL_CULL_FACE);
+        //glCullFace(GL_BACK);
+        //glFrontFace(GL_CW /* or GL_CCW */);
 
         // If the visual buffer is a polygon the vertex buffer
         // must be calculated by applying transformation matrix to model.
@@ -246,7 +263,7 @@ void VboManager::Render(VisualBuffer& vert) {
             glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
             glEnableClientState(GL_VERTEX_ARRAY);
             glDrawArrays(GL_TRIANGLES, 0, vert.numIndices);
-            //                printf("numIndices: %i\n", buf.numIndices);
+
             CHECK_FOR_GL_ERROR();
         }
         else {
@@ -261,6 +278,103 @@ void VboManager::Render(VisualBuffer& vert) {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }
+
+void VboManager::UseColorArray(VisualBuffer& colr, bool useAlpha) {
+    // Enable normal array
+    if( colr.vboID > 0 ) {
+        glBindBufferARB(GL_ARRAY_BUFFER, colr.vboID);
+        if( useAlpha )
+            glColorPointer(4, GL_FLOAT, sizeof(float4), 0);
+        else
+            glColorPointer(3, GL_FLOAT, sizeof(float4), 0);
+        glEnableClientState(GL_COLOR_ARRAY);
+    }
+}
+
+void VboManager::UseNormalArray(VisualBuffer& norm) {
+    // Enable normal array
+    if( norm.vboID > 0 ) {
+        glBindBufferARB(GL_ARRAY_BUFFER, norm.vboID);
+        glNormalPointer(GL_FLOAT, sizeof(float4), 0);
+        glEnableClientState(GL_NORMAL_ARRAY);
+    }
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+//! Check if the result is correct or write data to file for external
+//! regression testing
+////////////////////////////////////////////////////////////////////////////////
+void VboManager::dumpBufferToFile(char* filename, VisualBuffer& vb){
+    return dumpBufferToFile(filename, vb.vboID, vb.byteSize);
+}
+
+void VboManager::dumpBufferToFile(char* filename, GLuint vboID, unsigned int size) {
+    CUDA_SAFE_CALL(cudaGLUnregisterBufferObject(vboID));
+
+    // map buffer object
+    glBindBuffer( GL_ARRAY_BUFFER_ARB, vboID );
+    float* data = (float*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_ONLY);
+
+    // write file for regression test
+    CUT_SAFE_CALL( cutWriteFilef( filename, data, size, false));
+ 
+    // unmap GL buffer object
+    if( ! glUnmapBuffer( GL_ARRAY_BUFFER)) {
+        fprintf( stderr, "Unmap buffer failed.\n");
+        fflush( stderr);
+    }
+
+    CUDA_SAFE_CALL(cudaGLRegisterBufferObject(vboID));
+
+    CHECK_FOR_CUDA_ERROR();
+    CHECK_FOR_GL_ERROR();
+}
+
+void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, float* data) {
+
+    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb.buf, vb.vboID));
+
+    // Alloc buffer
+    data = (float*)malloc(vb.byteSize);
+    // Cop
+    CudaMemcpy(data, vb.buf, vb.byteSize, cudaMemcpyDeviceToHost);
+
+    float minVal = 0;
+    float maxVal = 0;
+
+    static float totalMinVal = 0;
+    static float totalMaxVal = 0;
+
+    float avgMin = 0;
+    float avgMax = 0;
+
+    for( unsigned int i=0; i<vb.numIndices; i++ ) {
+        //printf("[%i] %f ", i, data[i]);
+        if( data[i] > maxVal ) maxVal = data[i];
+        if( data[i] < minVal ) minVal = data[i];
+        
+        if( data[i] > 0 ) avgMax += data[i];
+        if( data[i] < 0 ) avgMin += data[i]; 
+    }
+    if( maxVal > totalMaxVal ) totalMaxVal = maxVal;
+    if( minVal < totalMinVal ) totalMinVal = minVal;
+
+    avgMin /= vb.numIndices;
+    avgMax /= vb.numIndices;
+
+    printf("Max: %f, min: %f  -  overall max: %f, min: %f  - average max: %f, min %f\n", maxVal, minVal, totalMaxVal, totalMinVal, avgMax, avgMin);
+
+    free(data);
+
+    CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb.vboID ));
+    
+    CHECK_FOR_CUDA_ERROR();
+    CHECK_FOR_GL_ERROR();
+}
+
+
 
 
 /**
@@ -364,94 +478,3 @@ void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& no
 
 }
 */
-void VboManager::UseColorArray(VisualBuffer& colr) {
-    // Enable normal array
-    if( colr.vboID > 0 ) {
-        glBindBufferARB(GL_ARRAY_BUFFER, colr.vboID);
-        glColorPointer(4, GL_FLOAT, sizeof(float4), 0);
-        glEnableClientState(GL_COLOR_ARRAY);
-    }
-}
-
-void VboManager::UseNormalArray(VisualBuffer& norm) {
-    // Enable normal array
-    if( norm.vboID > 0 ) {
-        glBindBufferARB(GL_ARRAY_BUFFER, norm.vboID);
-        glNormalPointer(GL_FLOAT, sizeof(float4), 0);
-        glEnableClientState(GL_NORMAL_ARRAY);
-    }
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-//! Check if the result is correct or write data to file for external
-//! regression testing
-////////////////////////////////////////////////////////////////////////////////
-void VboManager::dumpBufferToFile(char* filename, VisualBuffer& vb){
-    return dumpBufferToFile(filename, vb.vboID, vb.byteSize);
-}
-
-void VboManager::dumpBufferToFile(char* filename, GLuint vboID, unsigned int size) {
-    CUDA_SAFE_CALL(cudaGLUnregisterBufferObject(vboID));
-
-    // map buffer object
-    glBindBuffer( GL_ARRAY_BUFFER_ARB, vboID );
-    float* data = (float*) glMapBuffer( GL_ARRAY_BUFFER, GL_READ_ONLY);
-
-    // write file for regression test
-    CUT_SAFE_CALL( cutWriteFilef( filename, data, size, false));
- 
-    // unmap GL buffer object
-    if( ! glUnmapBuffer( GL_ARRAY_BUFFER)) {
-        fprintf( stderr, "Unmap buffer failed.\n");
-        fflush( stderr);
-    }
-
-    CUDA_SAFE_CALL(cudaGLRegisterBufferObject(vboID));
-
-    CHECK_FOR_CUDA_ERROR();
-    CHECK_FOR_GL_ERROR();
-}
-
-void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, float* data) {
-
-    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb.buf, vb.vboID));
-
-    // Alloc buffer
-    data = (float*)malloc(vb.byteSize);
-    // Cop
-    cudaMemcpy(data, vb.buf, vb.byteSize, cudaMemcpyDeviceToHost);
-
-    float minVal = 0;
-    float maxVal = 0;
-
-    static float totalMinVal = 0;
-    static float totalMaxVal = 0;
-
-    float avgMin = 0;
-    float avgMax = 0;
-
-    for( unsigned int i=0; i<vb.numIndices; i++ ) {
-        //printf("[%i] %f ", i, data[i]);
-        if( data[i] > maxVal ) maxVal = data[i];
-        if( data[i] < minVal ) minVal = data[i];
-        
-        if( data[i] > 0 ) avgMax += data[i];
-        if( data[i] < 0 ) avgMin += data[i]; 
-    }
-    if( maxVal > totalMaxVal ) totalMaxVal = maxVal;
-    if( minVal < totalMinVal ) totalMinVal = minVal;
-
-    avgMin /= vb.numIndices;
-    avgMax /= vb.numIndices;
-
-    printf("Max: %f, min: %f  -  overall max: %f, min: %f  - average max: %f, min %f\n", maxVal, minVal, totalMaxVal, totalMinVal, avgMax, avgMin);
-
-    free(data);
-
-    CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb.vboID ));
-    
-    CHECK_FOR_CUDA_ERROR();
-    CHECK_FOR_GL_ERROR();
-}

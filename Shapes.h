@@ -91,10 +91,19 @@ struct PolyShape {
 struct Matrix4f {
     float4 t;
     float4 s;
+    float4 row0;
+    float4 row1;
+    float4 row2;
+    float4 row3;
 
     Matrix4f() { 
         t = make_float4(0,0,0,0);
-        s = make_float4(1,1,1,0); 
+        s = make_float4(1,1,1,0);
+        
+        row0 = make_float4(1,0,0,0);
+        row1 = make_float4(0,1,0,0);
+        row2 = make_float4(0,0,1,0);
+        row3 = make_float4(0,0,0,1);
     }
 
     Matrix4f(float4 pos) : t(pos) {
@@ -109,10 +118,10 @@ struct Matrix4f {
     __device__
     void CopyToBuf(float4* buf, int idx) {
         // Insert 4x4 transformation matrix into buffer        
-        buf[(idx*4)+0] = make_float4( 1+s.x, 0,     0,     t.x   );
-        buf[(idx*4)+1] = make_float4( 0,     1+s.y, 0,     t.y   );
-        buf[(idx*4)+2] = make_float4( 0,     0,     1+s.z, t.z   );
-        buf[(idx*4)+3] = make_float4( 0,     0,     0,     1     );
+        buf[(idx*4)+0] = make_float4( row0.x+s.x, row0.y,     row0.z,     row0.w+t.x   );
+        buf[(idx*4)+1] = make_float4( row1.x,     row1.y+s.y, row1.z,     row1.w+t.y   );
+        buf[(idx*4)+2] = make_float4( row2.x,     row2.y,     row2.z+s.z, row2.w+t.z   );
+        buf[(idx*4)+3] = make_float4( row3.x,     row3.y,     row3.z,     row3.w       );
     }
 
 };

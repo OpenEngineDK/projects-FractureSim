@@ -67,6 +67,9 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
             case KEY_p:
                 tled.renderPlane = !tled.renderPlane;
                 break;
+            case KEY_b:
+                tled.useAlphaBlending = !tled.useAlphaBlending;
+                break;
             case KEY_x:
                 tled.dump = true;
                 break;

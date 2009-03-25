@@ -19,7 +19,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
  public:
     VboManager* vbom;
     unsigned int numIterations;
-    bool paused, dump, renderPlane;
+    bool paused, dump, renderPlane, useAlphaBlending;
     float minX;
 
     TLEDNode();
