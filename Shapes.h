@@ -107,7 +107,7 @@ struct Matrix4f {
     }
 
     Matrix4f(float4 pos) : t(pos) {
-        s = make_float4(1,1,1,0);   
+        s = make_float4(0,0,0,0);   
     }
 
     __device__
@@ -124,6 +124,112 @@ struct Matrix4f {
         buf[(idx*4)+3] = make_float4( row3.x,     row3.y,     row3.z,     row3.w       );
     }
 
+    /*
+    void  (double x1, double y1, double z1, double x2, double y2, double z2)
+{
+   // Build a transform as if you were at a point (x1,y1,z1), and
+     // looking at a point (x2,y2,z2) 
+
+   double ViewOut[3];      // the View or "new Z" vector
+   double ViewUp[3];       // the Up or "new Y" vector
+   double ViewRight[3];    // the Right or "new X" vector
+
+   double ViewMagnitude;   // for normalizing the View vector
+   double UpMagnitude;     // for normalizing the Up vector
+   double UpProjection;    // magnitude of projection of View Vector on World UP
+
+   // first, calculate and normalize the view vector
+   ViewOut[0] = x2-x1;
+   ViewOut[1] = y2-y1;
+   ViewOut[2] = z2-z1;
+   ViewMagnitude = sqrt(ViewOut[0]*ViewOut[0] + ViewOut[1]*ViewOut[1]+
+      ViewOut[2]*ViewOut[2]);
+
+   // invalid points (not far enough apart)
+   if (ViewMagnitude < .000001)
+      return (-1);
+
+   // normalize. This is the unit vector in the "new Z" direction
+   ViewOut[0] = ViewOut[0]/ViewMagnitude;
+   ViewOut[1] = ViewOut[1]/ViewMagnitude;
+   ViewOut[2] = ViewOut[2]/ViewMagnitude;
+
+   // Now the hard part: The ViewUp or "new Y" vector
+
+   // dot product of ViewOut vector and World Up vector gives projection of
+   // of ViewOut on WorldUp
+   UpProjection = ViewOut[0]*WorldUp[0] + ViewOut[1]*WorldUp[1]+
+   ViewOut[2]*WorldUp[2];
+
+   // first try at making a View Up vector: use World Up
+   ViewUp[0] = WorldUp[0] - UpProjection*ViewOut[0];
+   ViewUp[1] = WorldUp[1] - UpProjection*ViewOut[1];
+   ViewUp[2] = WorldUp[2] - UpProjection*ViewOut[2];
+
+   // Check for validity:
+   UpMagnitude = ViewUp[0]*ViewUp[0] + ViewUp[1]*ViewUp[1] + ViewUp[2]*ViewUp[2];
+
+   if (UpMagnitude < .0000001)
+   {
+      //Second try at making a View Up vector: Use Y axis default  (0,1,0)
+      ViewUp[0] = -ViewOut[1]*ViewOut[0];
+      ViewUp[1] = 1-ViewOut[1]*ViewOut[1];
+      ViewUp[2] = -ViewOut[1]*ViewOut[2];
+
+      // Check for validity:
+      UpMagnitude = ViewUp[0]*ViewUp[0] + ViewUp[1]*ViewUp[1] + ViewUp[2]*ViewUp[2];
+
+      if (UpMagnitude < .0000001)
+      {
+          //Final try at making a View Up vector: Use Z axis default  (0,0,1)
+          ViewUp[0] = -ViewOut[2]*ViewOut[0];
+          ViewUp[1] = -ViewOut[2]*ViewOut[1];
+          ViewUp[2] = 1-ViewOut[2]*ViewOut[2];
+
+          // Check for validity:
+          UpMagnitude = ViewUp[0]*ViewUp[0] + ViewUp[1]*ViewUp[1] + ViewUp[2]*ViewUp[2];
+
+          if (UpMagnitude < .0000001)
+              return(-1);
+      }
+   }
+
+   // normalize the Up Vector
+   UpMagnitude = sqrt(UpMagnitude);
+   ViewUp[0] = ViewUp[0]/UpMagnitude;
+   ViewUp[1] = ViewUp[1]/UpMagnitude;
+   ViewUp[2] = ViewUp[2]/UpMagnitude;
+
+   // Calculate the Right Vector. Use cross product of Out and Up.
+   ViewRight[0] = -ViewOut[1]*ViewUp[2] + ViewOut[2]*ViewUp[1];
+   ViewRight[1] = -ViewOut[2]*ViewUp[0] + ViewOut[0]*ViewUp[2];
+   ViewRight[2] = -ViewOut[0]*ViewUp[1] + ViewOut[1]*ViewUp[0];
+
+   // Plug values into rotation matrix R
+   ViewRotationMatrix[0]=ViewRight[0];
+   ViewRotationMatrix[1]=ViewRight[1];
+   ViewRotationMatrix[2]=ViewRight[2];
+   ViewRotationMatrix[3]=0;
+
+   ViewRotationMatrix[4]=ViewUp[0];
+   ViewRotationMatrix[5]=ViewUp[1];
+   ViewRotationMatrix[6]=ViewUp[2];
+   ViewRotationMatrix[7]=0;
+
+   ViewRotationMatrix[8]=ViewOut[0];
+   ViewRotationMatrix[9]=ViewOut[1];
+   ViewRotationMatrix[10]=ViewOut[2];
+   ViewRotationMatrix[11]=0;
+
+   // Plug values into translation matrix T
+   MoveFill(ViewMoveMatrix,-x1,-y1,-z1);
+
+   // build the World Transform
+   MatrixMultiply(ViewRotationMatrix,ViewMoveMatrix,WorldTransform);
+
+   return(0);
+}
+    */
 };
 
 

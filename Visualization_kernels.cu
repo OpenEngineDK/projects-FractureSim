@@ -236,11 +236,11 @@ updateStressTensors_k(Body body,
 
     Matrix4f m;
     m.SetPos(center.x, center.y, center.z);
-    m.SetScale(1.0, 1.0, 1.0);
+    //    m.SetScale(1.0, 1.0, 1.0);
     
-    m.row0 = eigenVectors[me_idx+0];
-    m.row1 = eigenVectors[me_idx+1];
-    m.row2 = eigenVectors[me_idx+2];
+    m.row0 = normalize(eigenVectors[me_idx+0]);
+    m.row1 = normalize(eigenVectors[me_idx+1]);
+    m.row2 = normalize(eigenVectors[me_idx+2]);
 
     m.CopyToBuf(matBuf, me_idx);
 }

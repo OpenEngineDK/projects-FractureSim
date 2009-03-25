@@ -1,5 +1,6 @@
 #include "VboManager.h"
 #include "CudaMem.h"
+#include <fstream>
 #include "CUDA.h"
 
 VboManager::VboManager() {
@@ -241,6 +242,7 @@ void VboManager::Render(int id) {
 
 void VboManager::Render(VisualBuffer& vert) {
     if( vert.enabled && vert.vboID > 0 ) {
+        glEnable(GL_AUTO_NORMAL);
         glEnable(GL_NORMALIZE); 
         glEnable(GL_COLOR_MATERIAL);
         //glShadeModel(GL_FLAT);
@@ -250,7 +252,7 @@ void VboManager::Render(VisualBuffer& vert) {
         //glDisable(GL_CULL_FACE);
         //glEnable(GL_CULL_FACE);
         //glCullFace(GL_BACK);
-        //glFrontFace(GL_CW /* or GL_CCW */);
+        //glFrontFace(GL_CCW);
 
         // If the visual buffer is a polygon the vertex buffer
         // must be calculated by applying transformation matrix to model.
@@ -332,39 +334,26 @@ void VboManager::dumpBufferToFile(char* filename, GLuint vboID, unsigned int siz
     CHECK_FOR_GL_ERROR();
 }
 
-void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, float* data) {
+void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, char* filename) {
 
     CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb.buf, vb.vboID));
 
     // Alloc buffer
-    data = (float*)malloc(vb.byteSize);
-    // Cop
+    float4* data = (float4*)malloc(vb.byteSize);
+    // Copy
     CudaMemcpy(data, vb.buf, vb.byteSize, cudaMemcpyDeviceToHost);
 
-    float minVal = 0;
-    float maxVal = 0;
+    std::ofstream output(filename);
 
-    static float totalMinVal = 0;
-    static float totalMaxVal = 0;
+    for(unsigned int i=0; i<vb.numIndices; i++)
+    {
+        float4 v = data[i];
 
-    float avgMin = 0;
-    float avgMax = 0;
+        // if( (i % 4) == 0 ) 
+        //    output << std::endl;
 
-    for( unsigned int i=0; i<vb.numIndices; i++ ) {
-        //printf("[%i] %f ", i, data[i]);
-        if( data[i] > maxVal ) maxVal = data[i];
-        if( data[i] < minVal ) minVal = data[i];
-        
-        if( data[i] > 0 ) avgMax += data[i];
-        if( data[i] < 0 ) avgMin += data[i]; 
+        output << v.x << ", " << v.y << ", " << v.z << ", " << v.w << std::endl;
     }
-    if( maxVal > totalMaxVal ) totalMaxVal = maxVal;
-    if( minVal < totalMinVal ) totalMinVal = minVal;
-
-    avgMin /= vb.numIndices;
-    avgMax /= vb.numIndices;
-
-    printf("Max: %f, min: %f  -  overall max: %f, min: %f  - average max: %f, min %f\n", maxVal, minVal, totalMaxVal, totalMinVal, avgMax, avgMin);
 
     free(data);
 

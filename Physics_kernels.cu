@@ -249,9 +249,10 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
     // Eigen value one corresponds to eigen vector one, etc.. 
     eigenValues[me_idx] = make_float4(eValue[0], eValue[1], eValue[2], 0);
 
-    eigenVectors[me_idx+0] = make_float4(eVector[0][0],eVector[0][1],eVector[0][2], 0);
-    eigenVectors[me_idx+1] = make_float4(eVector[1][0],eVector[1][1],eVector[1][2], 0);
-    eigenVectors[me_idx+2] = make_float4(eVector[2][0],eVector[2][1],eVector[2][2], 0);
+    int e_idx = me_idx * 3;
+    eigenVectors[e_idx+0] = make_float4(eVector[0][0],eVector[0][1],eVector[0][2], 0);
+    eigenVectors[e_idx+1] = make_float4(eVector[1][0],eVector[1][1],eVector[1][2], 0);
+    eigenVectors[e_idx+2] = make_float4(eVector[2][0],eVector[2][1],eVector[2][2], 0);
 
     int maxSign = 1;
     int minSign = 1;

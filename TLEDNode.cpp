@@ -52,9 +52,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
      dataDir + "tetrahedron.ascii.1.ele",
      dataDir + "tetrahedron.ascii.1.smesh");
     */
-    /*
+    
     //tetrahedra: vpool: 14, body tetrahedra: 17, surface triangles: 24
-    loader = new TetGenLoader
+    /*loader = new TetGenLoader
     (dataDir + "box.ascii.1.node",
      dataDir + "box.ascii.1.ele",
      dataDir + "box.ascii.1.smesh");
@@ -99,8 +99,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
-    //PolyShape ps("FlightArrow7.obj");
-    PolyShape ps("Box12.obj");
+    PolyShape ps("FlightArrow7.obj");
+    //PolyShape ps("Box12.obj");
     //PolyShape ps("Sphere80.obj");
 
     // Initialize the Visualizer
@@ -109,20 +109,25 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // Surface
     vbom->AllocBuffer(SURFACE_VERTICES, solid->surface->numFaces, GL_TRIANGLES);
     vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_TRIANGLES);
+
     // Center of mass points
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
-    //    vbom->AllocBuffer(CENTER_OF_MASS_COLR, solid->body->numTetrahedra, GL_POINTS);
+   //    vbom->AllocBuffer(CENTER_OF_MASS_COLR, solid->body->numTetrahedra, GL_POINTS);
+
+    vbom->AllocBuffer(EIGEN_VECTORS, solid->body->numTetrahedra*3, GL_POINTS);
+    vbom->AllocBuffer(EIGEN_VALUES, solid->body->numTetrahedra, GL_POINTS);
+    
     // Body mesh is all tetrahedron faces with colors and normals
     vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*12, GL_POINTS);
     vbom->AllocBuffer(BODY_NORMALS, solid->body->numTetrahedra*12, GL_POINTS);
-    vbom->AllocBuffer(EIGEN_VECTORS, solid->body->numTetrahedra*3, GL_POINTS);
-    vbom->AllocBuffer(EIGEN_VALUES, solid->body->numTetrahedra, GL_POINTS);
-    
+
     // Stress tensors visualizes stress planes.
-    vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
     //vbom->AllocBuffer(STRESS_TENSOR_COLORS, solid->body->numTetrahedra, GL_POINTS);
+    vbom->AllocBuffer(STRESS_TENSORS, solid->body->numTetrahedra, ps);
+
     
+     
     // Disabled to bypass rendering
     vbom->Disable(SURFACE_VERTICES);
     vbom->Disable(SURFACE_NORMALS);
@@ -184,8 +189,9 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     
     if( dump ) {
         //float* data;
-        //vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VALUES), data);    
-        vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
+        vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VALUES), "./eigValues.dump"); 
+        vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VECTORS), "./eigVectors.dump");   
+        //vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
         dump = false;
     }
 }
