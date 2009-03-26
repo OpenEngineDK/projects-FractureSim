@@ -28,7 +28,8 @@ cudaError_t CudaMemcpy( void* dst, const void* src, size_t count, enum cudaMemcp
 cudaError_t CudaFree(void* devPtr) {
     std::map<void*, unsigned int>::iterator iter = memMap.find(devPtr);
     if (iter == memMap.end()) {
-        printf("dealloc of unalloced memory, with pointer: %u\n", devPtr);
+        printf("dealloc of unalloced memory, with pointer: %lu\n",
+               (unsigned long) devPtr);
         exit(-1);
     }
     alloced -= memMap[devPtr];

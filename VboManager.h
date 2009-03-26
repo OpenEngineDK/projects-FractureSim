@@ -72,7 +72,7 @@ public:
     void dumpBufferToFile(char* filename, VisualBuffer& vb);
     void dumpBufferToFile(char* filename, GLuint vboID, unsigned int size);
 
-    void CopyBufferDeviceToHost(VisualBuffer& vb, char* filename);
+    void CopyBufferDeviceToHost(VisualBuffer& vb, std::string filename);
 
 };
 

@@ -319,7 +319,7 @@ void VboManager::dumpBufferToFile(char* filename, GLuint vboID, unsigned int siz
     CHECK_FOR_GL_ERROR();
 }
 
-void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, char* filename) {
+void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, std::string filename) {
 
     CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb.matBuf, vb.vboID));
 
@@ -328,7 +328,7 @@ void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, char* filename) {
     // Copy
     CudaMemcpy(data, vb.matBuf, vb.byteSize, cudaMemcpyDeviceToHost);
 
-    std::ofstream output(filename);
+    std::ofstream output(filename.c_str());
 
     for(unsigned int i=0; i<vb.numIndices; i++)
     {
