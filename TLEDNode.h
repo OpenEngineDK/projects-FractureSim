@@ -8,6 +8,7 @@
 #include <Scene/RenderNode.h>
 #include <Scene/TransformationNode.h>
 #include <Renderers/IRenderingView.h>
+#include <Utils/Timer.h>
 
 #include "VboManager.h"
 #include "Solid.h"
@@ -34,6 +35,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
  private:
     Scene::TransformationNode* plane;
     Solid* solid;
+    Utils::Timer timer;
 };
 
 #endif // _TLED_NODE_

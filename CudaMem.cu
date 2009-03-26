@@ -27,8 +27,8 @@ cudaError_t CudaMemcpy( void* dst, const void* src, size_t count, enum cudaMemcp
 
 cudaError_t CudaFree(void* devPtr) {
     std::map<void*, unsigned int>::iterator iter = memMap.find(devPtr);
-    if( iter != memMap.end() ) {
-        printf("dealloc of unalloced memory");
+    if (iter == memMap.end()) {
+        printf("dealloc of unalloced memory, with pointer: %u\n", devPtr);
         exit(-1);
     }
     alloced -= memMap[devPtr];
@@ -61,12 +61,13 @@ unsigned int AllocGLBuffer(unsigned int byteSize) {
 
 void FreeGLBuffer(unsigned int id) {
     std::map<unsigned int, unsigned int>::iterator iter = glMemMap.find(id);
-    if( iter != glMemMap.end() ) {
-        printf("dealloc of gl unalloced memory");
+    if (iter == glMemMap.end()) {
+        printf("error in dealloc of gl unalloced memory, with id %u\n", id);
         exit(-1);
     }
     glAlloced -= glMemMap[id];
     glDeleteBuffers(1, &id);
+    CHECK_FOR_GL_ERROR();
 }
 
 void PrintAllocedMemory() {

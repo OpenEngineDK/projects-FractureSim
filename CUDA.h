@@ -35,6 +35,10 @@ inline void INITIALIZE_CUDA() {
     #endif
 }
 
+inline void DEINITIALIZE_CUDA() {
+    //cuDeinit();
+}
+
 inline std::string PRINT_CUDA_DEVICE_INFO() {
     std::string str = "\n";
     int numDevices;

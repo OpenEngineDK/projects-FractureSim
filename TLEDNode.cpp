@@ -16,12 +16,13 @@
 TLEDNode::TLEDNode() {
     solid = NULL;
     numIterations = 25;
-    paused = false;
+    paused = true;
     renderPlane = true;
     useAlphaBlending = false;
     minX = 0.0;
     plane = Create(10,40,10, Vector<4,float>(0.5,0.5,0.0,0.2));
     dump = false;
+    timer.Start();
 }
 
 TLEDNode::~TLEDNode() {
@@ -163,23 +164,30 @@ void TLEDNode::StepPhysics() {
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if (!solid->IsInitialized()) return;
 
+    plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
+
+    // skip physics if delta time is to low
+    const unsigned int deltaTime = 50000;
+
 	// Update all visualization data
     vbom->MapAllBufferObjects();   
 
-    if( !paused )
+    if( !paused &&
+        timer.GetElapsedTime() > Utils::Time(deltaTime)) {
         for (unsigned int i=0; i<numIterations; i++) {
             calculateGravityForces(solid);
             calculateInternalForces(solid, vbom);
             updateDisplacement(solid);
             applyFloorConstraint(solid, 0);
         }
-
-    plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
+        timer.Reset();
+    }
  
     if( vbom->IsEnabled(SURFACE_VERTICES) )
         updateSurface(solid, vbom);
     
-    if( vbom->IsEnabled(CENTER_OF_MASS) || vbom->IsEnabled(STRESS_TENSOR_VERTICES) )
+    if( vbom->IsEnabled(CENTER_OF_MASS) ||
+        vbom->IsEnabled(STRESS_TENSOR_VERTICES) )
         updateCenterOfMass(solid, vbom);
     
     if( vbom->IsEnabled(BODY_MESH) )
@@ -205,6 +213,7 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
 }
 
 void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
+    DEINITIALIZE_CUDA();
     if (solid != NULL)
         solid->DeAlloc();
     //cleanupDisplay();

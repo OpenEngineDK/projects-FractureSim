@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
     setup->GetEngine().ProcessEvent().Attach(*tled);
     setup->GetEngine().DeinitializeEvent().Attach(*tled);
 
-    KeyHandler* kh = new KeyHandler(*camera, *tled);
+    KeyHandler* kh = new KeyHandler(*camera, tled, setup->GetEngine());
     kh->SetEye(Vector<3,float>(-100.0,30.0,0.0));
     kh->SetPoint(Vector<3,float>(0.0,30.0,0.0));
     setup->GetKeyboard().KeyEvent().Attach(*kh);

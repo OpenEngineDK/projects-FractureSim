@@ -28,7 +28,8 @@ VboManager::~VboManager() {
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
     for (int i = 0; i<NUM_BUFFERS; i++ )
-        FreeGLBuffer(vb[i].vboID);
+        if (vb[i].vboID != 0)
+            FreeGLBuffer(vb[i].vboID);
 
     // Check for errors
     CHECK_FOR_GL_ERROR();
