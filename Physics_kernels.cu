@@ -241,6 +241,11 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 	S(1,3) = mu*(-CI(1,3)) + lambda*J*(J-1.0f)*CI(1,3); // IS THIS RIGHT?? (3,1) instead?
 //	S(1,3) = mu*(-CI(3,1)) + lambda*J*(J-1.0f)*CI(3,1); // IS THIS RIGHT?? (1,3) instead?
 
+    // Make s_tensor symmetric
+    S(2,1) = S(1,2);
+    S(3,2) = S(2,3);
+    S(3,1) = S(1,3);
+
     // Calculate eigen vectors and values and map to colors
     double eVector[3][3];
     double eValue[3];
@@ -250,9 +255,9 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
     eigenValues[me_idx] = make_float4(eValue[0], eValue[1], eValue[2], 0);
 
     int e_idx = me_idx * 3;
-    eigenVectors[e_idx+0] = make_float4(eVector[0][0],eVector[0][1],eVector[0][2], 0);
-    eigenVectors[e_idx+1] = make_float4(eVector[1][0],eVector[1][1],eVector[1][2], 0);
-    eigenVectors[e_idx+2] = make_float4(eVector[2][0],eVector[2][1],eVector[2][2], 0);
+    eigenVectors[e_idx+0] = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], 0);
+    eigenVectors[e_idx+1] = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], 0);
+    eigenVectors[e_idx+2] = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], 0);
 
     int maxSign = 1;
     int minSign = 1;

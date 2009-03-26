@@ -26,5 +26,13 @@ void CoordSystemNode::Apply(Renderers::IRenderingView* view) {
                                  Math::Vector<3,float>(0.0,0.0,1000.0) ),
                   Math::Vector<3,float>(0.0,0.0,1.0) );
 
+    
+    Vector<3,float> v(1,1,0);
+    Vector<3,float> c(0,0,0);
+    
+    Vector<3,float> color(0.5, 0.5, 0);
+    
+    view->GetRenderer()->DrawLine( Geometry::Line(c,v), color);
+
 }
 

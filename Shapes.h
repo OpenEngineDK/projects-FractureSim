@@ -118,9 +118,9 @@ struct Matrix4f {
     __device__
     void CopyToBuf(float4* buf, int idx) {
         // Insert 4x4 transformation matrix into buffer        
-        buf[(idx*4)+0] = make_float4( row0.x+s.x, row0.y,     row0.z,     row0.w+t.x   );
-        buf[(idx*4)+1] = make_float4( row1.x,     row1.y+s.y, row1.z,     row1.w+t.y   );
-        buf[(idx*4)+2] = make_float4( row2.x,     row2.y,     row2.z+s.z, row2.w+t.z   );
+        buf[(idx*4)+0] = make_float4( row0.x*s.x, row0.y,     row0.z,     row0.w+t.x   );
+        buf[(idx*4)+1] = make_float4( row1.x,     row1.y*s.y, row1.z,     row1.w+t.y   );
+        buf[(idx*4)+2] = make_float4( row2.x,     row2.y,     row2.z*s.z, row2.w+t.z   );
         buf[(idx*4)+3] = make_float4( row3.x,     row3.y,     row3.z,     row3.w       );
     }
 

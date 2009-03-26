@@ -90,7 +90,7 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 tled.vbom->Toggle(CENTER_OF_MASS);
                 break;
             case KEY_4:
-                tled.vbom->Toggle(STRESS_TENSORS);
+                tled.vbom->Toggle(STRESS_TENSOR_VERTICES);
                 break;
             default: break;
             }

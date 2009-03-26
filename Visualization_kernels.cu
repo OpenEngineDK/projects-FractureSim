@@ -226,21 +226,29 @@ __global__ void
 updateStressTensors_k(Body body, 
                       float4* matBuf,
                       float4* com, 
-                      float4* eigenVectors) {
+                      float4* eigenVectors,
+                      float4* eigenValues) {
 
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-	if (me_idx>=body.numTetrahedra) return;
+    if (me_idx>=body.numTetrahedra) return;
+	//if (me_idx>=1) return;
 
     float4 center = com[me_idx];
 
+    int e_idx = me_idx * 3;
     Matrix4f m;
     m.SetPos(center.x, center.y, center.z);
-    //    m.SetScale(1.0, 1.0, 1.0);
     
-    m.row0 = normalize(eigenVectors[me_idx+0]);
-    m.row1 = normalize(eigenVectors[me_idx+1]);
-    m.row2 = normalize(eigenVectors[me_idx+2]);
+    float4 eVal = eigenValues[me_idx];
+    eVal = eVal / 1000.0f;
+    //float fac = 0.0001f;
+    //m.SetScale(eVal.x*fac, eVal.y*fac, eVal.z*fac);
+    //m.SetScale(0,0,0);
+    
+    m.row0 = eigenVectors[e_idx+0] * eVal.x;
+    m.row1 = eigenVectors[e_idx+1] * eVal.y;
+    m.row2 = eigenVectors[e_idx+2] * eVal.z;
 
     m.CopyToBuf(matBuf, me_idx);
 }
@@ -251,9 +259,10 @@ void updateStressTensors(Solid* solid, VboManager* vbom) {
     updateStressTensors_k
         <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
         (*solid->body,
-         vbom->GetBuf(STRESS_TENSORS).matBuf,
+         vbom->GetBuf(STRESS_TENSOR_VERTICES).matBuf,
          vbom->GetBuf(CENTER_OF_MASS).buf,
-         vbom->GetBuf(EIGEN_VECTORS).buf);
+         vbom->GetBuf(EIGEN_VECTORS).buf,
+         vbom->GetBuf(EIGEN_VALUES).buf);
 }
 
 
@@ -282,7 +291,7 @@ planeClipping_k(Body body, Point* points, float4* displacements,
         for (unsigned int i=0; i<12; i++) {
             bodyMesh[vert_idx++] = make_float4(0.0,0.0,0.0,0.0);
         }
-        com[me_idx] = make_float4(0.0,0.0,0.0,0.0);
+        com[me_idx] = make_float4(-1000.0,0.0,0.0,0.0);
     } else {
         for (unsigned int i=0; i<12; i++) {
             float dist = (minX - com[me_idx].x);// / 10.0f;//((minX - com[me_idx].x));

@@ -336,12 +336,12 @@ void VboManager::dumpBufferToFile(char* filename, GLuint vboID, unsigned int siz
 
 void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, char* filename) {
 
-    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb.buf, vb.vboID));
+    CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb.matBuf, vb.vboID));
 
     // Alloc buffer
     float4* data = (float4*)malloc(vb.byteSize);
     // Copy
-    CudaMemcpy(data, vb.buf, vb.byteSize, cudaMemcpyDeviceToHost);
+    CudaMemcpy(data, vb.matBuf, vb.byteSize, cudaMemcpyDeviceToHost);
 
     std::ofstream output(filename);
 
@@ -349,8 +349,11 @@ void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, char* filename) {
     {
         float4 v = data[i];
 
-        // if( (i % 4) == 0 ) 
-        //    output << std::endl;
+        if( (i % 3) == 0 ){
+            output << "Dot = " << dot(data[i], data[i+1]) << " ----- " <<  dot(data[i], data[i+2]) << " ---- " <<  dot(data[i+1], data[i+2]) << std::endl;
+            output << "Length: " << length(data[i]) << ", " << length(data[i+1]) << ", " << length(data[i+2]) << std::endl;
+        } 
+
 
         output << v.x << ", " << v.y << ", " << v.z << ", " << v.w << std::endl;
     }
