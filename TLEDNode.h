@@ -30,7 +30,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     virtual void Handle(Core::ProcessEventArg arg);
     virtual void Handle(Core::DeinitializeEventArg arg);
 
-    void TLEDNode::StepPhysics();
+    void StepPhysics();
  private:
     Scene::TransformationNode* plane;
     Solid* solid;

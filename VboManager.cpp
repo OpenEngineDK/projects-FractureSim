@@ -2,6 +2,7 @@
 #include "CudaMem.h"
 #include <fstream>
 #include "CUDA.h"
+#include "CudaMem.h"
 
 VboManager::VboManager() {
     vb = new VisualBuffer[NUM_BUFFERS];
@@ -27,34 +28,19 @@ VboManager::~VboManager() {
     glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 
     for (int i = 0; i<NUM_BUFFERS; i++ )
-        glDeleteBuffers(1, &vb[i].vboID);
+        FreeGLBuffer(vb[i].vboID);
 
     // Check for errors
     CHECK_FOR_GL_ERROR();
     CHECK_FOR_CUDA_ERROR();
 
     delete[] vb;
-    printf("[VboManger] Cleaned up\n");
+    //printf("[VboManger] Cleaned up\n");
 }
 
 
 void VboManager::RegisterBufferObject(VisualBuffer& vBuf) {
-    // create buffer object
-    glGenBuffers( 1, &vBuf.vboID);
-    // TODO: error check genBuffer
-    printf("glGenBufferID: %i\n", (int)vBuf.vboID);
-    // Bind buffer
-    glBindBuffer( GL_ARRAY_BUFFER, vBuf.vboID);
-    // initialize buffer object
-    glBufferData( GL_ARRAY_BUFFER, vBuf.byteSize, NULL, GL_DYNAMIC_DRAW);
-    // Unbind buffer
-    glBindBuffer( GL_ARRAY_BUFFER, 0);
-    // Register buffer object with CUDA
-    CUDA_SAFE_CALL(cudaGLRegisterBufferObject(vBuf.vboID));
-    // Update total bytes allocated
-    totalByteAlloc += vBuf.byteSize;
-    // Check for errors
-    CHECK_FOR_GL_ERROR();
+    vBuf.vboID = AllocGLBuffer(vBuf.byteSize);
 }
     
 unsigned int VboManager::sizeOfElement(GLenum mode){
@@ -92,7 +78,6 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, GLenum mode){
     vb[id].mode = mode;        
     vb[id].byteSize = sizeOfElement(mode) * numElm;
     vb[id].numIndices = numElm * indicesForMode(mode);
-    printf("numElm: %i   -  ByteSize: %i\n", numElm, vb[id].byteSize);
             
     // Register with cuda
     RegisterBufferObject(vb[id]);
@@ -101,7 +86,6 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, GLenum mode){
 }
 
 VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
-    printf("[AllocPolyBuffer] alloc poly buffer with numElm: %i numPolyVertices: %i\n", numElm, ps.numVertices);
     vb[id].numElm = numElm;        
     vb[id].enabled = true;
     vb[id].mode = GL_POLYGON;

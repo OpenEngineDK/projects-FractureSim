@@ -5,6 +5,7 @@
 #include "Precompute.h"
 #include "Physics_kernels.h"
 #include "HelperFunctions.h"
+#include "CudaMem.h"
 
 #include <string>
 #include <iostream>
@@ -30,6 +31,7 @@ TLEDNode::~TLEDNode() {
 
 void TLEDNode::Handle(Core::InitializeEventArg arg) {
     INITIALIZE_CUDA();
+    CHECK_FOR_CUDA_ERROR();
     logger.info << "CUDA info:" << PRINT_CUDA_DEVICE_INFO() << logger.end;
     logger.info << "TLEDNode initialization start" << logger.end;
 
@@ -53,7 +55,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
      dataDir + "tetrahedron.ascii.1.smesh");
     */
     
-    //tetrahedra: vpool: 14, body tetrahedra: 17, surface triangles: 24
+    //box: vpool: 14, body tetrahedra: 17, surface triangles: 24
     /*loader = new TetGenLoader
     (dataDir + "box.ascii.1.node",
      dataDir + "box.ascii.1.ele",
@@ -76,6 +78,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "number of surface triangles: " 
                 << loader->GetSurface().size() << logger.end;
 
+    CHECK_FOR_CUDA_ERROR();
     solid = new Solid();
 	solid->state = new TetrahedralTLEDState(); 
     solid->vertexpool = TypeConverter
@@ -137,10 +140,10 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->Disable(CENTER_OF_MASS);
     vbom->Disable(STRESS_TENSOR_VERTICES);
     
-    printf("[VboManager] Total Bytes Allocated: %i\n", totalByteAlloc);
-
     // Buffer setup
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
+
+    PrintAllocedMemory();
 }
 
 void TLEDNode::StepPhysics() {
