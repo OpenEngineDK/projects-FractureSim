@@ -1,6 +1,6 @@
 #include "Precompute.h"
 
-#include "CUDA.h"
+#include <Meta/CUDA.h>
 #include "Precompute_kernels.h"
 
 #include <Math/Vector.h>
@@ -8,10 +8,6 @@
 #include <Logging/Logger.h>
 
 using namespace Math;
-
-float squaredLength(Math::Vector<3,float> a) {
-    return a * a;
-}
 
 bool checkTriangle(Math::Vector<3,float> a, Math::Vector<3,float> b,
                    Math::Vector<3,float> c, Math::Vector<3,float> com) {
@@ -137,6 +133,10 @@ float CPUPrecalculation
  float density, float smallestAllowedVolume, float smallestAllowedLength) {
 
     float totalSmallestLengthSquared = 9e9; //float::max
+    float totalLargestLengthSquared = 0; //float::min
+    float totalSmallestVolume = 9e9;
+    float totalLargestVolume = 0;
+
     double totalVolume = 0;
     Tetrahedron *htetrahedra = solid->body->tetrahedra;
     Point* hpoints = solid->vertexpool->data;
@@ -210,79 +210,116 @@ float CPUPrecalculation
             Math::Vector<3,float> cd = d-c;
             Math::Vector<3,float> bd = d-a;
 
-            float smallestLengthSquared = squaredLength(ab);
-            float sql = squaredLength(ac);
-
-            if (sql<smallestLengthSquared) smallestLengthSquared = sql;
-            sql = squaredLength(ad);
-            if (sql<smallestLengthSquared) smallestLengthSquared = sql;
-            sql = squaredLength(bc);
-            if (sql<smallestLengthSquared) smallestLengthSquared = sql;
-            sql = squaredLength(cd);
-            if (sql<smallestLengthSquared) smallestLengthSquared = sql;
-            sql = squaredLength(bd);
-            if (sql<smallestLengthSquared) smallestLengthSquared = sql;
+            float smallestLengthSquared = ab*ab;
+            if(ac*ac < smallestLengthSquared) smallestLengthSquared = ac*ac;
+            if(ad*ad < smallestLengthSquared) smallestLengthSquared = ad*ad;
+            if(bc*bc < smallestLengthSquared) smallestLengthSquared = bc*bc;
+            if(cd*cd < smallestLengthSquared) smallestLengthSquared = cd*cd;
+            if(bd*bd < smallestLengthSquared) smallestLengthSquared = bd*bd;
+            
+            float largestLengthSquared = ab*ab;
+            if(ac*ac > largestLengthSquared) largestLengthSquared = ac*ac;
+            if(ad*ad > largestLengthSquared) largestLengthSquared = ad*ad;
+            if(bc*bc > largestLengthSquared) largestLengthSquared = bc*bc;
+            if(cd*cd > largestLengthSquared) largestLengthSquared = cd*cd;
+            if(bd*bd > largestLengthSquared) largestLengthSquared = bd*bd;
             
             if (smallestLengthSquared < 
                 smallestAllowedLength*smallestAllowedLength) {
+                printf("SKIPPING: smallest length in tetra is to small, index: %i, length: %f\n", i, sqrt(smallestLengthSquared));
                 continue;
             }
 
             if (smallestLengthSquared<totalSmallestLengthSquared) 
                 totalSmallestLengthSquared = smallestLengthSquared;
 
+            if (largestLengthSquared>totalLargestLengthSquared) 
+                totalLargestLengthSquared = largestLengthSquared;
+
             Math::Vector<3,float> cross_product = ab % ac; // cross product
             float cross_length = cross_product.GetLength();
             //Length of vector ad projected onto cross product normal
             float projected_length = ad * cross_product.GetNormalize();
+
+            /*				
+            if (ad*cross_product < 0)
+                printf("volume problem ");
+            */
+
             float volume = (1.0f/6.0f) * projected_length*cross_length;
             //printf("calc-volume[%i]=%f\n", i, volume);
+
             if (volume<smallestAllowedVolume) {
-                printf("skiping tetrahedron with index: %i\n", i);
+                printf("SKIPPING: volume too small skiping tetrahedron with index: %i, volume: %f\n", i, volume);
                 continue;
             }
 
 
-/*
-				static float smallestvolume = 100000;
+            if (volume < totalSmallestVolume) totalSmallestVolume = volume;
+            if (volume > totalLargestVolume) totalLargestVolume = volume;
 
-				if (volume<smallestvolume) 
-				{
-					smallestvolume=volume;
-					printf("smallest element volume: %g\n", smallestvolume);
-				}
-
-				static float largestvolume = 0;
-				if (volume>largestvolume) 
-				{
-					largestvolume=volume;
-					printf("largest element volume: %g\n", largestvolume);
-				}
-*/
-//				printf("volume: %g\n", volume);
             totalVolume += volume;
             initialVolume[counter] = volume;
 
-            if (volume<0.1) {
+            //if (volume<0.1) {
                 /*static unsigned int index = 0;
                 index++;
                 printf("volume[%i]: %f \n",index,volume);*/
-                printf("volume on tetrahedron with index is too small: %i\n", i);
+            //  printf("volume on tetrahedron is too small. volume: %f, index: %i\n", volume, i);
                 //continue;
-            }
+            //}
 
-/*				if	(dot(ad, cross_product)<0)
-				{
-					printf("volume problem ");
-				//	continue;
-				}
-*/
 
+            // center of mass
+            Math::Vector<3,float> com = (a+b+c+d)/4.0;
+
+            // lengths
+            float al = (com - a).GetLength();
+            float bl = (com - b).GetLength();
+            float cl = (com - c).GetLength();
+            float dl = (com - d).GetLength();
+            float tLength = al + bl + cl + dl;
+
+            // weights
+            float av = al/tLength;
+            float bv = bl/tLength;
+            float cv = cl/tLength;
+            float dv = dl/tLength;
+            float tv = av + bv + cv + dv;
+
+            float sum = av/tv + bv/tv + cv/tv + dv/tv;
+
+            if (abs(sum - 1.0) > Math::EPS)
+                logger.info << "ERROR sum not 100% on: "
+                            << " index: " << i 
+                            << " tv:" << sum
+                            << " av:" << av/tv
+                            << " bv:" << bv/tv
+                            << " cv:" << cv/tv
+                            << " dv:" << dv/tv
+                            << logger.end;
+
+            // x=a, y=b, z=c, w=d
+            float tMass = volume * density;
+            mass[htetrahedra[i].x] += tMass * av/tv;
+            mass[htetrahedra[i].y] += tMass * bv/tv;
+            mass[htetrahedra[i].z] += tMass * cv/tv;
+            mass[htetrahedra[i].w] += tMass * dv/tv;
+
+
+            /* old calcs
             mass[htetrahedra[i].x] += volume * 0.25 * density;
             mass[htetrahedra[i].y] += volume * 0.25 * density;
             mass[htetrahedra[i].z] += volume * 0.25 * density;
             mass[htetrahedra[i].w] += volume * 0.25 * density;
-            
+            */      
+            /*
+            float mMass = 200000;
+            mass[htetrahedra[i].x] = mMass;
+            mass[htetrahedra[i].y] = mMass;
+            mass[htetrahedra[i].z] = mMass;
+            mass[htetrahedra[i].w] = mMass;
+            */
             counter++;
         }
     }
@@ -299,10 +336,23 @@ float CPUPrecalculation
         tets[i].z = -1;
         tets[i].w = -1;
     }
-    printf("Total volume: %f\n", totalVolume);
+
+
     // ?!? mesh->numTetrahedra = counter;
     solid->body->numTetrahedra = tmpTetCount;
     solid->vertexpool->size = tmpPointCount;
+
+    float minEdge = sqrtf(totalSmallestLengthSquared);
+    float maxEdge = sqrtf(totalLargestLengthSquared);
+    printf("Smalest edge: %f\n", minEdge);
+    printf("Largest edge: %f\n", maxEdge);
+    printf("Min/Max edge ratio: %f\n", maxEdge/minEdge);
+    printf("Smalest volume: %f\n", totalSmallestVolume);
+    printf("Largest volume: %f\n", totalLargestVolume);
+    printf("Min/Max volume ratio: %f\n",
+           totalLargestVolume/totalSmallestVolume);
+    printf("Total volume: %f\n", totalVolume);
+    printf("Average volume: %f\n", totalVolume/solid->body->numTetrahedra);
 
 //		for (int i=0; i<solid->vertexpool->size; i++) {
 //			printf("Vertex %i: %f, %f, %f\n", i, 
@@ -321,7 +371,6 @@ float CPUPrecalculation
     //             writeIndices[i].z, writeIndices[i].w );
 	//	}
 
-    CUT_CHECK_ERROR("Error deleting");
     return_maxNumForces = maxNumForces;
     return sqrtf(totalSmallestLengthSquared);
 }
@@ -410,11 +459,14 @@ void precompute(Solid* solid,
     // keep out time step below the critical delta time step.
     // [Ref: TLED-article formula 17]
     // [Ref: Fysik-bog, Erik, page. 198]
-	float c = sqrt((E*(1.0f-nu))/(density*(1.0f-nu)*(1.0f-2.0f*nu)));
+	float c = sqrt((E*(1.0f-nu))/(density*(1.0f+nu)*(1.0f-2.0f*nu)));
 
 	// the factor is to account for changes i c during deformation
     // [ref: TLED-article formula 16]
 	float timeStep = timeStepFactor*smallestLength/c;
+
+
+    logger.info << "time step: " << timeStep << logger.end;
 
 	solid->state->timeStep = timeStep;
 	solid->state->mu = mu;

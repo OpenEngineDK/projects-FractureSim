@@ -1,5 +1,6 @@
 #include "Surface.h"
-#include "CUDA.h"
+
+#include <Meta/CUDA.h>
 #include "CudaMem.h"
 
 Surface::Surface() {}

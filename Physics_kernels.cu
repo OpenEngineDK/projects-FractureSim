@@ -1,4 +1,5 @@
-#include "CUDA.h"
+#include <Meta/CUDA.h>
+
 #include "Solid.h"
 #include "VboManager.h"
 #include "eig3.h"
@@ -90,11 +91,13 @@ texture<float4,  1, cudaReadModeElementType> _tex;
 
 
 __global__ void
-calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
-                  int4 *writeIndices, float4 *pointForces, int maxPointForces, float mu, float lambda, 
+calculateForces_k(Matrix4x3 *shape_function_derivatives,
+                  Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
+                  int4 *writeIndices, float4 *pointForces,
+                  int maxPointForces, float mu, float lambda, 
                   unsigned int numTets, float4* colrBuf, float4* tensorColr, 
-                  float4* eigenVectors, float4* eigenValues)
-{
+                  float4* eigenVectors, float4* eigenValues) {
+
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (me_idx>=numTets)
@@ -358,11 +361,16 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 		force.z = V*(B(1, 3)*S(1, 1)+B(2, 3)*S(2, 2)+B(3, 3)*S(3, 3)+B(4, 3)*S(1, 2)+B(5, 3)*S(2, 3)+B(6, 3)*S(1, 3));
 		force.w = 0;
 
-		if (length(make_float3(force))<100000 && J>0)
+        /*
+        float maxForce = 100000 * 10;
+        if (length(make_float3(force)) > maxForce)
+            force = normalize(force) * maxForce;
+        */
+
+		if(J > 0)
 			forces[a-1] = force;
 		else
 			forces[a-1] = make_float4(0,0,0,0);
-
 	}
 
 /*	printf("\nFor tetrahedron %i: \n", me_idx);

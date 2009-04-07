@@ -1,6 +1,6 @@
 #define BLOCKSIZE 128
 
-#include <CUDA.h>
+#include <Meta/CUDA.h>
 
 #include <stdio.h>
 #include <stdlib.h>

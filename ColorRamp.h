@@ -1,7 +1,7 @@
 #ifndef _COLOR_RAMP_
 #define _COLOR_RAMP_
 
-#include "CUDA.h"
+#include <Meta/CUDA.h>
 
 //from: http://local.wasp.uwa.edu.au/~pbourke/texture_colour/colourramp/
 

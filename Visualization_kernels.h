@@ -1,4 +1,3 @@
-
 #include "Shapes.h"
 
 #ifndef _VISUALIZATION_KERNELS_H_

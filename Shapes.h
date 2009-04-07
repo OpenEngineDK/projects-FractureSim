@@ -10,7 +10,7 @@
 #include <vector>
 #include <string>
 
-#include "CUDA.h"
+#include <Meta/CUDA.h>
 
 // NOTE: DO NOT CHANGE THE ORDER OF THE MEMBER VARIABLES!
 // The float4 color member *MUST* be in the top due to memory layout.

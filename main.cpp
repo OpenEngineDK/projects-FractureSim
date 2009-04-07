@@ -55,10 +55,16 @@ int main(int argc, char** argv) {
     logger.info << "========= Running OpenEngine Test Project =========";
     logger.info << logger.end;
    
+    //Vector<3,float> position(-100,30,0);
+    //Vector<3,float> lookat(0,30,0);
+
+    Vector<3,float> position(-300,30,-100);
+    Vector<3,float> lookat(0,130,0);
+
     // Move the camera
     Camera* camera = setup->GetCamera();
-    camera->SetPosition(Vector<3,float>(-100,30,0));
-    camera->LookAt(Vector<3,float>(0,30,0));
+    camera->SetPosition(position);
+    camera->LookAt(lookat);
 
     // Register movement handler to be able to move the camera
     MoveHandler* move_h = 
@@ -91,8 +97,8 @@ int main(int argc, char** argv) {
     setup->GetEngine().DeinitializeEvent().Attach(*tled);
 
     KeyHandler* kh = new KeyHandler(*camera, tled, setup->GetEngine());
-    kh->SetEye(Vector<3,float>(-100.0,30.0,0.0));
-    kh->SetPoint(Vector<3,float>(0.0,30.0,0.0));
+    kh->SetEye(position);
+    kh->SetPoint(lookat);
     setup->GetKeyboard().KeyEvent().Attach(*kh);
 
 

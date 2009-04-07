@@ -1,7 +1,7 @@
 #ifndef _SURFACE_
 #define _SURFACE_
 
-#include "CUDA.h"
+#include <Meta/CUDA.h>
 
 typedef uint3 Triangle;
 

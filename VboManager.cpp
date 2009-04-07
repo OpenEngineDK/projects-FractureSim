@@ -1,8 +1,8 @@
 #include "VboManager.h"
-#include "CudaMem.h"
 #include <fstream>
-#include "CUDA.h"
+
 #include "CudaMem.h"
+
 
 VboManager::VboManager() {
     vb = new VisualBuffer[NUM_BUFFERS];

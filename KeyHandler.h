@@ -93,8 +93,13 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 engine.ProcessEvent().Attach(*tled);
                 engine.DeinitializeEvent().Attach(*tled);
 
-                
                 break;
+            case KEY_q:
+                logger.info << "camera = {position: " << camera.GetPosition()
+                            << ", direction: " << camera.GetDirection()
+                            << "}" << logger.end;
+                break;
+
             case KEY_x:
                 tled->dump = true;
                 break;

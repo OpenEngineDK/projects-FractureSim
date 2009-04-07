@@ -6,7 +6,7 @@
 #ifndef _VBO_MANAGER_H_
 #define _VBO_MANAGER_H_
 
-#include "CUDA.h"
+#include <Meta/CUDA.h>
 
 #include <map>
 #include "Shapes.h"

@@ -1,7 +1,7 @@
 #ifndef _VERTEX_POOL_
 #define _VERTEX_POOL_
 
-#include "CUDA.h"
+#include <Meta/CUDA.h>
 
 typedef float4 Point;
 
