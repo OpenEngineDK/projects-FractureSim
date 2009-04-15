@@ -467,6 +467,7 @@ void precompute(Solid* solid,
 
 
     logger.info << "time step: " << timeStep << logger.end;
+    logger.info << "time step squared: " << timeStep*timeStep << logger.end;
 
 	solid->state->timeStep = timeStep;
 	solid->state->mu = mu;
