@@ -27,15 +27,18 @@ void TetGenLoader::Load() {
             throw Core::Exception("vertex file not found: " + vertexfile);
         
         unsigned int numVertices;
-        fscanf (vFile, "%i %i %i %i\n", &numVertices, &dim, &temp, &temp);
+        int rslt = fscanf(vFile, "%i %i %i %i\n",
+			  &numVertices, &dim, &temp, &temp);
+	if (rslt != 4) throw Core::Exception("vertex pool header error");
         
         //logger.info << "---- vertex pool ----"  << logger.end;
         for (unsigned int i=0; i<numVertices && !feof(vFile); i++) {
             Math::Vector<3,float> point;
-            fscanf (vFile, "%i %f %f %f\n", 
-                    &index, &(point[0]), &(point[1]), &(point[2]));
+            rslt = fscanf(vFile, "%i %f %f %f\n", 
+			   &index, &(point[0]), &(point[1]), &(point[2]));
+	    if (rslt != 4) throw Core::Exception("not a vertex");
             //logger.info << point << logger.end;
-        vertexPool.push_back(point);
+	    vertexPool.push_back(point);
         }
         fclose (vFile);
         if (numVertices != vertexPool.size())
@@ -47,13 +50,15 @@ void TetGenLoader::Load() {
             throw Core::Exception("body index file not found: " + bodyfile);
         
         unsigned int numTetrahedra;
-        fscanf (bFile, "%i %i %i\n", &numTetrahedra, &dim, &temp);
+        int rslt = fscanf(bFile, "%i %i %i\n", &numTetrahedra, &dim, &temp);
+	if (rslt != 3) throw Core::Exception("body file header error");
         
         //logger.info << "---- body indices ----"  << logger.end;
         for (unsigned int i=0; i<numTetrahedra && !feof(bFile); i++) {
             Math::Vector<4,unsigned int> bid;
-            fscanf (bFile, "%i %i %i %i %i %i\n", 
-                    &index, &(bid[0]), &(bid[1]), &(bid[2]), &(bid[3]), &temp);
+            rslt = fscanf(bFile, "%i %i %i %i %i %i\n", &index, 
+			  &(bid[0]), &(bid[1]), &(bid[2]), &(bid[3]), &temp);
+	    if (rslt != 6) throw Core::Exception("malformed tetra");
             //logger.info << bid << logger.end;
             body.push_back(bid);
         }
