@@ -79,7 +79,7 @@ void FreeGLBuffer(unsigned int id) {
         exit(-1);
     }
     glAlloced -= glMemMap[id];
-    glDeleteBuffers(1, &id);
+    glDeleteBuffers(1, (GLuint*)&id);
     CHECK_FOR_GL_ERROR();
 }
 
