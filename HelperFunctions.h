@@ -37,8 +37,7 @@ static Scene::TransformationNode* Create
     leftside->Scale(scale);
     faces->Add(leftside);
 
-    leftside->colr[0] = leftside->colr[1] = leftside->colr[2] =
-        leftside->colr[3] = color;
+    leftside->colr[0] = leftside->colr[1] = leftside->colr[2] = color;
         
     FacePtr rightside = FacePtr(new Face(*lowerright,*upperright,*upperleft));
     rightside->texc[2] = Vector<2,float>(0,1);
@@ -50,8 +49,7 @@ static Scene::TransformationNode* Create
     rightside->Scale(scale);
     faces->Add(rightside);
     
-    rightside->colr[0] = rightside->colr[1] = rightside->colr[2] =
-        rightside->colr[3] = color;
+    rightside->colr[0] = rightside->colr[1] = rightside->colr[2] = color;
 
     MaterialPtr m = MaterialPtr(new Material());
 	//m->texr = ResourceManager<ITextureResource>::Create(textureFile);
