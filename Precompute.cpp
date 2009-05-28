@@ -6,6 +6,7 @@
 #include <Math/Vector.h>
 #include <Geometry/Face.h>
 #include <Logging/Logger.h>
+#include <cstring>
 
 using namespace Math;
 
