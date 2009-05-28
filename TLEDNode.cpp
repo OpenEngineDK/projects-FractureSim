@@ -114,7 +114,11 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     //precompute(solid, density, smallestAllowedVolume, smallestAllowedLength,
     //           mu, lambda, timeStepFactor, damping);
     precompute(solid, 0.0001f, 0.0f, 0.0f,
-             10007.0f, 0.0005f, 0.01f, 100.0f); //stiff
+         10007.0f, 0.0005f, 0.01f, 100.0f); //stiff
+    //precompute(solid, 24000.0f, 0.0f, 0.0f,
+    //       75000000000.0f, 2045000000.0f, 0.4f, 100.0f); //concrete
+    //precompute(solid, 2.4f, 0.0f, 0.0f,
+    //       136360000000.0f, 8334000000.0f, 0.4f, 100.0f); //concrete moded
     //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
 	//precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f); //soft
     logger.info << "TLEDNode initialization done" << logger.end;
