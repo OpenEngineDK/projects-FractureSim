@@ -58,8 +58,8 @@ int main(int argc, char** argv) {
     //Vector<3,float> position(-100,30,0);
     //Vector<3,float> lookat(0,30,0);
 
-    Vector<3,float> position(-300,30,-100);
-    Vector<3,float> lookat(0,130,0);
+    Vector<3,float> position(10,3,30);
+    Vector<3,float> lookat(0,3,0);
 
     // Move the camera
     Camera* camera = setup->GetCamera();

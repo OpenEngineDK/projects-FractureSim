@@ -26,6 +26,8 @@ SET( PROJECT_SOURCES
   VboManager.cpp
   Shapes.cpp
   Precompute.cpp
+  CrackStrategyOne.cpp
+  CudaMem.cpp
 )
 
 # Include needed to use SDL under Mac OS X

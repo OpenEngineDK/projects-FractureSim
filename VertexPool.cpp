@@ -1,5 +1,7 @@
 #include "VertexPool.h"
 #include "CudaMem.h"
+#include "Body.h"
+#include <cstring>
 
 VertexPool::VertexPool() {}
 

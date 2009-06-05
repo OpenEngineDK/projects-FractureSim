@@ -93,6 +93,7 @@ texture<float4,  1, cudaReadModeElementType> _tex;
 __global__ void
 calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
                   int4 *writeIndices, float4 *pointForces, int maxPointForces, float mu, float lambda, 
+                  float4* principalStress,  bool* maxStressExceeded, 
                   unsigned int numTets, float4* colrBuf, float4* tensorColr, 
                   float4* eigenVectors, float4* eigenValues) {
 

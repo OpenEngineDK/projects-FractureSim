@@ -16,7 +16,7 @@
 
 TLEDNode::TLEDNode() {
     solid = NULL;
-    numIterations = 5;
+    numIterations = 15;
     paused = true;
     renderPlane = false;
     useAlphaBlending = false;
@@ -40,15 +40,15 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     ISolidLoader* loader = NULL;
     std::string dataDir = "projects/TLED/data/RegistrationShapes/";
 
-    /*
+    
     //PROSTATE: vpool: 3386, body tetrahedra: 16068, surface triangles: 2470
     /*loader = new MshObjLoader(dataDir + "PROSTATE.msh",
                               dataDir + "PROSTATE.obj");
-
-    
+    */
     //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
-    //        loader = new MshObjLoader(dataDir + "tand2.msh",
-    //                          dataDir + "tand2.obj");
+    /*loader = new MshObjLoader(dataDir + "tand2.msh",
+                              dataDir + "tand2.obj");
+    */  
     
     //tetrahedra: vpool: 4, body tetrahedra: 1, surface triangles: 4
     /*loader = new TetGenLoader
@@ -57,18 +57,18 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
      dataDir + "tetrahedron.ascii.1.smesh");
     */
 
-    //box: vpool: 14, body tetrahedra: 17, surface triangles: 24
+    /*    //box: vpool: 14, body tetrahedra: 17, surface triangles: 24
     loader = new TetGenLoader
     (dataDir + "box.ascii.1.node",
      dataDir + "box.ascii.1.ele",
      dataDir + "box.ascii.1.smesh");
-    
+    */
     //tetrahedra: vpool: 119, body tetrahedra: 328, surface triangles: 212
-    /*    loader = new TetGenLoader
+    loader = new TetGenLoader
         (dataDir + "sphere.ascii.1.node", 
          dataDir + "sphere.ascii.1.ele", 
          dataDir + "sphere.ascii.1.smesh");
-    */
+    
 
     /*
     //bunny: vpool: , body tetrahedra: , surface triangles: 
@@ -98,10 +98,11 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
         ::ConvertToSurface(loader->GetSurface());
 
     // scaling factors for the different models
-    solid->vertexpool->Scale(1.1); // blob
+    //solid->vertexpool->Scale(1.1); // blob
     //solid->vertexpool->Scale(5); // tand2, tetrahedra and box
+    //solid->vertexpool->Scale(10);
     //solid->vertexpool->Scale(30); // bunny
-    //solid->vertexpool->Scale(0.3); // sphere
+    solid->vertexpool->Scale(0.3); // sphere
     
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
@@ -109,8 +110,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     
     //precompute(solid, density, smallestAllowedVolume, smallestAllowedLength,
     //           mu, lambda, timeStepFactor, damping);
-    precompute(solid, 0.0001f, 0.0f, 0.0f,
-         10007.0f, 0.0005f, 0.01f, 100.0f); //stiff
+    precompute(solid, 0.001f, 0.0f, 0.0f, 100007.0f, 0.0005f, 0.1f, 10.0f); //stiff
     //precompute(solid, 24000.0f, 0.0f, 0.0f,
     //       75000000000.0f, 2045000000.0f, 0.4f, 100.0f); //concrete
     //precompute(solid, 2.4f, 0.0f, 0.0f,
@@ -127,8 +127,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
-    //PolyShape ps("FlightArrow7.obj");
-    PolyShape ps("Box12.obj");
+    PolyShape ps("FlightArrow7.obj");
+    //PolyShape ps("Box12.obj");
     //PolyShape ps("Sphere80.obj");
 
     // Initialize the Visualizer
@@ -220,8 +220,8 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if( vbom->IsEnabled(BODY_MESH) )
         updateBodyMesh(solid, vbom, minX);
 
-
-    planeClipping(solid, vbom, minX);
+    if (renderPlane) 
+        planeClipping(solid, vbom, minX);
 
     if( vbom->IsEnabled(STRESS_TENSOR_VERTICES) ) {
         updateStressTensors(solid, vbom);
@@ -273,6 +273,7 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (renderPlane) 
         plane->Accept(*view);
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     crackStrategy->RenderDebugInfo();
 }
 

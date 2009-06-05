@@ -97,8 +97,9 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 tled->Handle(Core::InitializeEventArg());
                 engine.ProcessEvent().Attach(*tled);
                 engine.DeinitializeEvent().Attach(*tled);
-
                 
+                // Restore numIterations 
+                tled->numIterations = numItr;
                 break;
             case KEY_q:
                 logger.info << "camera = {position: " << camera.GetPosition()
