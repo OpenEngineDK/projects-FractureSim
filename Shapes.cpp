@@ -29,7 +29,8 @@ PolyShape::PolyShape(std::string name) {
     mod_res->Unload();
     FaceSet* face_set = geo_node->GetFaceSet();
 
-    vector<float4> vList;
+    vector<float4> vList;  //Vertices 
+    vector<float4> nList;  //Normals
     FaceList::iterator itr;
     for( itr = face_set->begin(); itr!=face_set->end(); itr++ ) {
         FacePtr face = *itr;
@@ -39,20 +40,35 @@ PolyShape::PolyShape(std::string name) {
                          face->vert[i][2],
                          1.0};
 
+            float4 n = { face->norm[i][0], 
+                         face->norm[i][1],
+                         face->norm[i][2],
+                         1.0};
+
              vList.push_back(v);
+             nList.push_back(n);
         }
     }
 
     // Copy vertices into static buffer
     vertices = new float4[vList.size()];
-    
+    normals  = new float4[nList.size()];
+
     numVertices=0;
     std::vector<float4>::iterator it;
     for( it=vList.begin(); it!=vList.end(); it++ ) {
-        //        printf("[%i] %f %f %f\n", numVertices,(*it).x, (*it).y, (*it).z);
+        //printf("[%i] %f %f %f\n", numVertices,(*it).x, (*it).y, (*it).z);
         vertices[numVertices++] = *it;
     }
-    printf("[PolyShape] numVertices loaded: %i\n", numVertices);
+
+    numNormals=0;
+    for( it=nList.begin(); it!=nList.end(); it++ ) {
+        //        printf("[%i] %f %f %f\n", numVertices,(*it).x, (*it).y, (*it).z);
+        normals[numNormals++] = *it;
+    }
+
+
+    printf("[PolyShape] numVertices loaded: %i - numNormals: %i\n", numVertices, numNormals);
 }
 
 

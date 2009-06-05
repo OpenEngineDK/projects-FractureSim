@@ -10,4 +10,6 @@ void precompute(Solid* solid,
                 float smallestAllowedLength, float mu,
                 float lambda, float timeStepFactor, float damping);
 
+void createNeighbourList(Solid* solid);
+
 #endif // _PRECLCULATE_

@@ -6,7 +6,7 @@
 class Solid;
 class VboManager;
 
-void applyTransformation(VisualBuffer& vb);
+void applyTransformation(VisualBuffer& vert, VisualBuffer& norm);
 
 // rendering
 void updateSurface(Solid* solid, VboManager* vbom);

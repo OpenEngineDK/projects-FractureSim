@@ -17,46 +17,14 @@ class Solid {
     Body* body;
     Surface* surface;
     TetrahedralTLEDState* state;
-    Solid() {
-        vertexpool = NULL;
-        body = NULL;
-        surface = NULL;
-        state = NULL;
-    }
 
-    void DeAlloc() {
-        if (body != NULL)
-            body->DeAlloc();
-        if (surface != NULL)
-            surface->DeAlloc();
-        if (vertexpool != NULL)
-            vertexpool->DeAlloc();
-        vertexpool = NULL;
-        body = NULL;
-        surface = NULL;
-        state = NULL;
-    }
+    Solid();
+    ~Solid();
 
-    void Print() {
-        printf("--------- vertexpool --------\n");
-        vertexpool->Print();
-        printf("--------- body indices --------\n");
-        body->Print();
-        printf("--------- surface indecies --------\n");
-        surface->Print();
-        printf("--------- end  --------\n");
+    void DeAlloc();
+    void Print();
+    bool IsInitialized();
 
-    }
-
-    bool IsInitialized() {
-        if (state == NULL ||
-            body == NULL ||
-            surface == NULL ||
-            vertexpool == NULL)
-            return false;
-        else
-            return true;
-    }
 };
 
 #endif // _SOLID_

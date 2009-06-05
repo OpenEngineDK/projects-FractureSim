@@ -3,6 +3,7 @@
 
 #include <Meta/CUDA.h>
 
+class Tetrahedron;
 typedef float4 Point;
 
 struct VertexPool {
@@ -18,6 +19,10 @@ struct VertexPool {
     void Scale(float scale);
     void Move(float dx, float dy, float dz);
     void Print();
+    void GetTetrahedronVertices(Tetrahedron tetra, float4* vertices);
+    void GetTetrahedronDisplacements(Tetrahedron tetra, float4* displacements);
+    void GetTetrahedronAbsPosition(Tetrahedron tetra, float4* absPos);
+
     void ConvertToCuda();
     void DeAlloc();
 };

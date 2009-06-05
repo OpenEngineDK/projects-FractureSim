@@ -15,16 +15,16 @@
 // NOTE: DO NOT CHANGE THE ORDER OF THE MEMBER VARIABLES!
 // The float4 color member *MUST* be in the top due to memory layout.
 struct VisualBuffer {
-    VisualBuffer() : vboID(0), buf(NULL), matBuf(NULL), modelBuf(NULL), colorBuf(NULL), numElm(0), 
-                     byteSize(0), mode(0), enabled(true) { 
+    VisualBuffer() : vboID(0), buf(NULL), matBuf(NULL), modelVertBuf(NULL), modelNormBuf(NULL), numElm(0), 
+                     byteSize(0), numIndices(0), mode(0), enabled(true) { 
         color = make_float4(0.0,1.0,0.0,1.0); 
     }
     float4 color;
     GLuint vboID;
     float4* buf; 
     float4* matBuf;
-    float4* modelBuf;          // Base geometry of model
-    float4* colorBuf;
+    float4* modelVertBuf;          // Base geometry of model
+    float4* modelNormBuf;
     unsigned int numElm;
     unsigned int byteSize;
     unsigned int numIndices;
@@ -81,6 +81,9 @@ struct TriangleShape {
 struct PolyShape {
     float4* vertices;
     unsigned int numVertices;
+
+    float4* normals;
+    unsigned int numNormals;
 
     PolyShape() {}
     PolyShape(std::string name);

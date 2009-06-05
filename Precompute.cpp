@@ -426,6 +426,8 @@ void precompute(Solid* solid,
                           density, smallestAllowedVolume,
                           smallestAllowedLength);
 
+
+
     CHECK_FOR_CUDA_ERROR();
     solid->vertexpool->ConvertToCuda();
     solid->body->ConvertToCuda();
@@ -479,3 +481,107 @@ void precompute(Solid* solid,
 
     precalculateShapeFunctionDerivatives(solid);
 }
+
+// Returns true if the two tetrahedrons share a face, equal to
+// having 3 nodes in common.
+bool isNeighbour(Tetrahedron a, Tetrahedron b) {
+    //    logger.info << "Comparing: " << a.x << "," << a.y << "," << a.z << "," << a.w << " == " <<
+    //     b.x << "," << b.y << "," << b.z << "," << b.w << logger.end;  
+    int nodesInCommon = 0;
+    for( int i=0; i<4; i++ ) {
+        int aIdx = a.GetNodeIndex(i);
+        for( int j=0; j<4; j++ ){
+            int bIdx = b.GetNodeIndex(j);
+            if( aIdx == bIdx ) 
+                nodesInCommon++;   
+        }
+    }
+    //logger.info << "NodesInCommon: " << nodesInCommon << logger.end;
+    return nodesInCommon == 3;
+}
+
+
+void createNeighbourList(Solid* solid) {
+    // Get body
+    Body* body = solid->body;
+    // Get all tetrahedron indices from device
+    body->tetrahedraMainMem = (Tetrahedron*)malloc(sizeof(Tetrahedron) * solid->body->numTetrahedra);
+    body->GetTetrahedrons(body->tetrahedraMainMem);
+
+    Tetrahedron* tetrahedra = body->tetrahedraMainMem;
+
+    // TEMP
+    int tetraWithFourNeighbours = 0;
+
+    int numPrints = 0;
+    // For each tetrahedron 
+    for( unsigned int i=0; i<body->numTetrahedra; i++ ) {
+        float percentDone = ((float)(i+1) / (float)body->numTetrahedra) * 100.0f;
+        if( ((int)percentDone / 10) > numPrints ) {
+            numPrints++;
+            logger.info << "Neighbour List Processing " << numPrints * 10 << "% done" << logger.end;
+        }
+
+        // Find neighbours
+        std::list<int> neighbours;
+        for( unsigned int j=0; j<body->numTetrahedra; j++ )
+            if( i != j && isNeighbour(tetrahedra[i], tetrahedra[j]) ){
+                body->neighbour[(i*4) + neighbours.size()] = j;
+                neighbours.push_back(j);
+            }
+
+        //logger.info << "Tetra #" << i << " has " << neighbours.size() << " neighbours" << logger.end;
+
+        // Just for statistical use 
+        if( neighbours.size() == 4 )  tetraWithFourNeighbours++;
+
+        // For each edge in tetrahedron
+        for( int edge=0; edge<6; edge++ ) {
+            // Get node index 1
+            int idx1 = tetrahedra[i].GetNodeIndex(GetEdgeStartIndex(edge));
+            // Get node index 2
+            int idx2 = tetrahedra[i].GetNodeIndex(GetEdgeEndIndex(edge));
+            
+            int numTetraSharingEdge = 0;
+            std::list<int>::iterator itr;
+            for( itr=neighbours.begin(); itr!=neighbours.end(); itr++ ){
+                if( numTetraSharingEdge == 2) break;
+                // Neighbour tetra index
+                int tIdx = *itr; 
+                //logger.info << "Edge Comparing tetra with index " << i << " and " << tIdx << logger.end; 
+                // Check if edge is part of neighbour tetrahedron
+                for( int nEdge=0; nEdge<6; nEdge++ ) {
+                    // Get neighbour node index 1
+                    int nIdx1 = tetrahedra[tIdx].GetNodeIndex(GetEdgeStartIndex(nEdge));
+                    // Get neighbour node index 2
+                    int nIdx2 = tetrahedra[tIdx].GetNodeIndex(GetEdgeEndIndex(nEdge));
+                    
+                    //logger.info << "comparing: " << idx1 << "," << idx2 << " == " << nIdx1 << "," << nIdx2;
+                    // If edge is the same, tetra i and j shares an edge
+                    if( (idx1 == nIdx1 && idx2 == nIdx2) || 
+                        (idx1 == nIdx2 && idx2 == nIdx1) ) {
+                        // Add neighbour tetrahedron index to edge sharing list
+                        body->edgeSharing[(i*12)+(edge*2)+numTetraSharingEdge] = tIdx;
+                        numTetraSharingEdge++;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    /*
+    for( unsigned int i=0; i<body->numTetrahedra; i++ ){
+        logger.info << "----- Tetra #" << i << "------" << logger.end;
+        for( int edge=0; edge<6; edge++ ) {
+            logger.info << "Edge #" << edge << ": ";
+            logger.info << body->edgeSharing[(i*12)+edge*2] << ",";
+            logger.info << body->edgeSharing[(i*12)+edge*2+1] << logger.end; 
+        }
+    }
+
+    logger.info << "Number of tetrahedrons: " << body->numTetrahedra << logger.end;
+    logger.info << "Number of tetras with four neighbours: " << tetraWithFourNeighbours << logger.end;
+    logger.info << "Number of faces in surface: " << solid->surface->numFaces << logger.end;
+    */
+}
+

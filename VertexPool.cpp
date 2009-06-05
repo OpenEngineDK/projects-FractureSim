@@ -1,6 +1,5 @@
 #include "VertexPool.h"
 #include "CudaMem.h"
-#include <cstring>
 
 VertexPool::VertexPool() {}
 
@@ -47,6 +46,37 @@ void VertexPool::Print() {
         printf("v[%i] = (%f,%f,%f)\n", i, id.x, id.y, id.z);
     }
 }
+
+void VertexPool::GetTetrahedronVertices(Tetrahedron tetra, float4* vertices) {
+    CHECK_FOR_CUDA_ERROR();
+    // Copy tetrahedrons vertices from device to host
+    CudaMemcpy(&vertices[0], (void**)&data[tetra.x], sizeof(float4), cudaMemcpyDeviceToHost);    
+    CudaMemcpy(&vertices[1], (void**)&data[tetra.y], sizeof(float4), cudaMemcpyDeviceToHost);    
+    CudaMemcpy(&vertices[2], (void**)&data[tetra.z], sizeof(float4), cudaMemcpyDeviceToHost);    
+    CudaMemcpy(&vertices[3], (void**)&data[tetra.w], sizeof(float4), cudaMemcpyDeviceToHost);      
+    CHECK_FOR_CUDA_ERROR();
+}
+
+void VertexPool::GetTetrahedronDisplacements(Tetrahedron tetra, float4* displacements) {
+    CHECK_FOR_CUDA_ERROR();
+    CudaMemcpy(&displacements[0], (void**)&Ui_t[tetra.x], sizeof(float4), cudaMemcpyDeviceToHost);    
+    CudaMemcpy(&displacements[1], (void**)&Ui_t[tetra.y], sizeof(float4), cudaMemcpyDeviceToHost);    
+    CudaMemcpy(&displacements[2], (void**)&Ui_t[tetra.z], sizeof(float4), cudaMemcpyDeviceToHost);    
+    CudaMemcpy(&displacements[3], (void**)&Ui_t[tetra.w], sizeof(float4), cudaMemcpyDeviceToHost);      
+    CHECK_FOR_CUDA_ERROR();    
+}
+
+void VertexPool::GetTetrahedronAbsPosition(Tetrahedron tetra, float4* absPos) {
+    // Get init pos
+    GetTetrahedronVertices(tetra, absPos);
+    // Alloc for displacements
+    float4* disp = (float4*)malloc(sizeof(float4) * 4);
+    GetTetrahedronDisplacements(tetra, disp);
+    // Add the two together to get absolute position
+    for(int i=0; i<4; i++)
+        absPos[i] += disp[i];
+}
+
 
 void VertexPool::ConvertToCuda() {
     CHECK_FOR_CUDA_ERROR();

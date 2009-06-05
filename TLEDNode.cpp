@@ -6,6 +6,7 @@
 #include "Physics_kernels.h"
 #include "HelperFunctions.h"
 #include "CudaMem.h"
+#include "CrackStrategyOne.h"
 
 #include <string>
 #include <iostream>
@@ -15,11 +16,11 @@
 
 TLEDNode::TLEDNode() {
     solid = NULL;
-    numIterations = 25;
+    numIterations = 5;
     paused = true;
     renderPlane = false;
     useAlphaBlending = false;
-    minX = 0.0;
+    minX = -100.0;
     plane = Create(10,40,10, Vector<4,float>(0.5,0.5,0.0,0.2));
     dump = false;
     timer.Start();
@@ -41,19 +42,16 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     /*
     //PROSTATE: vpool: 3386, body tetrahedra: 16068, surface triangles: 2470
-    loader = new MshObjLoader(dataDir + "PROSTATE.msh",
+    /*loader = new MshObjLoader(dataDir + "PROSTATE.msh",
                               dataDir + "PROSTATE.obj");
-    */
 
-    /*
-    //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
-    loader = new MshObjLoader(dataDir + "tand2.msh",
-                              dataDir + "tand2.obj");
-    */
     
-    /*
+    //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
+    //        loader = new MshObjLoader(dataDir + "tand2.msh",
+    //                          dataDir + "tand2.obj");
+    
     //tetrahedra: vpool: 4, body tetrahedra: 1, surface triangles: 4
-    loader = new TetGenLoader
+    /*loader = new TetGenLoader
     (dataDir + "tetrahedron.ascii.1.node",
      dataDir + "tetrahedron.ascii.1.ele",
      dataDir + "tetrahedron.ascii.1.smesh");
@@ -65,9 +63,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
      dataDir + "box.ascii.1.ele",
      dataDir + "box.ascii.1.smesh");
     
-    /*
-    //Sphere: vpool: 119, body tetrahedra: 328, surface triangles: 212
-    loader = new TetGenLoader
+    //tetrahedra: vpool: 119, body tetrahedra: 328, surface triangles: 212
+    /*    loader = new TetGenLoader
         (dataDir + "sphere.ascii.1.node", 
          dataDir + "sphere.ascii.1.ele", 
          dataDir + "sphere.ascii.1.smesh");
@@ -101,11 +98,10 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
         ::ConvertToSurface(loader->GetSurface());
 
     // scaling factors for the different models
-    //solid->vertexpool->Scale(1.1); // blob
+    solid->vertexpool->Scale(1.1); // blob
     //solid->vertexpool->Scale(5); // tand2, tetrahedra and box
     //solid->vertexpool->Scale(30); // bunny
     //solid->vertexpool->Scale(0.3); // sphere
-    solid->vertexpool->Scale(30); // for testing
     
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
@@ -121,11 +117,18 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     //       136360000000.0f, 8334000000.0f, 0.4f, 100.0f); //concrete moded
     //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
 	//precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f); //soft
+    //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
+    
+    // Initializing tetrahedron neighbouring lists
+    createNeighbourList(solid);
+    // Initialize crack strategy
+    crackStrategy = new CrackStrategyOne();
+    
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
-    PolyShape ps("FlightArrow7.obj");
-    //PolyShape ps("Box12.obj");
+    //PolyShape ps("FlightArrow7.obj");
+    PolyShape ps("Box12.obj");
     //PolyShape ps("Sphere80.obj");
 
     // Initialize the Visualizer
@@ -137,8 +140,6 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     // Center of mass points
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
-   //    vbom->AllocBuffer(CENTER_OF_MASS_COLR, solid->body->numTetrahedra, GL_POINTS);
-
     
     // Body mesh is all tetrahedron faces with colors and normals
     vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
@@ -150,10 +151,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // Stress tensors visualizes stress planes.
     //vbom->AllocBuffer(STRESS_TENSOR_COLORS, solid->body->numTetrahedra, GL_POINTS);
     vbom->AllocBuffer(STRESS_TENSOR_VERTICES, solid->body->numTetrahedra, ps);
-    vbom->AllocBuffer(STRESS_TENSOR_COLORS,   solid->body->numTetrahedra*ps.numVertices, GL_POINTS);
+    //vbom->AllocBuffer(STRESS_TENSOR_COLORS,   solid->body->numTetrahedra*ps.numVertices, GL_POINTS);
     vbom->AllocBuffer(STRESS_TENSOR_NORMALS,  solid->body->numTetrahedra*ps.numVertices, GL_POINTS);
     
-
     // Disabled to bypass rendering
     vbom->Disable(SURFACE_VERTICES);
     vbom->Disable(SURFACE_NORMALS);
@@ -196,9 +196,17 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         for (unsigned int i=0; i<numIterations; i++) {
             calculateGravityForces(solid);
             calculateInternalForces(solid, vbom);
+            
             updateDisplacement(solid);
             applyFloorConstraint(solid, 0);
         }
+
+        // Check for cracks
+        if( crackStrategy->CrackInitialized(solid) ) {
+            crackStrategy->ApplyCrackTracking(solid);
+            paused = true;
+        }
+
         timer.Reset();
     }
  
@@ -213,21 +221,24 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         updateBodyMesh(solid, vbom, minX);
 
 
-    if (renderPlane) 
-        planeClipping(solid, vbom, minX);
+    planeClipping(solid, vbom, minX);
 
-    if( vbom->IsEnabled(STRESS_TENSOR_VERTICES) )
+    if( vbom->IsEnabled(STRESS_TENSOR_VERTICES) ) {
         updateStressTensors(solid, vbom);
+        applyTransformation(vbom->GetBuf(STRESS_TENSOR_VERTICES),
+                            vbom->GetBuf(STRESS_TENSOR_NORMALS));    
+    }
        
     vbom->UnmapAllBufferObjects();
     
+    // press x to dump
     if( dump ) {
         //float* data;
         vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VALUES), "./eigValues.dump"); 
         vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VECTORS), "./eigVectors.dump");   
         //vbom->CopyBufferDeviceToHost(vbom->GetBuf(STRESS_TENSORS), "./matrixBuffer.dump");   
        
-        //vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(BODY_COLORS));
+        //vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(STRESS_TENSOR_VERTICES));
         dump = false;
     }
 }
@@ -246,7 +257,9 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
 
     // These buffers will only be rendered if they are enabled.
     vbom->Render(CENTER_OF_MASS);
-    vbom->Render(STRESS_TENSOR_VERTICES);
+    vbom->RenderWithNormals(vbom->GetBuf(STRESS_TENSOR_VERTICES),
+                            vbom->GetBuf(STRESS_TENSOR_NORMALS)); 
+    //vbom->Render(STRESS_TENSOR_VERTICES);
     //vbom->RenderWithColors(vbom->GetBuf(STRESS_TENSORS), vbom->GetBuf(STRESS_TENSOR_COLORS));
 
     vbom->RenderWithNormals(vbom->GetBuf(SURFACE_VERTICES),
@@ -259,4 +272,8 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     // needs to be last, because it is transparent
     if (renderPlane) 
         plane->Accept(*view);
+
+    crackStrategy->RenderDebugInfo();
 }
+
+

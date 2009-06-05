@@ -73,9 +73,14 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
             case KEY_b:
                 tled->useAlphaBlending = !tled->useAlphaBlending;
                 break;
+            case KEY_c:
+                tled->crackStrategy->ApplyCrackTracking(tled->solid);
+                break;
             case KEY_n: //reset
                 Scene::ISceneNode* parentnode;
                 parentnode = tled->GetParent();
+                // Save numIterations
+                int numItr = tled->numIterations;
 
                 // remove old node
                 parentnode->RemoveNode(tled);
@@ -93,6 +98,7 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 engine.ProcessEvent().Attach(*tled);
                 engine.DeinitializeEvent().Attach(*tled);
 
+                
                 break;
             case KEY_q:
                 logger.info << "camera = {position: " << camera.GetPosition()

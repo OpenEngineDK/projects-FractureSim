@@ -11,6 +11,7 @@
 #include <Utils/Timer.h>
 
 #include "VboManager.h"
+#include "CrackStrategy.h"
 #include "Solid.h"
 #include <string>
 
@@ -18,6 +19,10 @@ using namespace OpenEngine;
 
 class TLEDNode : public Scene::RenderNode, public Core::IModule {
  public:
+    CrackStrategy* crackStrategy;
+    Scene::TransformationNode* plane;
+    Solid* solid;
+    Utils::Timer timer;
     VboManager* vbom;
     unsigned int numIterations;
     bool paused, dump, renderPlane, useAlphaBlending;
@@ -32,10 +37,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     virtual void Handle(Core::DeinitializeEventArg arg);
 
     void StepPhysics();
- private:
-    Scene::TransformationNode* plane;
-    Solid* solid;
-    Utils::Timer timer;
+
 };
 
 #endif // _TLED_NODE_

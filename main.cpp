@@ -49,7 +49,7 @@ using namespace OpenEngine::Resources;
 int main(int argc, char** argv) {
  
     // Create simple setup
-    SimpleSetup* setup = new SimpleSetup("TLED", new Viewport(0,0,800,600));
+    SimpleSetup* setup = new SimpleSetup("TLED", new Viewport(0,0,1280,1024));
 
     // Print usage info.
     logger.info << "========= Running OpenEngine Test Project =========";
@@ -85,9 +85,8 @@ int main(int argc, char** argv) {
 
     Scene::BlendingNode* bn = new Scene::BlendingNode();
     rsn->AddNode(bn);
-
     Vector<3,float> color(0.0,0.0,0.0);
-    bn->AddNode(new GridNode(1000,20,color));
+    bn->AddNode(new GridNode(1000,30,color));
     bn->AddNode(new CoordSystemNode());
 
     TLEDNode* tled = new TLEDNode();
@@ -101,10 +100,9 @@ int main(int argc, char** argv) {
     kh->SetPoint(lookat);
     setup->GetKeyboard().KeyEvent().Attach(*kh);
 
-
     setup->AddDataDirectory("projects/TLED/data/models/");
-    
-    // Start the engine.
+
+     // Start the engine.
     setup->GetEngine().Start();
 
     // delete the entire scene

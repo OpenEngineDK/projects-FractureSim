@@ -32,7 +32,9 @@ float4 calcNormal(float4 *v0, float4 *v1, float4 *v2)
 
 
 __global__
-void applyTransformation_k(float4* model, float4* vert, float4* mat, unsigned int numVerts, unsigned int numThreads) {
+void applyTransformation_k(float4* modelVert, float4* mat, float4* vert, 
+                           float4* modelNorm, float4* norm,
+                           unsigned int numVerts, unsigned int numThreads) {
 	int me_idx = (numVerts*blockIdx.x) + threadIdx.x;
 
 	if (threadIdx.x>=numVerts)
@@ -40,10 +42,17 @@ void applyTransformation_k(float4* model, float4* vert, float4* mat, unsigned in
     
     int m_idx = 4*blockIdx.x;
 
-    vert[me_idx].x = dot(mat[m_idx + 0], model[threadIdx.x]);
-    vert[me_idx].y = dot(mat[m_idx + 1], model[threadIdx.x]);
-    vert[me_idx].z = dot(mat[m_idx + 2], model[threadIdx.x]);
-    vert[me_idx].w = dot(mat[m_idx + 3], model[threadIdx.x]);
+    // Transform the model vertex
+    vert[me_idx].x = dot(mat[m_idx + 0], modelVert[threadIdx.x]);
+    vert[me_idx].y = dot(mat[m_idx + 1], modelVert[threadIdx.x]);
+    vert[me_idx].z = dot(mat[m_idx + 2], modelVert[threadIdx.x]);
+    vert[me_idx].w = dot(mat[m_idx + 3], modelVert[threadIdx.x]);
+    // Transform the model normal
+    norm[me_idx].x = dot(mat[m_idx + 0], modelNorm[threadIdx.x]);
+    norm[me_idx].y = dot(mat[m_idx + 1], modelNorm[threadIdx.x]);
+    norm[me_idx].z = dot(mat[m_idx + 2], modelNorm[threadIdx.x]);
+    norm[me_idx].w = dot(mat[m_idx + 3], modelNorm[threadIdx.x]);
+    
 }
 
 /**
@@ -51,16 +60,21 @@ void applyTransformation_k(float4* model, float4* vert, float4* mat, unsigned in
  * vertex in the polygon model. Start as many threats as there are
  * vertices in the model.
  */
-void applyTransformation(VisualBuffer& vb) {
-    unsigned int gridSize = vb.numElm;
-    unsigned int numVerticesInModel = vb.numIndices / vb.numElm; // this is the number of indices in one model.
+void applyTransformation(VisualBuffer& vert, VisualBuffer& norm) {
+    unsigned int gridSize = vert.numElm;
+    unsigned int numVerticesInModel = vert.numIndices / vert.numElm; // this is the number of indices in one model.
     //unsigned int blockSize = numVerticesInModel; // number of indices pr. elm (box=36)
     unsigned int blockSize = (int)ceil((float)numVerticesInModel/BLOCKSIZE) * BLOCKSIZE;
 
     //printf("Grid: %i  block: %i - numThreads: %i - numVerts: %i\n", gridSize, blockSize, vb.numIndices, numVerticesInModel);
     //printf("modelAddr: %i - bufAddr: %i\n", vb.modelBuf, vb.buf);
    
-    applyTransformation_k<<<make_uint3(gridSize,1,1), make_uint3(blockSize,1,1)>>>(vb.modelBuf, vb.buf, vb.matBuf, numVerticesInModel, vb.numIndices);
+    applyTransformation_k
+        <<<make_uint3(gridSize,1,1), make_uint3(blockSize,1,1)>>>
+        (vert.modelVertBuf, vert.matBuf, vert.buf, 
+         vert.modelNormBuf, norm.buf,
+         numVerticesInModel, vert.numIndices);
+
     CUT_CHECK_ERROR("Error applying transformations");
 }
 
@@ -162,7 +176,6 @@ updateBodyMesh_k(float4* vertBuf, float4* colrBuf, float4* normBuf,
     int norm_idx = me_idx*12;
 	me_idx *= 12;
 
-
     // 0     2     3
     vertBuf[me_idx++] = a;
     vertBuf[me_idx++] = b;
@@ -225,6 +238,7 @@ void updateBodyMesh(Solid* solid, VboManager* vbom, float minX) {
 __global__ void
 updateStressTensors_k(Body body, 
                       float4* matBuf,
+                      float4* norm,
                       float4* com, 
                       float4* eigenVectors,
                       float4* eigenValues) {
@@ -240,15 +254,15 @@ updateStressTensors_k(Body body,
     Matrix4f m;
     m.SetPos(center.x, center.y, center.z);
     
-    float4 eVal = eigenValues[me_idx];
-    eVal = eVal / 1000.0f;
+    //    float4 eVal = eigenValues[me_idx];
+    //eVal = eVal / 1000.0f;
     //float fac = 0.0001f;
     //m.SetScale(eVal.x*fac, eVal.y*fac, eVal.z*fac);
     //m.SetScale(0,0,0);
     
-    m.row0 = eigenVectors[e_idx+0] * eVal.x;
-    m.row1 = eigenVectors[e_idx+1] * eVal.y;
-    m.row2 = eigenVectors[e_idx+2] * eVal.z;
+    m.row0 = eigenVectors[e_idx+0];
+    m.row1 = eigenVectors[e_idx+1];
+    m.row2 = eigenVectors[e_idx+2];
 
     m.CopyToBuf(matBuf, me_idx);
 }
@@ -260,11 +274,38 @@ void updateStressTensors(Solid* solid, VboManager* vbom) {
         <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
         (*solid->body,
          vbom->GetBuf(STRESS_TENSOR_VERTICES).matBuf,
+         vbom->GetBuf(STRESS_TENSOR_NORMALS).buf,
          vbom->GetBuf(CENTER_OF_MASS).buf,
          vbom->GetBuf(EIGEN_VECTORS).buf,
          vbom->GetBuf(EIGEN_VALUES).buf);
 }
 
+
+__global__ void
+updateStressTensorNormals_k(Body body, 
+                            float4* vert,
+                            float4* norm,
+                            float4* eigenValues) {
+
+	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (me_idx>=body.numTetrahedra) return;
+
+    
+}
+
+
+void updateStressTensorNormals(Solid* solid, VboManager* vbom) {
+	int gridSize = (int)ceil(((float)solid->body->numTetrahedra)/BLOCKSIZE);
+
+    updateStressTensorNormals_k
+        <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (*solid->body,
+         vbom->GetBuf(STRESS_TENSOR_VERTICES).buf,
+         vbom->GetBuf(STRESS_TENSOR_NORMALS).buf,
+         vbom->GetBuf(EIGEN_VALUES).buf);
+
+}
 
 __global__ void
 planeClipping_k(Body body, Point* points, float4* displacements, 

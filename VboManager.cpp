@@ -18,7 +18,8 @@ VboManager::~VboManager() {
     for (int i = 0; i<NUM_BUFFERS; i++ )
         if( vb[i].mode == GL_POLYGON && vb[i].vboID > 0 ) {
             cudaFree(vb[i].matBuf);
-            cudaFree(vb[i].modelBuf);
+            cudaFree(vb[i].modelVertBuf);
+            cudaFree(vb[i].modelNormBuf);
         }
             
     CHECK_FOR_CUDA_ERROR();
@@ -51,7 +52,7 @@ unsigned int VboManager::sizeOfElement(GLenum mode){
     case GL_LINES:
         return 2 * sizeof(float4);
     case GL_TRIANGLES: 
-        return 3 * sizeof(float4); // NOTE: float3 here!
+        return 3 * sizeof(float4);
     default: 
         printf("[VboManager] ERROR: unknown buffer mode, use GL_POINTS, GL_LINES og GL_TRIANGLES\n");
         exit(-1);
@@ -89,7 +90,7 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, GLenum mode){
 VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
     vb[id].numElm = numElm;        
     vb[id].enabled = true;
-    vb[id].mode = GL_POLYGON;
+    vb[id].mode = GL_TRIANGLES;
     vb[id].numIndices = numElm * ps.numVertices;
 
 
@@ -102,16 +103,24 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
         CudaMemset(vb[id].matBuf, 0, matByteSize);
     else printf("[VboManager] Error: could not allocate matrix buffer\n");
     
-
-    // ------------------ MODEL BUFFER --------------- //
+    // ------------------ MODEL VERTEX BUFFER --------------- //
     int byteSize = ps.numVertices * sizeof(float4);
-    stat = CudaMemAlloc((void**)&(vb[id].modelBuf), byteSize);
+    stat = CudaMemAlloc((void**)&(vb[id].modelVertBuf), byteSize);
     if( stat != cudaSuccess )
         printf("[VboManager] Error: could not allocate model buffer\n");
     // Copy the poly shape once to cuda.
-    stat = CudaMemcpy(vb[id].modelBuf, ps.vertices, byteSize, cudaMemcpyHostToDevice);
+    stat = CudaMemcpy(vb[id].modelVertBuf, ps.vertices, byteSize, cudaMemcpyHostToDevice);
     if( stat == cudaSuccess )
-        printf("PolyShape uploaded successfully\n");
+        printf("PolyShape vertices uploaded successfully\n");
+
+    // ------------------ MODEL NORMAL BUFFER --------------- //
+    stat = CudaMemAlloc((void**)&(vb[id].modelNormBuf), byteSize);
+    if( stat != cudaSuccess )
+        printf("[VboManager] Error: could not allocate normal buffer\n");
+    // Copy the poly shape once to cuda.
+    stat = CudaMemcpy(vb[id].modelNormBuf, ps.normals, byteSize, cudaMemcpyHostToDevice);
+    if( stat == cudaSuccess )
+        printf("PolyShape normals uploaded successfully\n");
 
     // ----------- VERTEX BUFFER ------------------- //            
     // Each element has a float4 pr. vertex
@@ -134,7 +143,7 @@ VisualBuffer& VboManager::GetBuf(unsigned int id) {
 void VboManager::MapAllBufferObjects() {   
     // Map VBO id to buffer
     for( int i=0; i<NUM_BUFFERS; i++ ) 
-        if( vb[i].mode != GL_POLYGON && vb[i].vboID > 0 ) {
+        if( vb[i].vboID > 0 ) {
             //printf("mapping bufferAddress %i -  with ID: %i \n", vb[i].buf, vb[i].vboID);
             CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vb[i].buf, vb[i].vboID));
         }
@@ -143,7 +152,7 @@ void VboManager::MapAllBufferObjects() {
 void VboManager::UnmapAllBufferObjects() {
     // Unmap VBO
     for( int i=0; i<NUM_BUFFERS; i++ )
-        if( vb[i].mode != GL_POLYGON && vb[i].vboID > 0 ) {
+        if( vb[i].vboID > 0 ) {
             CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vb[i].vboID ));
         }
 }
@@ -227,7 +236,7 @@ void VboManager::Render(int id) {
 
 void VboManager::Render(VisualBuffer& vert) {
     if( vert.enabled && vert.vboID > 0 ) {
-        glEnable(GL_AUTO_NORMAL);
+        //        glEnable(GL_AUTO_NORMAL);
         glEnable(GL_NORMALIZE); 
         glEnable(GL_COLOR_MATERIAL);
         //glShadeModel(GL_FLAT);
@@ -239,28 +248,13 @@ void VboManager::Render(VisualBuffer& vert) {
         //glCullFace(GL_BACK);
         //glFrontFace(GL_CCW);
 
-        // If the visual buffer is a polygon the vertex buffer
-        // must be calculated by applying transformation matrix to model.
-        if( vert.mode == GL_POLYGON ) {
-            CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vert.buf, vert.vboID));
-            applyTransformation(vert);
-            CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vert.vboID ));
- 
-            glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
-            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glDrawArrays(GL_TRIANGLES, 0, vert.numIndices);
-
-            CHECK_FOR_GL_ERROR();
-        }
-        else {
-            glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
-            glPointSize(2);
-            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glDrawArrays(vert.mode, 0, vert.numIndices);
-            CHECK_FOR_GL_ERROR();
-        }
+        glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
+        glPointSize(2);
+        glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glDrawArrays(vert.mode, 0, vert.numIndices);
+        CHECK_FOR_GL_ERROR();
+         
         glDisableClientState(GL_VERTEX_ARRAY);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
@@ -334,11 +328,11 @@ void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, std::string filename) 
     {
         float4 v = data[i];
 
-        if( (i % 3) == 0 ){
+        /*        if( (i % 3) == 0 ){
             output << "Dot = " << dot(data[i], data[i+1]) << " ----- " <<  dot(data[i], data[i+2]) << " ---- " <<  dot(data[i+1], data[i+2]) << std::endl;
             output << "Length: " << length(data[i]) << ", " << length(data[i+1]) << ", " << length(data[i+2]) << std::endl;
         } 
-
+        */
 
         output << v.x << ", " << v.y << ", " << v.z << ", " << v.w << std::endl;
     }
@@ -351,107 +345,3 @@ void VboManager::CopyBufferDeviceToHost(VisualBuffer& vb, std::string filename) 
     CHECK_FOR_GL_ERROR();
 }
 
-
-
-
-/**
- * Render all visual buffers that are enabled for rendering.
- */
-/*void VboManager::Render(int id) {
-    VisualBuffer& buf = vb[id];
-    if( buf.enabled && buf.vboID > 0 ) {
-        // Set color
-        float4 color = buf.color;
-        float4 ambcolor;
-        ambcolor.x = 1.0 * color.x;
-        ambcolor.y = 1.0 * color.y;
-        ambcolor.z = 1.0 * color.z;
-        ambcolor.w = 0.1 * color.w;
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, (GLfloat*)&color);
-        glMaterialfv(GL_FRONT, GL_AMBIENT, (GLfloat*)&ambcolor);
-        glColor4f(color.x,color.y,color.z,color.w);
-     
-        // Draw VBO
-        // If the visual buffer is a polygon the vertex buffer
-        // must be calculated by applying transformation matrix to model.
-        if( buf.mode == GL_POLYGON ) {
-            CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&buf.buf, buf.vboID));
-            applyTransformation(buf);
-            CUDA_SAFE_CALL(cudaGLUnmapBufferObject( buf.vboID ));
- 
-            glBindBuffer(GL_ARRAY_BUFFER, buf.vboID);
-            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glDrawArrays(GL_TRIANGLES, 0, buf.numIndices);
-            //                printf("numIndices: %i\n", buf.numIndices);
-            CHECK_FOR_GL_ERROR();
-        }
-        else {
-            glBindBuffer(GL_ARRAY_BUFFER, buf.vboID);
-            glPointSize(2);
-            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            glDrawArrays(buf.mode, 0, buf.numIndices);
-            CHECK_FOR_GL_ERROR();
-        }
-
-        glDisableClientState(GL_VERTEX_ARRAY);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-        //glDisable(GL_DEPTH_TEST);
-        CHECK_FOR_GL_ERROR();
-    }
-}
-*/
-/*
-void VboManager::Render(VisualBuffer& vert, VisualBuffer& colr, VisualBuffer& norm) {
-    if( vert.enabled && vert.vboID ) {
-        // Draw VBO
- 
-        // glEnable(GL_CULL_FACE);
-        glEnable(GL_NORMALIZE); 
-        glEnable(GL_COLOR_MATERIAL);
-        //glShadeModel(GL_FLAT);
-        
-        glEnable(GL_LIGHTING);
-        glEnable(GL_LIGHT0);
- 
-        UseColorArray(colr);
-        UseNormalArray(norm);
-
-        // If the visual buffer is a polygon the vertex buffer
-        // must be calculated by applying transformation matrix to model.
-        if( vert.mode == GL_POLYGON ) {
-            CUDA_SAFE_CALL(cudaGLMapBufferObject( (void**)&vert.buf, vert.vboID));
-            applyTransformation(vert);
-            CUDA_SAFE_CALL(cudaGLUnmapBufferObject( vert.vboID ));
-        
-            glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
-            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
-            glEnableClientState(GL_VERTEX_ARRAY);
-            
-            glDrawArrays(GL_TRIANGLES, 0, vert.numIndices);
-        }
-        else {
-            glPointSize(4);
-
-            glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
-            glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
-            glEnableClientState(GL_VERTEX_ARRAY);
- 
-            glDrawArrays(vert.mode, 0, vert.numIndices);
-        }
-
-        glDisableClientState( GL_VERTEX_ARRAY );
-        glDisableClientState( GL_COLOR_ARRAY );
-        glDisableClientState( GL_NORMAL_ARRAY );
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindBufferARB(GL_ARRAY_BUFFER, 0);
-
-        //glDisable(GL_DEPTH_TEST);
-        CHECK_FOR_GL_ERROR();
-    }
-
-}
-*/

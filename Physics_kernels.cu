@@ -91,10 +91,8 @@ texture<float4,  1, cudaReadModeElementType> _tex;
 
 
 __global__ void
-calculateForces_k(Matrix4x3 *shape_function_derivatives,
-                  Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
-                  int4 *writeIndices, float4 *pointForces,
-                  int maxPointForces, float mu, float lambda, 
+calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
+                  int4 *writeIndices, float4 *pointForces, int maxPointForces, float mu, float lambda, 
                   unsigned int numTets, float4* colrBuf, float4* tensorColr, 
                   float4* eigenVectors, float4* eigenValues) {
 
@@ -254,6 +252,22 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     double eValue[3];
     s_tensor.calcEigenDecomposition(eVector, eValue);
 
+    // Find and save largest Eigen value and corresponding Eigen vector because 
+    // this defines the principal stress
+    if( abs(eValue[0]) > abs(eValue[1]) && abs(eValue[0]) > abs(eValue[2]) )
+        principalStress[me_idx] = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
+    else if( abs(eValue[1]) > abs(eValue[0]) && abs(eValue[1]) > abs(eValue[2]) )
+        principalStress[me_idx] = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], eValue[1]);
+    else
+        principalStress[me_idx] = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
+
+    // The eigenvalue determines the highest principal stress, 
+    // if it exceeds the max stress we raise a flag.
+    double MAX_STRESS = 10000.0;
+    if( abs(principalStress[me_idx].w) > MAX_STRESS )
+        *maxStressExceeded = true;
+
+
     // Eigen value one corresponds to eigen vector one, etc.. 
     eigenValues[me_idx] = make_float4(eValue[0], eValue[1], eValue[2], 0);
 
@@ -278,15 +292,12 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     }
     double longestEv = maxEv > minEv ? maxEv : minEv;
     longestEv *= maxEv > minEv ? maxSign : minSign;
- 
-    //float4 col = make_float4((numTets/me_idx), 0.5, 0.1, 1.0);
-    float4 col = GetColor(-longestEv, -1000.0, 1500.0);
-
-    //    tensorColr[me_idx] = col;
-    
-    int colr_idx = me_idx*12;
 
     // ---------- COLORS -------------------
+    //float4 col = make_float4((numTets/me_idx), 0.5, 0.1, 1.0);
+    float4 col = GetColor(-longestEv, -1000.0, 1500.0);
+    int colr_idx = me_idx*12;
+
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
@@ -416,7 +427,7 @@ void calculateInternalForces(Solid* solid, VboManager* vbom)  {
 	cudaChannelFormatDesc channelDesc2 = cudaCreateChannelDesc<float>();	
 	cudaBindTexture( 0,  V0_1d_tex, mesh->volume, channelDesc2 );
 
-	// run kernel (BLOCKSIZE=128)
+    // run kernel (BLOCKSIZE=128)
 	int tetSize = (int)ceil(((float)mesh->numTetrahedra)/BLOCKSIZE);
 	calculateForces_k<<<make_uint3(tetSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>(
 		(Matrix4x3 *)mesh->shape_function_deriv,
@@ -428,7 +439,9 @@ void calculateInternalForces(Solid* solid, VboManager* vbom)  {
 		solid->vertexpool->maxNumForces,
 		state->mu,
 		state->lambda,
-		mesh->numTetrahedra,
+		solid->body->principalStress,
+        solid->body->maxStressExceeded,
+        mesh->numTetrahedra,
         vbom->GetBuf(BODY_COLORS).buf,
         vbom->GetBuf(STRESS_TENSOR_COLORS).buf,
         vbom->GetBuf(EIGEN_VECTORS).buf,

@@ -17,6 +17,7 @@ SET( PROJECT_SOURCES
   TLEDNode.cpp
   VertexPool.cpp
   Surface.cpp
+  Solid.cpp
   Body.cpp
   GridNode.cpp
   CoordSystemNode.cpp
@@ -25,7 +26,6 @@ SET( PROJECT_SOURCES
   VboManager.cpp
   Shapes.cpp
   Precompute.cpp
-  CudaMem.cpp
 )
 
 # Include needed to use SDL under Mac OS X
