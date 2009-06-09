@@ -264,7 +264,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 
     // The eigenvalue determines the highest principal stress, 
     // if it exceeds the max stress we raise a flag.
-    double MAX_STRESS = 10000.0;
+    double MAX_STRESS = 40000.0;
     if( abs(principalStress[me_idx].w) > MAX_STRESS )
         *maxStressExceeded = true;
 

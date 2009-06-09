@@ -88,7 +88,7 @@ bool Body::AddCrackPoint(int tetraIdx, int nodeIdx1, int nodeIdx2, float crackPo
             return true;
         }
     }
-    logger.info << "Warning: cracked edge not found in tetrahedron - possible error in neighbour list" << logger.end;
+    //    logger.info << "Warning: cracked edge not found in tetrahedron - possible error in neighbour list" << logger.end;
     return false;
 }
 

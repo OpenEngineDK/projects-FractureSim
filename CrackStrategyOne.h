@@ -32,6 +32,9 @@ private:
     std::list<int> crackedTetrahedrons;
     std::list<int> crackFront;
 
+    std::list<float4> debugPlaneNorm;
+    std::list<float4> debugPointOnPlane;
+
     Solid* solid;
     bool crackInitialized;
     int initTetraIdx;
