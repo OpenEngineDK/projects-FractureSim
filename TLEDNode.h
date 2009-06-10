@@ -27,6 +27,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     unsigned int numIterations;
     bool paused, dump, renderPlane, useAlphaBlending;
     float minX;
+    bool crackTrackAllWay;
 
     TLEDNode();
     virtual ~TLEDNode();

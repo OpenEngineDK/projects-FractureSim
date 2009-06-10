@@ -22,6 +22,9 @@ Body::Body(unsigned int size) {
     neighbour = (int*)malloc(sizeof(int)*4*size);
     for( unsigned int i=0; i<size*4; i++ ) neighbour[i] = -1;
 
+    crackPlaneNorm = (float4*)malloc(sizeof(float4)*size);
+    for( unsigned int i=0; i<size; i++ ) crackPlaneNorm[i] = make_float4(0);
+
     crackPoints = (float*)malloc(sizeof(float) * 6 * size);
     memset(crackPoints, 0, sizeof(float) * 6 * size);
 
@@ -102,13 +105,17 @@ float4 Body::GetPrincipalStressNorm(int tetraIdx) {
 }
 
 bool Body::HasCrackPoints(int tetraIdx) {
-    float* cp = GetCrackPoints(tetraIdx);
-    for(int i=0; i<6; i++) {
-        if( cp[i] > 0 ) return true;
-    }
-    return false;
+    return NumCrackPoints(tetraIdx) > 0;
 }
 
+int Body::NumCrackPoints(int tetraIdx) {
+    int numCrackPoints = 0;
+    float* cp = GetCrackPoints(tetraIdx);
+    for(int i=0; i<6; i++) {
+        if( cp[i] > 0 ) numCrackPoints++;
+    }
+    return numCrackPoints;
+}
 
 float* Body::GetCrackPoints(int tetraIdx){
     return &crackPoints[tetraIdx*6];

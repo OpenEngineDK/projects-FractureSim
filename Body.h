@@ -108,6 +108,9 @@ class Body {
     // Encoded as a float4: [s_x, s_y, s_z, size]
     float4* principalStress;
 
+    // Crack plane normal or [0,0,0,0] if not yet cracked
+    float4* crackPlaneNorm;
+
     // True if the maximum stress in a tetrahedron has been exceeded
     bool* maxStressExceeded;
 
@@ -133,6 +136,7 @@ class Body {
     int*   GetNeighbours(int tetraIdx);
     float4 GetPrincipalStressNorm(int tetraIdx);
     bool   HasCrackPoints(int tetraIdx);
+    int    NumCrackPoints(int tetraIdx);
     float* GetCrackPoints(int tetraIdx);
     
 

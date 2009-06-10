@@ -26,28 +26,28 @@ public:
     bool FragmentationDone();
 
     // Debug
-    void RenderDebugInfo();
+    void RenderDebugInfo(Solid* solid);
 
 private:
     std::list<int> crackedTetrahedrons;
     std::list<int> crackFront;
 
-    std::list<float4> debugPlaneNorm;
-    std::list<float4> debugPointOnPlane;
+    std::list<float3> debugPlaneNorm;
+    std::list<float3> debugPointOnPlane;
+    
+    std::list<float3> debugVector;
+    void AddDebugVector(float3 pos, float3 dir, float3 color);
 
-    Solid* solid;
+
+    //    Solid* solid;
     bool crackInitialized;
     int initTetraIdx;
-    float4 initPlaneNorm;
+    float3 initPlaneNorm;
     
     
-
-
-    std::list<float4> cpTri;
-
     // Crack first tetrahedron 
     void InitializeCrack(Solid* solid, int tetraIndex);
-    bool CrackTetrahedron(int tetraIdx, float4 planeNorm, float4 pointOnPlane);
+    bool CrackTetrahedron(Solid* solid, int tetraIdx, float4 planeNorm, float4 pointOnPlane);
 
 };
 

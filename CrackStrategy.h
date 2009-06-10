@@ -29,7 +29,7 @@ public:
     virtual bool FragmentationDone() { return false; }
 
     // Debug
-    virtual void RenderDebugInfo() {}
+    virtual void RenderDebugInfo(Solid* solid) {}
 
 };
 

@@ -76,6 +76,11 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
             case KEY_c:
                 tled->crackStrategy->ApplyCrackTracking(tled->solid);
                 break;
+            case KEY_v:
+                tled->crackTrackAllWay = !tled->crackTrackAllWay;
+                logger.info << "Crack All way through = " << 
+                    tled->crackTrackAllWay << logger.end;
+                break;
             case KEY_n: //reset
                 Scene::ISceneNode* parentnode;
                 parentnode = tled->GetParent();

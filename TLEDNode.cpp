@@ -24,6 +24,7 @@ TLEDNode::TLEDNode() {
     plane = Create(10,40,10, Vector<4,float>(0.5,0.5,0.0,0.2));
     dump = false;
     timer.Start();
+    crackTrackAllWay = false;
 }
 
 TLEDNode::~TLEDNode() {
@@ -46,10 +47,10 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
                               dataDir + "PROSTATE.obj");
     */
     //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
-    loader = new MshObjLoader(dataDir + "tand2.msh",
+    /*loader = new MshObjLoader(dataDir + "tand2.msh",
                               dataDir + "tand2.obj");
       
-    
+    */
     //tetrahedra: vpool: 4, body tetrahedra: 1, surface triangles: 4
     /*loader = new TetGenLoader
     (dataDir + "tetrahedron.ascii.1.node",
@@ -64,11 +65,11 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
      dataDir + "box.ascii.1.smesh");
     */
     //tetrahedra: vpool: 119, body tetrahedra: 328, surface triangles: 212
-    /*loader = new TetGenLoader
+    loader = new TetGenLoader
         (dataDir + "sphere.ascii.1.node", 
          dataDir + "sphere.ascii.1.ele", 
          dataDir + "sphere.ascii.1.smesh");
-    */
+    
 
     /*
     //bunny: vpool: , body tetrahedra: , surface triangles: 
@@ -99,14 +100,14 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     // scaling factors for the different models
     //solid->vertexpool->Scale(1.1); // blob
-    solid->vertexpool->Scale(5); // tand2, tetrahedra and box
+    //solid->vertexpool->Scale(5); // tand2, tetrahedra and box
     //solid->vertexpool->Scale(10);
     //solid->vertexpool->Scale(30); // bunny
-    //solid->vertexpool->Scale(0.3); // sphere
+    solid->vertexpool->Scale(0.3); // sphere
     
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
-    solid->vertexpool->Move(0,20,0);
+    solid->vertexpool->Move(0,30,0);
     
     //precompute(solid, density, smallestAllowedVolume, smallestAllowedLength,
     //           mu, lambda, timeStepFactor, damping);
@@ -122,8 +123,6 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // Initialize crack strategy
     crackStrategy = new CrackStrategyOne();
     
-    // Initializing tetrahedron neighbouring lists
-    createNeighbourList(solid);
     // Initializing tetrahedron neighbouring lists
     createNeighbourList(solid);
     
@@ -203,16 +202,30 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
             updateDisplacement(solid);
             applyFloorConstraint(solid, 0);
         }
-
-        // Crack Tracking
-        if( crackStrategy->CrackInitialized(solid) ) {
-            crackStrategy->ApplyCrackTracking(solid);
-            paused = true;
-        }
-
         timer.Reset();
     }
  
+    // Crack Tracking
+    if( crackStrategy->CrackInitialized(solid) ) {
+        static int itrCount = 0;
+        while(crackTrackAllWay && !crackStrategy->FragmentationDone()){
+            crackStrategy->ApplyCrackTracking(solid);
+            if( itrCount++ > 100 ) break;
+            logger.info << "tracking" << logger.end;
+        } 
+        
+        if( !crackTrackAllWay )
+            paused = true;
+    }
+
+    /*
+    float3 n1 = make_float3(0,1,0);
+    for( float r=Math::PI/2.0; r<2*Math::PI+Math::PI/2.0; r+=0.2f ){
+        float3 n2 = make_float3(cos(r),sin(r),0);
+        logger.info << "Angle: " << acos(dot(n1,n2)) * (180.0f / Math::PI) << logger.end;
+    }
+    exit(0);
+    */
     if( vbom->IsEnabled(SURFACE_VERTICES) )
         updateSurface(solid, vbom);
     
@@ -277,7 +290,7 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
         plane->Accept(*view);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    crackStrategy->RenderDebugInfo();
+    crackStrategy->RenderDebugInfo(solid);
 }
 
 
