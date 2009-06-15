@@ -42,7 +42,7 @@ __global__ void applyGroundConstraint_k
 //	printf("%f, %f, %f \n", me.x, me.y, me.z);
 //	printf("%f, %f, %f \n", displacement.x, displacement.y, displacement.z);
 
-	if ((me.y+displacement.y)<lowestYValue) {
+	if( me.x+displacement.x > -10.0 && me.x+displacement.x < 10.0 && (me.y+displacement.y)<lowestYValue) {
 		displacements[me_idx].y = lowestYValue - me.y;
 		//oldDisplacements[me_idx] = displacements[me_idx];
 	}
@@ -253,29 +253,74 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
     double eValue[3];
     s_tensor.calcEigenDecomposition(eVector, eValue);
 
+    
+    float4 major;
+    float4 medium;
+    float4 minor;
+    // Sort Eigen values by size
+    if( abs(eValue[0]) > abs(eValue[1]) ){
+        if( abs(eValue[0]) > abs(eValue[2]) ) {
+            // 0 is the largest
+            major = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
+            if( abs(eValue[1]) > abs(eValue[2]) ){
+                // 0, 1, 2
+                medium  = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], eValue[1]);
+                minor  = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
+             }
+            else {
+                // 0, 2, 1
+                medium = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
+                minor  = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], eValue[1]);
+            }
+        }
+        else {
+            // 2,0,1 
+            major  = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
+            medium = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
+            minor  = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], eValue[1]);
+        }
+    }else if( abs(eValue[1]) > abs(eValue[2]) ){
+        // 1 is the largest
+        major = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], eValue[1]);
+        if( abs(eValue[0]) > abs(eValue[2]) ){
+            // 1, 0, 2
+            medium = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
+            minor  = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
+        }
+        else {
+            // 1, 2, 0
+            medium = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
+            minor  = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
+        }
+    }else{
+        // 2 is the largest
+        major = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
+        // 2, 1, 0
+        medium = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], eValue[1]);
+        minor  = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
+    }
+
     // Find and save largest Eigen value and corresponding Eigen vector because 
     // this defines the principal stress
-    if( abs(eValue[0]) > abs(eValue[1]) && abs(eValue[0]) > abs(eValue[2]) )
-        principalStress[me_idx] = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
-    else if( abs(eValue[1]) > abs(eValue[0]) && abs(eValue[1]) > abs(eValue[2]) )
-        principalStress[me_idx] = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], eValue[1]);
-    else
-        principalStress[me_idx] = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
+    principalStress[me_idx] = major;
 
     // The eigenvalue determines the highest principal stress, 
     // if it exceeds the max stress we raise a flag.
-    double MAX_STRESS = 60000.0;
+    double MAX_STRESS = 6000.0;
+    //    double MAX_STRESS = 3000000.0;
     if( abs(principalStress[me_idx].w) > MAX_STRESS )
         *maxStressExceeded = true;
-
 
     // Eigen value one corresponds to eigen vector one, etc.. 
     eigenValues[me_idx] = make_float4(eValue[0], eValue[1], eValue[2], 0);
 
+    // Clear fourth component being the Eigen value
+    major.w = medium.w = minor.w = 0;
+
     int e_idx = me_idx * 3;
-    eigenVectors[e_idx+0] = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], 0);
-    eigenVectors[e_idx+1] = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], 0);
-    eigenVectors[e_idx+2] = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], 0);
+    eigenVectors[e_idx+0] = major;
+    eigenVectors[e_idx+1] = medium;
+    eigenVectors[e_idx+2] = minor;
 
     int maxSign = 1;
     int minSign = 1;

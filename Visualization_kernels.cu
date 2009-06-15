@@ -258,7 +258,7 @@ updateStressTensors_k(Body body,
     //eVal = eVal / 1000.0f;
     //float fac = 0.0001f;
     //m.SetScale(eVal.x*fac, eVal.y*fac, eVal.z*fac);
-    //m.SetScale(0,0,0);
+    m.SetScale(1.0, 1.0, 1.0);
     
     m.row0 = eigenVectors[e_idx+0];
     m.row1 = eigenVectors[e_idx+1];

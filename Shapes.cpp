@@ -18,7 +18,7 @@ using namespace OpenEngine::Geometry;
 using namespace OpenEngine::Scene;
 using namespace OpenEngine::Resources;
 
-PolyShape::PolyShape(std::string name) {
+PolyShape::PolyShape(std::string name, float scale) {
     // Load the model
     IModelResourcePtr mod_res = ResourceManager<IModelResource>::Create(name);
     mod_res->Load();
@@ -44,6 +44,10 @@ PolyShape::PolyShape(std::string name) {
                          face->norm[i][1],
                          face->norm[i][2],
                          1.0};
+
+            // Scale model
+            v *= scale;
+            v.w = 1.0f;
 
              vList.push_back(v);
              nList.push_back(n);

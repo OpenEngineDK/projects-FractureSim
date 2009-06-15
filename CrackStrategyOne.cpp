@@ -114,8 +114,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
         
         float3 planeNorm = make_float3(0);
         float3 pointOnPlane = make_float3(0);
-        static float maxAngle = 0;
- 
+         
        // Handle each of the five cases
         if( numCrackPoints == 0 ) {
             // Save initial plane normal for boundary condition
@@ -135,17 +134,8 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             logger.info << "UN HANDLED CASE NUMBER OF CRACK POINTS == 1" << logger.end;
         }
         else if( numCrackPoints == 2 ) {
-            // Find neighbour tetra index
-            int neighbourIdx = -1;
-            int* nIndices = b->GetNeighbours(tetraIdx);
-            for( int i=0; i<4; i++ ) {
-                if( std::find(crackedTetrahedrons.begin(), 
-                              crackedTetrahedrons.end(), nIndices[i]) != crackedTetrahedrons.end() ) {
-                    // Found cracked neighbour
-                    neighbourIdx = nIndices[i];
-                    break;
-                }
-            }
+            // Find cracked neighbour tetra index
+            int neighbourIdx = GetCrackedNeighbour(solid, tetraIdx);
             // Check that neighbour is found
             if( neighbourIdx == -1 )
                 logger.info << "Warning: Cracked neighbour NOT found" << logger.end;
@@ -215,6 +205,14 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             planeNorm = normalize(planeNorm); 
             logger.info << "ResultingStressNorm: " << planeNorm.x << ", " << planeNorm.y << ", " << planeNorm.z << logger.end;
 
+            // Angle between new plane and initial crack plane
+            float dotp = dot( planeNorm, initPlaneNorm );
+            float angle = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);
+                
+            //if( angle > 90.0f ){
+            //    planeNorm *= -1;
+            //}
+
             // Note which two crack points that defines the edge
             int cpIdx1 = -1;
             int cpIdx2 = -1;
@@ -248,12 +246,12 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             tangent = cross(calcNorm, edge);
 
             // Calculate angel between this plane tangent and the neighbour plane tangent
-            float dotp = dot(tangent, nTangent);
-            float angle = acos( dotp / (length(tangent)*length(nTangent))) * (180 / Math::PI);
+            dotp = dot(tangent, nTangent);
+            angle = acos( dotp / (length(tangent)*length(nTangent))) * (180 / Math::PI);
 
             // While the angle is 
             float angleLimit = 45.0f;
-            static int MAX_ITR = 100;
+            int MAX_ITR = 100;
             int iterations = 0;
             // If angle exceeds limit - recalculate plane normal
             while( angle > angleLimit ) {
@@ -265,9 +263,6 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
                 planeNorm = principalStressNorm - ((dot(principalStressNorm, AB) / ABLengthSqr) * AB); 
                 planeNorm = normalize(planeNorm); 
                 logger.info << "RecalculatedStressNorm: " << planeNorm.x << ", " << planeNorm.y << ", " << planeNorm.z << logger.end;
-                //planeNorm = normalize(planeNorm);
-                //planeNorm = planeNorm - ((dot(planeNorm, AB) / ABLengthSqr) * AB); 
-                //planeNorm = normalize(planeNorm);
                 
                 // Crack the tetra to Find third crack point (not in crack edge)
                 newCpIdx = -1;
@@ -305,7 +300,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             
             logger.info << "Angle between tangents: " << angle << logger.end;
         }
-        else if( numCrackPoints == 3 ) {
+        else if( numCrackPoints == 3 || numCrackPoints == 4 ) {
             float3 v1 = normalize( make_float3(cp[1]-cp[0]) );
             float3 v2 = normalize( make_float3(cp[2]-cp[0]) );
             planeNorm = normalize( cross(v1, v2) );
@@ -313,21 +308,17 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             // Angle between new plane and initial crack plane
             float dotp = dot( planeNorm, initPlaneNorm );
             float angle = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);
-            
-            //      logger.info << "Angle Between Planes: " << angle << logger.end;
-              
-            if( angle > 90.0f ) {
-                planeNorm *= -1;
-                dotp = dot( planeNorm, initPlaneNorm);
-                angle = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);
-            }
-            if( angle > maxAngle ) maxAngle = angle;
-            logger.info << "Angle Between Planes: " << angle << " (max:" << maxAngle << ")" << logger.end;
+                
+            //if( angle > 90.0f ){
+                //                planeNorm *= -1;
+                //logger.info << "--------------------------------------- FLIPPING ----------------------------------" << logger.end;
+            //}
       
             pointOnPlane = make_float3(cp[0]);
-        }else if( numCrackPoints == 4 ) {
-            logger.info << "ERROR: case with 4 crack points NOT YET IMPLEMENTED" << logger.end;
         }
+        /*else if( numCrackPoints == 4 ) {
+            logger.info << "ERROR: case with 4 crack points NOT YET IMPLEMENTED" << logger.end;
+            }*/
         else
             logger.info << "Warning: tetra " << tetraIdx << " has less than 1 or more than 4 crack points" << logger.end;
 
@@ -485,9 +476,28 @@ bool CrackStrategyOne::CrackTetrahedron(Solid* solid, int tetraIdx, float4 plane
     return false;
 }
 
+/**
+ * Returns tetrahedron index on cracked neighbour if one exists. 
+ * Otherwise -1 is returned. This method relies on the neighbour 
+ * list maintained by the body (must be precomputed).
+ */
+int CrackStrategyOne::GetCrackedNeighbour(Solid* solid, int tetraIdx) {
+    // Find neighbour tetra index
+    int* nIndices = solid->body->GetNeighbours(tetraIdx);
+    for( int i=0; i<4; i++ ) {
+        if( std::find(crackedTetrahedrons.begin(), 
+                      crackedTetrahedrons.end(), nIndices[i]) != crackedTetrahedrons.end() ) {
+            // Found cracked neighbour
+            return nIndices[i];
+        }
+    }
+    // None of the neighbours are cracked
+    return -1;
+}
 
 void CrackStrategyOne::RenderDebugInfo(Solid* solid) {
-    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    //glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glEnable(GL_NORMALIZE);
 
     float color = 0.5;
     std::list<int>::iterator itr;
@@ -530,10 +540,10 @@ void CrackStrategyOne::RenderDebugInfo(Solid* solid) {
     glEnd();
 
 
-    /*    // ----- Render plane normals -------- //
+    // ----- Render plane normals -------- //
     
     std::list<float3>::iterator pointItr = debugPointOnPlane.begin();;
-
+    std::list<float3>::iterator planeItr = debugPlaneNorm.begin();
     glLineWidth(3.0);
     glBegin(GL_LINES);
     for( ; planeItr!=debugPlaneNorm.end(); planeItr++, pointItr++ ) {
@@ -547,12 +557,12 @@ void CrackStrategyOne::RenderDebugInfo(Solid* solid) {
         glVertex3f(norm.x+point.x, norm.y+point.y, norm.z+point.z);
     }
     glEnd();
-    */
+    
 
 
 
     // -------- Render crack planes --------------- //
-    std::list<float3>::iterator planeItr = debugPlaneNorm.begin();
+    planeItr = debugPlaneNorm.begin();
     for( itr=crackedTetrahedrons.begin(); itr!=crackedTetrahedrons.end(); itr++, planeItr++){
         int tetraIdx = *itr;
         float3 norm = *planeItr;

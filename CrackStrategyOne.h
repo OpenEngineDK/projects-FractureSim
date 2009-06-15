@@ -31,15 +31,6 @@ public:
 private:
     std::list<int> crackedTetrahedrons;
     std::list<int> crackFront;
-
-    std::list<float3> debugPlaneNorm;
-    std::list<float3> debugPointOnPlane;
-    
-    std::list<float3> debugVector;
-    void AddDebugVector(float3 pos, float3 dir, float3 color);
-
-
-    //    Solid* solid;
     bool crackInitialized;
     int initTetraIdx;
     float3 initPlaneNorm;
@@ -48,6 +39,14 @@ private:
     // Crack first tetrahedron 
     void InitializeCrack(Solid* solid, int tetraIndex);
     bool CrackTetrahedron(Solid* solid, int tetraIdx, float4 planeNorm, float4 pointOnPlane);
+
+    int GetCrackedNeighbour(Solid* solid, int tetraIdx);
+
+    // Debug
+    std::list<float3> debugPlaneNorm;
+    std::list<float3> debugPointOnPlane;    
+    std::list<float3> debugVector;
+    void AddDebugVector(float3 pos, float3 dir, float3 color);
 
 };
 

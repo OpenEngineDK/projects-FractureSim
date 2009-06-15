@@ -99,6 +99,7 @@ class Body {
     // edge 1 is shared by B and F, edge 2 is shared by D and F etc....
     int* edgeSharing;
 
+    // Tetrahedron index list of neighbours. First 4 entries are neighbours to tetra 1, etc..
     int* neighbour;
 
     // Volume for each tetrahedron

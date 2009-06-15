@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
     Camera* camera = setup->GetCamera();
     camera->SetPosition(position);
     camera->LookAt(lookat);
-
+    
     // Register movement handler to be able to move the camera
     MoveHandler* move_h = 
         new MoveHandler(*camera, setup->GetMouse());

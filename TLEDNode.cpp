@@ -65,10 +65,17 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
      dataDir + "box.ascii.1.smesh");
     */
     //tetrahedra: vpool: 119, body tetrahedra: 328, surface triangles: 212
-    loader = new TetGenLoader
+    /*    loader = new TetGenLoader
         (dataDir + "sphere.ascii.1.node", 
          dataDir + "sphere.ascii.1.ele", 
          dataDir + "sphere.ascii.1.smesh");
+    */
+
+    //Bar: vpool: 119, body tetrahedra: 328, surface triangles: 212
+    loader = new TetGenLoader
+        (dataDir + "bar.ascii.1.node", 
+         dataDir + "bar.ascii.1.ele", 
+         dataDir + "bar.ascii.1.smesh");
     
 
     /*
@@ -103,21 +110,22 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     //solid->vertexpool->Scale(5); // tand2, tetrahedra and box
     //solid->vertexpool->Scale(10);
     //solid->vertexpool->Scale(30); // bunny
-    solid->vertexpool->Scale(0.3); // sphere
-    
+    //solid->vertexpool->Scale(0.3); // sphere
+    solid->vertexpool->Scale(10.0); // bar
+
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
-    solid->vertexpool->Move(0,30,0);
+    solid->vertexpool->Move(0,35,0);
     
     //precompute(solid, density, smallestAllowedVolume, smallestAllowedLength,
     //           mu, lambda, timeStepFactor, damping);
-    precompute(solid, 0.001f, 0.0f, 0.0f, 100007.0f, 0.0005f, 0.2f, 10.0f); //stiff
+    //precompute(solid, 0.001f, 0.0f, 0.0f, 1000007.0f, 0.005f, 0.2f, 50.0f); //stiff
     //precompute(solid, 24000.0f, 0.0f, 0.0f,
     //       75000000000.0f, 2045000000.0f, 0.4f, 100.0f); //concrete
     //precompute(solid, 2.4f, 0.0f, 0.0f,
     //       136360000000.0f, 8334000000.0f, 0.4f, 100.0f); //concrete moded
     //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
-	//precompute(solid, 0.001f, 0.0f, 0.0f, 1007.0f, 49329.0f, 0.5f, 10.0f); //soft
+	precompute(solid, 0.001f, 0.0f, 0.0f, 80007.0f, 49329.0f, 0.5f, 50.0f); //soft
     //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
     
     // Initialize crack strategy
@@ -129,7 +137,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
-    PolyShape ps("FlightArrow7.obj");
+    PolyShape ps("FlightArrow7.obj", 0.5f);
     //PolyShape ps("Box12.obj");
     //PolyShape ps("Sphere80.obj");
 
