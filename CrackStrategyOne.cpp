@@ -250,7 +250,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             angle = acos( dotp / (length(tangent)*length(nTangent))) * (180 / Math::PI);
 
             // While the angle is 
-            float angleLimit = 45.0f;
+            float angleLimit = 15.0f;
             int MAX_ITR = 100;
             int iterations = 0;
             // If angle exceeds limit - recalculate plane normal
@@ -306,8 +306,8 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             planeNorm = normalize( cross(v1, v2) );
       
             // Angle between new plane and initial crack plane
-            float dotp = dot( planeNorm, initPlaneNorm );
-            float angle = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);
+            //float dotp = dot( planeNorm, initPlaneNorm );
+            //float angle = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);
                 
             //if( angle > 90.0f ){
                 //                planeNorm *= -1;
@@ -497,6 +497,8 @@ int CrackStrategyOne::GetCrackedNeighbour(Solid* solid, int tetraIdx) {
 
 void CrackStrategyOne::RenderDebugInfo(Solid* solid) {
     //glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
     glEnable(GL_NORMALIZE);
 
     float color = 0.5;

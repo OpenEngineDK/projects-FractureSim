@@ -19,6 +19,7 @@
 #include <Display/Camera.h>
 #include <Scene/BlendingNode.h>
 #include <Scene/RenderStateNode.h>
+#include <Scene/PointLightNode.h>
 
 // SimpleSetup
 #include <Utils/SimpleSetup.h>
@@ -82,6 +83,12 @@ int main(int argc, char** argv) {
     root->AddNode(rsn);
     RenderStateHandler* rsh = new RenderStateHandler(*rsn);
     setup->GetKeyboard().KeyEvent().Attach(*rsh);
+
+    PointLightNode* pln = new PointLightNode();
+    TransformationNode* lightPos = new TransformationNode();
+    lightPos->AddNode(pln);
+    lightPos->SetPosition(Vector<3,float>(1000,1000,1000));
+    root->AddNode(lightPos);
 
     Scene::BlendingNode* bn = new Scene::BlendingNode();
     rsn->AddNode(bn);
