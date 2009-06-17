@@ -16,7 +16,7 @@
 
 TLEDNode::TLEDNode() {
     solid = NULL;
-    numIterations = 15;
+    numIterations = 25;
     paused = true;
     renderPlane = false;
     useAlphaBlending = false;
@@ -25,6 +25,8 @@ TLEDNode::TLEDNode() {
     dump = false;
     timer.Start();
     crackTrackAllWay = false;
+    exception = false;
+    crackTrackingItrCount = 0;
 }
 
 TLEDNode::~TLEDNode() {
@@ -115,18 +117,18 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
-    solid->vertexpool->Move(0,35,0);
+    solid->vertexpool->Move(0,25,0);
     
     //precompute(solid, density, smallestAllowedVolume, smallestAllowedLength,
     //           mu, lambda, timeStepFactor, damping);
-    //precompute(solid, 0.001f, 0.0f, 0.0f, 1000007.0f, 0.005f, 0.2f, 50.0f); //stiff
+    precompute(solid, 0.001f, 0.0f, 0.0f, 1000007.0f, 0.005f, 0.4f, 50.0f); //stiff
     //precompute(solid, 24000.0f, 0.0f, 0.0f,
     //       75000000000.0f, 2045000000.0f, 0.4f, 100.0f); //concrete
     //precompute(solid, 2.4f, 0.0f, 0.0f,
     //       136360000000.0f, 8334000000.0f, 0.4f, 100.0f); //concrete moded
     //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
-	precompute(solid, 0.001f, 0.0f, 0.0f, 80007.0f, 49329.0f, 0.5f, 50.0f); //soft
-    //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
+	//precompute(solid, 0.001f, 0.0f, 0.0f, 80007.0f, 49329.0f, 0.5f, 50.0f); //soft
+    //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.2f, 150.0f); //yelly
     
     // Initialize crack strategy
     crackStrategy = new CrackStrategyOne();
@@ -140,6 +142,10 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     PolyShape ps("FlightArrow7.obj", 0.5f);
     //PolyShape ps("Box12.obj");
     //PolyShape ps("Sphere80.obj");
+
+    // Add node constraints
+    AddConstraint(new PolyShape("Box12.obj"), &solidCollisionConstraint);
+
 
     // Initialize the Visualizer
     vbom = new VboManager();
@@ -193,6 +199,9 @@ void TLEDNode::StepPhysics() {
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if (!solid->IsInitialized()) return;
 
+    // TEST
+    //constraintStrategyPtr = &solidCollisionConstraint;
+
     plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
 
     // skip physics if delta time is to low
@@ -206,25 +215,32 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         for (unsigned int i=0; i<numIterations; i++) {
             calculateGravityForces(solid);
             calculateInternalForces(solid, vbom);
-            
             updateDisplacement(solid);
+            //            ApplyConstraints(solid);
             applyFloorConstraint(solid, 0);
+
         }
         timer.Reset();
     }
  
     // Crack Tracking
-    if( crackStrategy->CrackInitialized(solid) ) {
-        static int itrCount = 0;
-        while(crackTrackAllWay && !crackStrategy->FragmentationDone()){
-            crackStrategy->ApplyCrackTracking(solid);
-            if( itrCount++ > 100 ) break;
-            logger.info << "tracking" << logger.end;
-        } 
-        
-        if( !crackTrackAllWay )
-            paused = true;
+    try {
+        if( crackStrategy->CrackInitialized(solid) && !exception ) {
+            
+            while(crackTrackAllWay && !crackStrategy->FragmentationDone()){
+                crackStrategy->ApplyCrackTracking(solid);
+                
+                if( crackTrackingItrCount++ > 100 ) break;
+            } 
+            if( !crackTrackAllWay )
+                paused = true;
+        }
+    }catch(Core::Exception ex) { 
+        paused = true; 
+        exception = true;
+        logger.info << "EXCEPTION: " << ex.what() << logger.end;
     }
+    
 
     /*
     float3 n1 = make_float3(0,1,0);
@@ -279,6 +295,9 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
 
     if (!solid->IsInitialized()) return;
 
+    // Visualize constraints
+    VisualizeConstraints();
+
     // These buffers will only be rendered if they are enabled.
     vbom->Render(CENTER_OF_MASS);
     vbom->RenderWithNormals(vbom->GetBuf(STRESS_TENSOR_VERTICES),
@@ -301,4 +320,23 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     crackStrategy->RenderDebugInfo(solid);
 }
 
+void TLEDNode::AddConstraint(PolyShape* constrainArea, constraintFuncPtr constrainFunction) {
+    std::pair<PolyShape*, constraintFuncPtr> constraint(constrainArea, constrainFunction);
+    nodeConstraint.push_back(constraint);
+}
+
+void TLEDNode::ApplyConstraints(Solid* solid) {
+    // For each constrain
+    std::list< std::pair<PolyShape*, constraintFuncPtr> >::iterator itr;
+    for( itr=nodeConstraint.begin(); itr!=nodeConstraint.end(); itr++ ){
+        PolyShape* area = (*itr).first;
+        constraintFuncPtr cons = (*itr).second;
+        // Apply constrain on solid
+        (*cons)(solid, area);  
+    }
+}
+
+void TLEDNode::VisualizeConstraints() {
+
+}
 

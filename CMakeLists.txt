@@ -8,6 +8,7 @@ CUDA_ADD_LIBRARY( ${CUDA_LIB}
   Physics_kernels.cu
   Visualization_kernels.cu
   Precompute_kernels.cu
+  CudaMath.cu
 )
 
 # Project source code list

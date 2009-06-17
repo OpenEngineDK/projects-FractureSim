@@ -12,18 +12,29 @@ inline bool operator!=(const float4 l, const float4 r) {
     return !(l==r);
 }
 
-CrackStrategyOne::CrackStrategyOne() : crackInitialized(false) {
+
+struct SortFunctor {
+    Body* body;
+    SortFunctor( Body* body ) : body(body) {}
+    
+    bool operator()( const int tetraIdxA, const int tetraIdxB ) { 
+        return body->NumCrackPoints(tetraIdxA) > body->NumCrackPoints(tetraIdxB);
+    }
+};
+
+CrackStrategyOne::CrackStrategyOne() : crackInitialized(false), exceedCount(0) {
 }
 
 CrackStrategyOne::~CrackStrategyOne() { 
 }
 
-
 bool CrackStrategyOne::CrackInitialized(Solid* solid) {
-    //    this->solid = solid;
-
     // Check if max stress has been exceeded
     if( !crackInitialized && solid->body->IsMaxStressExceeded() ) {
+        exceedCount++;
+    }
+
+    if( !crackInitialized && exceedCount > 6 ){
         // Crack first tetrahedron
         logger.info << "-------- CRACK INITIALIZATION ---------" << logger.end;
         InitializeCrack(solid);
@@ -62,6 +73,8 @@ void CrackStrategyOne::InitializeCrack(Solid* solid) {
 
 
 void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
+    debugVector.clear();
+
     Body* b = solid->body;
     // List of new crack front elements
     std::list<int> tetraToBeCracked;
@@ -97,7 +110,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
         int numCrackPoints = 0;
         float4 cp[4];
         for( int i=0; i<6; i++ )
-            if( crackPoint[i] > 0 ) { 
+            if( crackPoint[i] != -1 ) { 
                 float4 lp0 = node[GetEdgeStartIndex(i)]; // Line Point 0
                 float4 lp1 = node[GetEdgeEndIndex(i)];   // Line Point 1
                 float4 dir = lp1 - lp0;
@@ -107,9 +120,11 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             }
         logger.info << "Number of existing CrackPoints: " << numCrackPoints << logger.end;
 
+        logger.info << "TetraId: " << tetraIdx << " MaxStress: " << b->GetPrincipalStressNorm(tetraIdx).w << logger.end;
+
         // Get normal to principal stress plane.
         float3 principalStressNorm = make_float3(b->GetPrincipalStressNorm(tetraIdx));
-        principalStressNorm = normalize(principalStressNorm);
+        //        principalStressNorm = normalize(principalStressNorm);
         logger.info << "PrincipalStressNorm: " << principalStressNorm.x << ", " << principalStressNorm.y << ", " << principalStressNorm.z << logger.end;
         
         float3 planeNorm = make_float3(0);
@@ -151,7 +166,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             float4 thirdAbsNeighbourCrackPoint = make_float4(0);
             int numNeighbourCrackPoint = 0;
             for( int i=0; i<6; i++ )
-                if( neighbourCrackPoint[i] > 0 ) { 
+                if( neighbourCrackPoint[i] != -1 ) { 
                     float4 lp0 = neighbourNode[GetEdgeStartIndex(i)]; // Line Point 0
                     float4 lp1 = neighbourNode[GetEdgeEndIndex(i)];   // Line Point 1
                     float4 dir = lp1 - lp0;
@@ -188,7 +203,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             float nDotp = dot(nPlaneNorm, calcNeighbourNorm);
             float nAngle = acos( nDotp / (length(nPlaneNorm)*length(calcNeighbourNorm))) * (180 / Math::PI);
             // If angle between the two normals are 180 degrees - flip the orientation of edge
-            if( nAngle > 5.0 ) {
+            if( nAngle > Math::EPS ) {
                 float4 tmp = cp[0];
                 cp[0] = cp[1]; cp[1] = tmp;
                 edge *= -1;
@@ -198,26 +213,41 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             calcNeighbourNorm = cross(nTangent, edge);
             nTangent = cross(calcNeighbourNorm, edge);
 
+
+            //logger.info << "Neighbour Eigen value: " << b->GetPrincipalStressNorm(neighbourIdx).w << logger.end;
+
+            // TEST Add weighted neighbour principal stress
+            /*          float nLength = b->GetPrincipalStressNorm(neighbourIdx).w;
+            float3 nPrincipalStress = normalize(make_float3(b->GetPrincipalStressNorm(neighbourIdx))) * nLength;
+            
+            float len = b->GetPrincipalStressNorm(tetraIdx).w;
+            float3 newPrincipalStressNorm = normalize((principalStressNorm*len) + nPrincipalStress);
+
+            logger.info << "PrincipalStressNorm: " << principalStressNorm.x << ", " << principalStressNorm.y << ", " << principalStressNorm.z << logger.end;
+            logger.info << "NewPrincipalStsNorm: " << newPrincipalStressNorm.x << ", " << newPrincipalStressNorm.y << ", " << newPrincipalStressNorm.z << logger.end;
+*/
+
+            float3 nPrincipalStress = make_float3(b->GetPrincipalStressNorm(neighbourIdx));
+            principalStressNorm = normalize(principalStressNorm + nPrincipalStress);
+
             // Calculate modified normal according to article (38)
             float3 AB = make_float3(cp[1]-cp[0]);
             float ABLengthSqr = pow(length(AB),2);
             planeNorm = principalStressNorm - ((dot(principalStressNorm, AB) / ABLengthSqr) * AB); 
             planeNorm = normalize(planeNorm); 
             logger.info << "ResultingStressNorm: " << planeNorm.x << ", " << planeNorm.y << ", " << planeNorm.z << logger.end;
-
-            // Angle between new plane and initial crack plane
+            // Angle between this plane normal and initial crack plane normal
             float dotp = dot( planeNorm, initPlaneNorm );
-            float angle = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);
-                
-            //if( angle > 90.0f ){
-            //    planeNorm *= -1;
-            //}
+            float angleInitPlane = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);    
+            if( angleInitPlane > 90.0f ){
+                angleInitPlane = 180.0 - angleInitPlane;
+            }
 
             // Note which two crack points that defines the edge
             int cpIdx1 = -1;
             int cpIdx2 = -1;
             for( int i=0; i<6; i++ )
-                if( crackPoint[i] > 0 ) { 
+                if( crackPoint[i] != -1 ) { 
                     if( cpIdx1 < 0 ) cpIdx1 = i;
                     else cpIdx2 = i;
                 }
@@ -226,55 +256,19 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             pointOnPlane = make_float3(cp[0]);
 
             // Crack the tetra to Find third crack point (not in crack edge)
+            // for plane tangent calculation.
+            float angleTangents = 0;
+            float tangentAngleLimit = 5.0f;
+            float normAngleLimit = 45.0f;
+            float3 tangent;
             int newCpIdx = -1;
-            if( CrackTetrahedron(solid, tetraIdx, make_float4(planeNorm), make_float4(pointOnPlane)) ){
+            if( CrackTetrahedron(solid, tetraIdx, planeNorm, pointOnPlane ) ){
                 // Find new crack point
                 for( int i=0; i<6; i++ )
-                    if( crackPoint[i] > 0 && i!=cpIdx1 && i!=cpIdx2) 
+                    if( crackPoint[i] != -1 && i!=cpIdx1 && i!=cpIdx2) 
                         newCpIdx = i;
-            
-            }
-
-            // Create vector from crack edge to new crack point
-            float4 lp0 = node[GetEdgeStartIndex(newCpIdx)]; // Line Point 0
-            float4 lp1 = node[GetEdgeEndIndex(newCpIdx)];   // Line Point 1
-            float4 dir = lp1 - lp0;
-            float4 absCrackPoint = lp0 + (dir * crackPoint[newCpIdx]);
-            // Calculate crack plane tangent   
-            float3 tangent = make_float3(absCrackPoint - cp[0]);
-            float3 calcNorm = cross(edge, tangent);
-            tangent = cross(calcNorm, edge);
-
-            // Calculate angel between this plane tangent and the neighbour plane tangent
-            dotp = dot(tangent, nTangent);
-            angle = acos( dotp / (length(tangent)*length(nTangent))) * (180 / Math::PI);
-
-            // While the angle is 
-            float angleLimit = 15.0f;
-            int MAX_ITR = 100;
-            int iterations = 0;
-            // If angle exceeds limit - recalculate plane normal
-            while( angle > angleLimit ) {
-                if( iterations++ > MAX_ITR ) break;
-                logger.info << "Angle Between tangents: " << angle << " exceeds boundary of " << angleLimit << " recalc" << logger.end;
-                //planeNorm += nPlaneNorm;
-                principalStressNorm += nPlaneNorm;
-                principalStressNorm = normalize(principalStressNorm);
-                planeNorm = principalStressNorm - ((dot(principalStressNorm, AB) / ABLengthSqr) * AB); 
-                planeNorm = normalize(planeNorm); 
-                logger.info << "RecalculatedStressNorm: " << planeNorm.x << ", " << planeNorm.y << ", " << planeNorm.z << logger.end;
                 
-                // Crack the tetra to Find third crack point (not in crack edge)
-                newCpIdx = -1;
-                if( CrackTetrahedron(solid, tetraIdx, make_float4(planeNorm), make_float4(pointOnPlane)) ){
-                    // Find new crack point
-                    for( int i=0; i<6; i++ )
-                        if( crackPoint[i] > 0 && i!=cpIdx1 && i!=cpIdx2) 
-                            newCpIdx = i;    
-                }
-                if( newCpIdx == -1 )
-                    logger.info << "Warning: could not find third crack point - cannot calculate tangent" << logger.end;
-
+                
                 // Create vector from crack edge to new crack point
                 float4 lp0 = node[GetEdgeStartIndex(newCpIdx)]; // Line Point 0
                 float4 lp1 = node[GetEdgeEndIndex(newCpIdx)];   // Line Point 1
@@ -282,23 +276,84 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
                 float4 absCrackPoint = lp0 + (dir * crackPoint[newCpIdx]);
                 // Calculate crack plane tangent   
                 tangent = make_float3(absCrackPoint - cp[0]);
-                calcNorm = cross(edge, tangent);
+                float3 calcNorm = cross(edge, tangent);
                 tangent = cross(calcNorm, edge);
-                
+
                 // Calculate angel between this plane tangent and the neighbour plane tangent
                 dotp = dot(tangent, nTangent);
-                angle = acos( dotp / (length(tangent)*length(nTangent))) * (180 / Math::PI);
-             
+                angleTangents = acos( dotp / (length(tangent)*length(nTangent))) * (180 / Math::PI);
+            }else
+                angleTangents = tangentAngleLimit*2; // exceed limit to force recalculation
+
+
+            // While the angle is 
+            int MAX_ITR = 25;
+            int iterations = 0;
+            // If angle exceeds limit - recalculate plane normal
+            while( angleTangents > tangentAngleLimit || angleInitPlane > normAngleLimit ) {
+                if( iterations++ > MAX_ITR ) {
+                    // DEBUG
+                    debugVector.clear();
+                    AddDebugVector(pointOnPlane, nTangent, make_float3(0,1,0));
+                    AddDebugVector(pointOnPlane, tangent,  make_float3(1,0,0));
+                    /*throw Core::Exception("ERROR: cannot interpolate normals to obtain valid plane angle!");
+                    */
+                    logger.info << "ERROR: cannot interpolate normals to obtain valid plane angle!" << logger.end;
+                    planeNorm = nPlaneNorm;
+                    break;
+                }
+
+                // Calculate modified normal according to article (38)
+                principalStressNorm += nPlaneNorm;
+                //principalStressNorm += initPlaneNorm;
+                principalStressNorm = normalize(principalStressNorm);
+                planeNorm = principalStressNorm - ((dot(principalStressNorm, AB) / ABLengthSqr) * AB); 
+                planeNorm = normalize(planeNorm);
+                // Set calculated plane normal as new principal stress normal 
+                principalStressNorm = planeNorm;
+                logger.info << "RecalculatedStressNorm: " << planeNorm.x << ", " << planeNorm.y << ", " << planeNorm.z << logger.end;
+                
+                // Crack the tetra to Find third crack point (not in crack edge)
+                newCpIdx = -1;
+                if( CrackTetrahedron(solid, tetraIdx, planeNorm, pointOnPlane ) ){
+                    // Find new crack point
+                    for( int i=0; i<6; i++ )
+                        if( crackPoint[i] != -1 && i!=cpIdx1 && i!=cpIdx2) 
+                            newCpIdx = i;    
+
+                    // Create vector from crack edge to new crack point
+                    float4 lp0 = node[GetEdgeStartIndex(newCpIdx)]; // Line Point 0
+                    float4 lp1 = node[GetEdgeEndIndex(newCpIdx)];   // Line Point 1
+                    float4 dir = lp1 - lp0;
+                    float4 absCrackPoint = lp0 + (dir * crackPoint[newCpIdx]);
+                    // Calculate crack plane tangent   
+                    tangent = make_float3(absCrackPoint - cp[0]);
+                    float3 calcNorm = cross(edge, tangent);
+                    tangent = cross(calcNorm, edge);
+                
+                    // Re-calculate angel between this plane tangent and the neighbour plane tangent
+                    dotp = dot(tangent, nTangent);
+                    angleTangents = acos( dotp / (length(tangent)*length(nTangent))) * (180 / Math::PI);
+                }
+            }
+            
+            // Angle between this plane normal and initial crack plane normal
+            dotp = dot( planeNorm, initPlaneNorm );
+            angleInitPlane = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);    
+            if( angleInitPlane > 90.0f ){
+                planeNorm *= -1;
+                dotp = dot( planeNorm, initPlaneNorm );
+                angleInitPlane = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);    
             }
     
             // DEBUG
-            debugVector.clear();
             AddDebugVector(pointOnPlane, nTangent, make_float3(0,1,0));
-            logger.info << "Adding nTangent: " << nTangent.x <<", " << nTangent.y<<", " <<nTangent.z << logger.end;
+            //           logger.info << "Adding nTangent: " << nTangent.x <<", " << nTangent.y<<", " <<nTangent.z << logger.end;
             AddDebugVector(pointOnPlane, tangent,  make_float3(0,0,1));
-            logger.info << "Adding tangent: " << tangent.x <<", " << tangent.y<<", " <<tangent.z << logger.end;
+            //            logger.info << "Adding tangent: " << tangent.x <<", " << tangent.y<<", " <<tangent.z << logger.end;
             
-            logger.info << "Angle between tangents: " << angle << logger.end;
+            logger.info << "Angle between tangents: " << angleTangents << logger.end;
+            logger.info << "Angle between normals : " << angleInitPlane << logger.end;
         }
         else if( numCrackPoints == 3 || numCrackPoints == 4 ) {
             float3 v1 = normalize( make_float3(cp[1]-cp[0]) );
@@ -306,13 +361,13 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             planeNorm = normalize( cross(v1, v2) );
       
             // Angle between new plane and initial crack plane
-            //float dotp = dot( planeNorm, initPlaneNorm );
-            //float angle = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);
+            float dotp = dot( planeNorm, initPlaneNorm );
+            float angle = acos( dotp / (length(planeNorm)*length(initPlaneNorm))) * (180 / Math::PI);
                 
-            //if( angle > 90.0f ){
-                //                planeNorm *= -1;
+            if( angle > 90.0f ){
+                planeNorm *= -1;
                 //logger.info << "--------------------------------------- FLIPPING ----------------------------------" << logger.end;
-            //}
+            }
       
             pointOnPlane = make_float3(cp[0]);
         }
@@ -323,7 +378,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
             logger.info << "Warning: tetra " << tetraIdx << " has less than 1 or more than 4 crack points" << logger.end;
 
         // If tetrahedron-plane intersections is successful, write crack point into neighbours
-        if( CrackTetrahedron(solid, tetraIdx, make_float4(planeNorm), make_float4(pointOnPlane)) ) {
+        if( CrackTetrahedron(solid, tetraIdx, planeNorm, pointOnPlane) ) {
             // Cracking tetrahedron was successful - add to set of cracked tetras 
             crackedTetrahedrons.push_back(tetraIdx);
             // Save crack plane normal
@@ -338,7 +393,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
                 // Get crack point
                 float cp = crackPoint[edgeIdx];
                 // If edge has a crack..
-                if( cp > 0 ){
+                if( cp != -1 ){
                     
                     // Get the two node indices defining the edge that has a crack point
                     int nIdx1 = tetra.GetNodeIndex(GetEdgeStartIndex(edgeIdx));
@@ -373,7 +428,7 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
                             }
                         }
                     }
-
+                    
                     // Add crack point to all tetrahedrons sharing edge with crack point
                     // For each tetrahedron in body..
                     for( int i=0; i<(int)b->numTetrahedra; i++ ) {
@@ -390,6 +445,8 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
                 }
             }
         }
+        else
+            throw Core::Exception("ERROR: Unable to crack tetrahedron with specified plane");
     }
     // Update crack front set
     //crackFront.clear();
@@ -400,6 +457,52 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
         crackFront.push_back(*tetraToBeCracked.begin());
         tetraToBeCracked.pop_front();
     }
+
+    logger.info << "CrackFront = {";
+    for( itr = crackFront.begin(); itr!=crackFront.end(); itr++ )
+        logger.info << *itr  << "[" << b->NumCrackPoints(*itr) << "],";
+    logger.info << "}" << logger.end;
+
+    // Sort crack front so 3 crack points or more is handled first
+    SortFunctor f(b);
+    crackFront.sort( f );
+
+    logger.info << "CrackFront = {";
+    for( itr = crackFront.begin(); itr!=crackFront.end(); itr++ )
+        logger.info << *itr  << "[" << b->NumCrackPoints(*itr) << "],";
+    logger.info << "}" << logger.end;
+    
+
+    if( !crackedTetrahedrons.empty() ){
+        // Get tetra indices
+        Tetrahedron nextTetra = b->tetrahedraMainMem[crackedTetrahedrons.back()];
+        // Tetrahedron absolute coordinates
+        float4 node[4];
+        solid->vertexpool->GetTetrahedronAbsPosition(nextTetra, &node[0]);
+
+        // Debug
+        AddDebugVector(make_float3(node[0]), make_float3(node[1]-node[0]), make_float3(0,1,0));
+        AddDebugVector(make_float3(node[0]), make_float3(node[2]-node[0]), make_float3(0,1,0));
+        AddDebugVector(make_float3(node[0]), make_float3(node[3]-node[0]), make_float3(0,1,0));
+        AddDebugVector(make_float3(node[1]), make_float3(node[2]-node[1]), make_float3(0,1,0));
+        AddDebugVector(make_float3(node[1]), make_float3(node[3]-node[1]), make_float3(0,1,0));
+        AddDebugVector(make_float3(node[2]), make_float3(node[3]-node[2]), make_float3(0,1,0));
+    }
+    if( !crackFront.empty() ){
+        // Get tetra indices
+        Tetrahedron nextTetra = b->tetrahedraMainMem[*crackFront.begin()];
+        // Tetrahedron absolute coordinates
+        float4 node[4];
+        solid->vertexpool->GetTetrahedronAbsPosition(nextTetra, &node[0]);
+        // Debug
+        AddDebugVector(make_float3(node[0]), make_float3(node[1]-node[0]), make_float3(1,0,0));
+        AddDebugVector(make_float3(node[0]), make_float3(node[2]-node[0]), make_float3(1,0,0));
+        AddDebugVector(make_float3(node[0]), make_float3(node[3]-node[0]), make_float3(1,0,0));
+        AddDebugVector(make_float3(node[1]), make_float3(node[2]-node[1]), make_float3(1,0,0));
+        AddDebugVector(make_float3(node[1]), make_float3(node[3]-node[1]), make_float3(1,0,0));
+        AddDebugVector(make_float3(node[2]), make_float3(node[3]-node[2]), make_float3(1,0,0));
+    }
+
     logger.info << "-----------------" << logger.end;
 }
 
@@ -408,7 +511,7 @@ bool CrackStrategyOne::FragmentationDone() {
 }
 
 // Returns true if plane intersects tetrahedron 
-bool CrackStrategyOne::CrackTetrahedron(Solid* solid, int tetraIdx, float4 planeNorm, float4 pointOnPlane){
+bool CrackStrategyOne::CrackTetrahedron(Solid* solid, int tetraIdx, float3 planeNorm, float3 pointOnPlane){
     // Check if tetrahedron is already cracked (init case)
     if( std::find(crackedTetrahedrons.begin(), 
                   crackedTetrahedrons.end(), 
@@ -430,41 +533,59 @@ bool CrackStrategyOne::CrackTetrahedron(Solid* solid, int tetraIdx, float4 plane
     // Iterate through all 6 edges
     int numIntersects = 0;
     for( int i=0; i<6; i++ ){
-        float4 lp0 = node[GetEdgeStartIndex(i)]; // Line Point 0
-        float4 lp1 = node[GetEdgeEndIndex(i)];   // Line Point 1
+        float3 lp0 = make_float3(node[GetEdgeStartIndex(i)]); // Line Point 0
+        float3 lp1 = make_float3(node[GetEdgeEndIndex(i)]);   // Line Point 1
      
         // Plane line intersection explained here:
         // http://local.wasp.uwa.edu.au/~pbourke/geometry/planeline/
         // u = (n dot (p0 - l0)) / (n dot (l1 - l0))
         // where n = plane normal, p0 lies on the plane, l0 and l1 is the line.
         // if u is between 0 and 1 the line segment intersects the plane.
-        //double nominator = dot( planeNorm, (pointOnPlane - lp0));
-        float4 tmp = pointOnPlane - lp0;
-        double nominator = planeNorm.x*tmp.x + planeNorm.y*tmp.y + planeNorm.z*tmp.z;
-        if( nominator < Math::EPS && nominator > -Math::EPS ) nominator = 0;  
-
-        float4 dir = lp1 - lp0;
-        double denomitor = planeNorm.x*dir.x + planeNorm.y*dir.y + planeNorm.z*dir.z;
-        if( denomitor < Math::EPS && denomitor > -Math::EPS ) denomitor = 0;  
-        
-        double u = nominator / denomitor;
-
-        //logger.info << "nominator: " << nominator << ", den: " << denomitor << ", u= " << u << logger.end;
-        //double u = dot( planeNorm, (pointOnPlane - lp0)) / dot(planeNorm, (lp1 - lp0));
+        double u = dot( planeNorm, (pointOnPlane - lp0)) / dot(planeNorm, (lp1 - lp0));
 
         // Each tetrahedron has 6 edges and therefore 6 possible edge intersections.
         // If the plane intersects edge 4 [y,w] the ratio (0.0-1.0) from first edge point (y) is 
         // saved at the 4'th position in crackPoints.
         if( u > Math::EPS && u < 1.0-Math::EPS ) {
-            //logger.info << "Plane Intersects Edge " << i << " u = " << u << logger.end;
-            //float4 cp = lp0 + (lp1 - lp0) * u;
-            //           logger.info << "Adding crackpoint to " << tetraIdx << " - " << cp.x << ", " << cp.y << ", " << cp.z << logger.end;
             // Add crack point to tetrahedron
             solid->body->AddCrackPoint(tetraIdx, i, u);
             numIntersects++;
         }
         else // Clear crack point
-            solid->body->AddCrackPoint(tetraIdx, i, 0);
+            solid->body->AddCrackPoint(tetraIdx, i, -1);
+
+        // Special case where plane intersect exactly through node point
+        /*  if( u > 0.0 && u < Math::EPS ) {
+            // Set 0.0 or 1.0 on all three edges sharing this node point
+            int edgeStartIdx = GetEdgeStartIndex(i);
+            // Find all edges with same start index
+            for( int j=0; j<6; j++ ) {
+                if( GetEdgeStartIndex(j) == edgeStartIdx ){
+                    solid->body->AddCrackPoint(tetraIdx, j, 0.01f );
+                    numIntersects++;
+                    logger.info << "CRACK POINT ADDED AT START NODE" << logger.end;
+                } 
+            }
+        }
+        else if( u < 1.0 && u > 1.0-Math::EPS ) {
+            // Set 0.0 or 1.0 on all three edges sharing this node point
+            int edgeEndIdx = GetEdgeEndIndex(i);
+            // Find all edges with same start index
+            for( int j=0; j<6; j++ ) {
+                if( GetEdgeEndIndex(j) == edgeEndIdx ) {
+                    solid->body->AddCrackPoint(tetraIdx, j, 0.99 );
+                    numIntersects++;
+                    logger.info << "CRACK POINT ADDED AT START NODE" << logger.end;
+                } 
+            }
+            }*/
+        if( (u > 0.0 && u < Math::EPS) || (u < 1.0 && u > 1.0-Math::EPS)){
+            logger.info << "intersection through node point..ERR" << logger.end;
+            return false;
+        }
+            //    throw Core::Exception("Plane intersects through node point!");
+        //logger.info << "ERROR: Plane intersects through node point!" << logger.end;
+        
     }
     // Add tetrahedron to cracked set.
     if( numIntersects >= 3 ){
@@ -472,7 +593,8 @@ bool CrackStrategyOne::CrackTetrahedron(Solid* solid, int tetraIdx, float4 plane
         return true;
     }
     else
-        logger.info << " - numItersects: " << numIntersects << " FAILED!" << logger.end;
+        throw Core::Exception("ERROR: Tetra-Plane intersection FAILED!");
+        //logger.info << " - numItersects: " << numIntersects << " FAILED!" << logger.end;
     return false;
 }
 
@@ -515,7 +637,7 @@ void CrackStrategyOne::RenderDebugInfo(Solid* solid) {
         
         for(int i=0; i<6; i++) {
             float crackPoint = solid->body->crackPoints[tetraIdx*6 + i];
-            if( crackPoint > 0 ) {
+            if( crackPoint != -1 ) {
                 float4 lp0 = node[GetEdgeStartIndex(i)]; // Line Point 0
                 float4 lp1 = node[GetEdgeEndIndex(i)];   // Line Point 1
                 float4 dir = lp1 - lp0;
@@ -579,7 +701,7 @@ void CrackStrategyOne::RenderDebugInfo(Solid* solid) {
         // Get crack points for tetrahedron
         float* crackPoint = solid->body->GetCrackPoints(tetraIdx);
         for(int i=0; i<6; i++)
-            if( crackPoint[i] > 0 ) {
+            if( crackPoint[i] != -1 ) {
                 float4 lp0 = node[GetEdgeStartIndex(i)]; // Line Point 0
                 float4 lp1 = node[GetEdgeEndIndex(i)];   // Line Point 1
                 float4 dir = lp1 - lp0;

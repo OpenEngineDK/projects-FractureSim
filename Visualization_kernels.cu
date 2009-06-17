@@ -253,11 +253,6 @@ updateStressTensors_k(Body body,
     int e_idx = me_idx * 3;
     Matrix4f m;
     m.SetPos(center.x, center.y, center.z);
-    
-    //    float4 eVal = eigenValues[me_idx];
-    //eVal = eVal / 1000.0f;
-    //float fac = 0.0001f;
-    //m.SetScale(eVal.x*fac, eVal.y*fac, eVal.z*fac);
     m.SetScale(1.0, 1.0, 1.0);
     
     m.row0 = eigenVectors[e_idx+0];

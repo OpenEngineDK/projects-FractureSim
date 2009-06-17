@@ -26,7 +26,7 @@ Body::Body(unsigned int size) {
     for( unsigned int i=0; i<size; i++ ) crackPlaneNorm[i] = make_float4(0);
 
     crackPoints = (float*)malloc(sizeof(float) * 6 * size);
-    memset(crackPoints, 0, sizeof(float) * 6 * size);
+    for( unsigned int i=0; i<size*6; i++ ) crackPoints[i] = -1;
 
     CHECK_FOR_CUDA_ERROR();
 }
@@ -39,6 +39,8 @@ bool Body::IsMaxStressExceeded() {
     bool* exceeded = (bool*)malloc(sizeof(bool));
     // Copy bool from device to host
     CudaMemcpy(exceeded, maxStressExceeded, sizeof(bool), cudaMemcpyDeviceToHost);
+    // Clear flag
+    CudaMemset(maxStressExceeded, 0, 1);
     // return the flag
     return *exceeded;
 }
@@ -112,7 +114,7 @@ int Body::NumCrackPoints(int tetraIdx) {
     int numCrackPoints = 0;
     float* cp = GetCrackPoints(tetraIdx);
     for(int i=0; i<6; i++) {
-        if( cp[i] > 0 ) numCrackPoints++;
+        if( cp[i] != -1 ) numCrackPoints++;
     }
     return numCrackPoints;
 }

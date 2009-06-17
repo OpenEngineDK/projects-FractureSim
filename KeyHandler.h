@@ -74,7 +74,12 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 tled->useAlphaBlending = !tled->useAlphaBlending;
                 break;
             case KEY_c:
-                tled->crackStrategy->ApplyCrackTracking(tled->solid);
+                try {
+                    tled->crackStrategy->ApplyCrackTracking(tled->solid);
+                }catch(Core::Exception ex) { 
+                    tled->paused = true; 
+                    logger.info << "EXCEPTION: " << ex.what() << logger.end;
+                }
                 break;
             case KEY_v:
                 tled->crackTrackAllWay = !tled->crackTrackAllWay;

@@ -1,5 +1,4 @@
 #include <Meta/CUDA.h>
-
 #include "Solid.h"
 #include "VboManager.h"
 #include "eig3.h"
@@ -28,6 +27,44 @@ void calculateGravityForces(Solid* solid) {
     CHECK_FOR_CUDA_ERROR();
 }
 
+
+__global__ void solidCollisionConstraint_k
+(Point* points, unsigned int numPoints, 
+ float4* displacements, float4* oldDisplacements,
+ float4* vertices, float4* normals, unsigned int numVertices) {
+
+	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+	if (me_idx>=numPoints)
+		return;
+
+	Point p = points[me_idx];
+	float4 d = displacements[me_idx];
+
+    //	if( (p.x+d.x < -35.0 || p.x+d.x > 35.0) && (p.y+d.y)<0) {
+    if( (p.x+d.x > -10.0 && p.x+d.x < 10.0) && (p.y+d.y)<0) {    
+        displacements[me_idx].y = oldDisplacements[me_idx].y;
+	}
+}
+
+
+void solidCollisionConstraint(Solid* solid, PolyShape* obj) {
+    printf("HEP\n");
+    /*    //logger.info << "Applying solid collision detection" << logger.end;
+    // Start kernel for each point in solid times each face in poly shape
+	int pointSize = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
+    solidCollisionConstraint_k
+        <<<make_uint3(pointSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (solid->vertexpool->data, 
+         solid->vertexpool->size,
+         solid->vertexpool->Ui_t,
+         solid->vertexpool->Ui_tminusdt,
+         obj->vertices,
+         obj->normals,
+         obj->numVertices);
+    */
+    CHECK_FOR_CUDA_ERROR();
+}
+
 __global__ void applyGroundConstraint_k
 (Point *points, float4 *displacements, float4 *oldDisplacements,
  float lowestYValue, unsigned int numPoints) {
@@ -42,7 +79,7 @@ __global__ void applyGroundConstraint_k
 //	printf("%f, %f, %f \n", me.x, me.y, me.z);
 //	printf("%f, %f, %f \n", displacement.x, displacement.y, displacement.z);
 
-	if( me.x+displacement.x > -10.0 && me.x+displacement.x < 10.0 && (me.y+displacement.y)<lowestYValue) {
+	if( (me.x+displacement.x > -10.0 && me.x+displacement.x < 10.0) && (me.y+displacement.y)<lowestYValue) {
 		displacements[me_idx].y = lowestYValue - me.y;
 		//oldDisplacements[me_idx] = displacements[me_idx];
 	}
@@ -306,7 +343,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 
     // The eigenvalue determines the highest principal stress, 
     // if it exceeds the max stress we raise a flag.
-    double MAX_STRESS = 6000.0;
+    double MAX_STRESS = 13000.0;
     //    double MAX_STRESS = 3000000.0;
     if( abs(principalStress[me_idx].w) > MAX_STRESS )
         *maxStressExceeded = true;

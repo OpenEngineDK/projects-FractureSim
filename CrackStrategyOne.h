@@ -28,19 +28,22 @@ public:
     // Debug
     void RenderDebugInfo(Solid* solid);
 
+
 private:
     std::list<int> crackedTetrahedrons;
     std::list<int> crackFront;
     bool crackInitialized;
+    int exceedCount;
     int initTetraIdx;
     float3 initPlaneNorm;
-    
+
     
     // Crack first tetrahedron 
     void InitializeCrack(Solid* solid, int tetraIndex);
-    bool CrackTetrahedron(Solid* solid, int tetraIdx, float4 planeNorm, float4 pointOnPlane);
+    bool CrackTetrahedron(Solid* solid, int tetraIdx, float3 planeNorm, float3 pointOnPlane);
 
     int GetCrackedNeighbour(Solid* solid, int tetraIdx);
+
 
     // Debug
     std::list<float3> debugPlaneNorm;

@@ -17,6 +17,9 @@
 
 using namespace OpenEngine;
 
+
+typedef void (*constraintFuncPtr)(Solid* solid, PolyShape* collidableObject);
+
 class TLEDNode : public Scene::RenderNode, public Core::IModule {
  public:
     CrackStrategy* crackStrategy;
@@ -24,11 +27,14 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     Solid* solid;
     Utils::Timer timer;
     VboManager* vbom;
+    std::list< std::pair<PolyShape*, constraintFuncPtr> > nodeConstraint;
     unsigned int numIterations;
     bool paused, dump, renderPlane, useAlphaBlending;
     float minX;
     bool crackTrackAllWay;
-
+    bool exception;
+    int crackTrackingItrCount;
+    
     TLEDNode();
     virtual ~TLEDNode();
 
@@ -38,6 +44,10 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     virtual void Handle(Core::DeinitializeEventArg arg);
 
     void StepPhysics();
+
+    void AddConstraint(PolyShape* constrainArea, constraintFuncPtr constrainFunction);
+    void ApplyConstraints(Solid* solid);
+    void VisualizeConstraints();
 
 };
 
