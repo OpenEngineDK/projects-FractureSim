@@ -31,37 +31,91 @@ void calculateGravityForces(Solid* solid) {
 __global__ void solidCollisionConstraint_k
 (Point* points, unsigned int numPoints, 
  float4* displacements, float4* oldDisplacements,
- float4* vertices, float4* normals, unsigned int numVertices) {
+ float4* vertices, float4* normals, unsigned int numFaces,
+ bool* intersect) {
 
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
-	if (me_idx>=numPoints)
-		return;
+    int pointIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    int faceIdx = blockIdx.y * blockDim.y + threadIdx.y;
+    
+    if( pointIdx >= numPoints || faceIdx >= numFaces ) return;
 
-	Point p = points[me_idx];
-	float4 d = displacements[me_idx];
+    // Get point
+    //    float3 point = make_float3(points[pointIdx]);
+    float3 point = make_float3(points[pointIdx]+displacements[pointIdx]);
+    // Get point on plane
+    float3 pointOnPlane = make_float3(vertices[faceIdx*3]);
+    // Get normal to plane
+    float3 planeNorm = make_float3(normals[faceIdx*3]);
 
-    //	if( (p.x+d.x < -35.0 || p.x+d.x > 35.0) && (p.y+d.y)<0) {
-    if( (p.x+d.x > -10.0 && p.x+d.x < 10.0) && (p.y+d.y)<0) {    
-        displacements[me_idx].y = oldDisplacements[me_idx].y;
-	}
+    // Point plane distance: D = planeNormal dot (point - pointOnPlane)
+    float distance = dot( planeNorm, (point - pointOnPlane) );
+
+    if( distance > 0 ){
+        intersect[pointIdx] = false;
+    }
 }
 
 
-void solidCollisionConstraint(Solid* solid, PolyShape* obj) {
-    printf("HEP\n");
-    /*    //logger.info << "Applying solid collision detection" << logger.end;
+void solidCollisionConstraint(Solid* solid, PolyShape* obj, bool* intersect) {
+    int pBlocks = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
+    int numFaces  = (int)((float)obj->numVertices/3);
+
     // Start kernel for each point in solid times each face in poly shape
-	int pointSize = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
     solidCollisionConstraint_k
-        <<<make_uint3(pointSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        <<<make_uint3(pBlocks, numFaces,1), make_uint3(BLOCKSIZE,1,1)>>>
         (solid->vertexpool->data, 
          solid->vertexpool->size,
          solid->vertexpool->Ui_t,
          solid->vertexpool->Ui_tminusdt,
          obj->vertices,
          obj->normals,
-         obj->numVertices);
-    */
+         numFaces,
+         intersect);
+    
+    CHECK_FOR_CUDA_ERROR();
+}
+
+
+__global__
+void constrainIntersectingPoints_k
+(Point* points, unsigned int numPoints, 
+ float4* displacements, float4* oldDisplacements,
+ bool* intersect) {
+
+    int pointIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if( pointIdx >= numPoints ) return;
+
+    if( intersect[pointIdx] )
+        displacements[pointIdx] += 1.0 * (oldDisplacements[pointIdx] - displacements[pointIdx]);
+}
+
+void constrainIntersectingPoints(Solid* solid, bool* intersect) {
+    int pBlocks = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
+
+    // Start kernel for each point in solid times each face in poly shape
+    constrainIntersectingPoints_k
+        <<<make_uint3(pBlocks, 1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (solid->vertexpool->data, 
+         solid->vertexpool->size,
+         solid->vertexpool->Ui_t,
+         solid->vertexpool->Ui_tminusdt,
+         intersect);
+    
+    CHECK_FOR_CUDA_ERROR();
+}
+
+__global__ 
+void loadPolyShapeIntoVBO_k(float4* vertices, unsigned int numVertices, float4* buf) {
+	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+	if (me_idx>=numVertices) return;
+    buf[me_idx] = vertices[me_idx];
+}
+
+void loadPolyShapeIntoVBO(PolyShape* obj, float4* buf) {
+	int pointSize = (int)ceil(((float)obj->numVertices)/BLOCKSIZE);
+    loadPolyShapeIntoVBO_k
+        <<<make_uint3(pointSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (obj->vertices, obj->numVertices, buf);
     CHECK_FOR_CUDA_ERROR();
 }
 

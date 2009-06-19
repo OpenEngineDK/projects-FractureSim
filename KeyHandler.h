@@ -81,6 +81,9 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                     logger.info << "EXCEPTION: " << ex.what() << logger.end;
                 }
                 break;
+            case KEY_z:
+                tled->crackStrategy->InitializeCrack(tled->solid);
+                break;
             case KEY_v:
                 tled->crackTrackAllWay = !tled->crackTrackAllWay;
                 logger.info << "Crack All way through = " << 

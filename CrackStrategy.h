@@ -18,6 +18,8 @@ public:
     CrackStrategy() {}
     virtual ~CrackStrategy() {}
 
+    virtual void InitializeCrack(Solid* solid) {}
+
     // Returns true if crack has been initialized.
     virtual bool CrackInitialized(Solid* solid) { return false; }
 

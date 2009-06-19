@@ -73,8 +73,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
          dataDir + "sphere.ascii.1.smesh");
     */
 
-    //Bar: vpool: 119, body tetrahedra: 328, surface triangles: 212
-    loader = new TetGenLoader
+    //Bar: vpool: X, body tetrahedra: X, surface triangles: X
+      loader = new TetGenLoader
         (dataDir + "bar.ascii.1.node", 
          dataDir + "bar.ascii.1.ele", 
          dataDir + "bar.ascii.1.smesh");
@@ -128,7 +128,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     //       136360000000.0f, 8334000000.0f, 0.4f, 100.0f); //concrete moded
     //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
 	//precompute(solid, 0.001f, 0.0f, 0.0f, 80007.0f, 49329.0f, 0.5f, 50.0f); //soft
-    //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.2f, 150.0f); //yelly
+    //precompute(solid, 0.001f, 0.0f, 0.0f, 2007.0f, 25000.0f, 0.2f, 10.0f); //yelly
     
     // Initialize crack strategy
     crackStrategy = new CrackStrategyOne();
@@ -144,8 +144,21 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     //PolyShape ps("Sphere80.obj");
 
     // Add node constraints
-    AddConstraint(new PolyShape("Box12.obj"), &solidCollisionConstraint);
-
+    PolyShape* box = new PolyShape("Box12.obj", 15);
+    NodeConstraint* leftBox = new NodeConstraint(box, &solidCollisionConstraint);
+    //Matrix4f mat(make_float4(-40,0,0,0));
+    //box->Transform(&mat);
+    leftBox->LoadPolyShapeIntoVBO();
+    nodeConstraint.push_back(leftBox);
+    /*
+    box = new PolyShape("Box12.obj", 15);
+    NodeConstraint* rightBox = new NodeConstraint(box, &solidCollisionConstraint);
+    Matrix4f mat2(make_float4(40,0,0,0));
+    box->Transform(&mat2);
+    rightBox->LoadPolyShapeIntoVBO();
+    nodeConstraint.push_back(rightBox);
+    */
+    
 
     // Initialize the Visualizer
     vbom = new VboManager();
@@ -169,7 +182,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     vbom->AllocBuffer(STRESS_TENSOR_VERTICES, solid->body->numTetrahedra, ps);
     //vbom->AllocBuffer(STRESS_TENSOR_COLORS,   solid->body->numTetrahedra*ps.numVertices, GL_POINTS);
     vbom->AllocBuffer(STRESS_TENSOR_NORMALS,  solid->body->numTetrahedra*ps.numVertices, GL_POINTS);
-    
+
     // Disabled to bypass rendering
     vbom->Disable(SURFACE_VERTICES);
     vbom->Disable(SURFACE_NORMALS);
@@ -199,9 +212,6 @@ void TLEDNode::StepPhysics() {
 void TLEDNode::Handle(Core::ProcessEventArg arg) {
     if (!solid->IsInitialized()) return;
 
-    // TEST
-    //constraintStrategyPtr = &solidCollisionConstraint;
-
     plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
 
     // skip physics if delta time is to low
@@ -216,13 +226,12 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
             calculateGravityForces(solid);
             calculateInternalForces(solid, vbom);
             updateDisplacement(solid);
-            //            ApplyConstraints(solid);
-            applyFloorConstraint(solid, 0);
-
+            ApplyConstraints(solid);
+            //applyFloorConstraint(solid, 0);
         }
         timer.Reset();
     }
- 
+
     // Crack Tracking
     try {
         if( crackStrategy->CrackInitialized(solid) && !exception ) {
@@ -241,15 +250,6 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         logger.info << "EXCEPTION: " << ex.what() << logger.end;
     }
     
-
-    /*
-    float3 n1 = make_float3(0,1,0);
-    for( float r=Math::PI/2.0; r<2*Math::PI+Math::PI/2.0; r+=0.2f ){
-        float3 n2 = make_float3(cos(r),sin(r),0);
-        logger.info << "Angle: " << acos(dot(n1,n2)) * (180.0f / Math::PI) << logger.end;
-    }
-    exit(0);
-    */
     if( vbom->IsEnabled(SURFACE_VERTICES) )
         updateSurface(solid, vbom);
     
@@ -295,15 +295,11 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
 
     if (!solid->IsInitialized()) return;
 
-    // Visualize constraints
-    VisualizeConstraints();
-
     // These buffers will only be rendered if they are enabled.
     vbom->Render(CENTER_OF_MASS);
+
     vbom->RenderWithNormals(vbom->GetBuf(STRESS_TENSOR_VERTICES),
                             vbom->GetBuf(STRESS_TENSOR_NORMALS)); 
-    //vbom->Render(STRESS_TENSOR_VERTICES);
-    //vbom->RenderWithColors(vbom->GetBuf(STRESS_TENSORS), vbom->GetBuf(STRESS_TENSOR_COLORS));
 
     vbom->RenderWithNormals(vbom->GetBuf(SURFACE_VERTICES),
                             vbom->GetBuf(SURFACE_NORMALS));
@@ -311,6 +307,9 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     vbom->Render(vbom->GetBuf(BODY_MESH), 
                  vbom->GetBuf(BODY_COLORS),
                  vbom->GetBuf(BODY_NORMALS), useAlphaBlending);
+
+    // Visualize constraints
+    VisualizeConstraints();
     
     // needs to be last, because it is transparent
     if (renderPlane) 
@@ -320,23 +319,18 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     crackStrategy->RenderDebugInfo(solid);
 }
 
-void TLEDNode::AddConstraint(PolyShape* constrainArea, constraintFuncPtr constrainFunction) {
-    std::pair<PolyShape*, constraintFuncPtr> constraint(constrainArea, constrainFunction);
-    nodeConstraint.push_back(constraint);
-}
 
 void TLEDNode::ApplyConstraints(Solid* solid) {
-    // For each constrain
-    std::list< std::pair<PolyShape*, constraintFuncPtr> >::iterator itr;
+    std::list<NodeConstraint*>::iterator itr;
     for( itr=nodeConstraint.begin(); itr!=nodeConstraint.end(); itr++ ){
-        PolyShape* area = (*itr).first;
-        constraintFuncPtr cons = (*itr).second;
-        // Apply constrain on solid
-        (*cons)(solid, area);  
+        (*itr)->Apply(solid);
     }
 }
 
 void TLEDNode::VisualizeConstraints() {
-
+    std::list<NodeConstraint*>::iterator itr;
+    for( itr=nodeConstraint.begin(); itr!=nodeConstraint.end(); itr++ ){
+        (*itr)->Visualize();
+    }
 }
 

@@ -13,12 +13,11 @@
 #include "VboManager.h"
 #include "CrackStrategy.h"
 #include "Solid.h"
+#include "NodeConstraint.h"
 #include <string>
 
 using namespace OpenEngine;
 
-
-typedef void (*constraintFuncPtr)(Solid* solid, PolyShape* collidableObject);
 
 class TLEDNode : public Scene::RenderNode, public Core::IModule {
  public:
@@ -27,7 +26,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     Solid* solid;
     Utils::Timer timer;
     VboManager* vbom;
-    std::list< std::pair<PolyShape*, constraintFuncPtr> > nodeConstraint;
+    std::list< NodeConstraint* > nodeConstraint;
     unsigned int numIterations;
     bool paused, dump, renderPlane, useAlphaBlending;
     float minX;
@@ -45,10 +44,8 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
 
     void StepPhysics();
 
-    void AddConstraint(PolyShape* constrainArea, constraintFuncPtr constrainFunction);
     void ApplyConstraints(Solid* solid);
     void VisualizeConstraints();
-
 };
 
 #endif // _TLED_NODE_

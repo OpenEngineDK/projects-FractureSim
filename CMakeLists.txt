@@ -29,6 +29,7 @@ SET( PROJECT_SOURCES
   Precompute.cpp
   CrackStrategyOne.cpp
   CudaMem.cpp
+  NodeConstraint.cpp
 )
 
 # Include needed to use SDL under Mac OS X

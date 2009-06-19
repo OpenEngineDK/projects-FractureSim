@@ -2,7 +2,7 @@
 #include <fstream>
 
 #include "CudaMem.h"
-
+#include <Logging/Logger.h>
 
 VboManager::VboManager() {
     vb = new VisualBuffer[NUM_BUFFERS];
@@ -92,7 +92,6 @@ VisualBuffer& VboManager::AllocBuffer(int id, int numElm, PolyShape ps) {
     vb[id].enabled = true;
     vb[id].mode = GL_TRIANGLES;
     vb[id].numIndices = numElm * ps.numVertices;
-
 
     // ------------------ MATRIX BUFFER ----------------- //
     cudaError_t stat;

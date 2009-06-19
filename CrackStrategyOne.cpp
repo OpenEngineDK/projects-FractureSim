@@ -36,7 +36,6 @@ bool CrackStrategyOne::CrackInitialized(Solid* solid) {
 
     if( !crackInitialized && exceedCount > 6 ){
         // Crack first tetrahedron
-        logger.info << "-------- CRACK INITIALIZATION ---------" << logger.end;
         InitializeCrack(solid);
         logger.info << "Press 'c' to apply crack tracking" << logger.end;
         logger.info << "----------------------------" << logger.end;
@@ -47,6 +46,7 @@ bool CrackStrategyOne::CrackInitialized(Solid* solid) {
 
 // Crack first tetrahedron 
 void CrackStrategyOne::InitializeCrack(Solid* solid) {
+    logger.info << "-------- CRACK INITIALIZATION ---------" << logger.end;
      // Alloc buffer
     float4* principalStress = (float4*)malloc(sizeof(float4) * solid->body->numTetrahedra);    
     // Get principal stress for all tetrahedrons 

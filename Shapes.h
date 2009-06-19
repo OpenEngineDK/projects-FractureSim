@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <Meta/CUDA.h>
+#include "CudaMem.h"
 #include "CudaMath.h"
 
 #define BLOCKSIZE 128
@@ -50,7 +51,6 @@ struct Matrix4f {
     Matrix4f() { 
         t = make_float4(0,0,0,0);
         s = make_float4(1,1,1,0);
-        
         row0 = make_float4(1,0,0,0);
         row1 = make_float4(0,1,0,0);
         row2 = make_float4(0,0,1,0);
@@ -59,6 +59,10 @@ struct Matrix4f {
 
     Matrix4f(float4 pos) : t(pos) {
         s = make_float4(1,1,1,0);   
+        row0 = make_float4(1,0,0,0);
+        row1 = make_float4(0,1,0,0);
+        row2 = make_float4(0,0,1,0);
+        row3 = make_float4(0,0,0,1);
     }
 
     __device__
@@ -139,7 +143,33 @@ struct PolyShape {
     void Transform(Matrix4f* matrix) {
         float4 transMatrix[4];
         matrix->GetTransformationMatrix(transMatrix);
-        applyTransformation(vertices, numVertices, transMatrix);
+   
+        float4* matrixPtr;
+        CudaMemAlloc((void**)&(matrixPtr), sizeof(float4) * 4);
+        CudaMemcpy(matrixPtr, &transMatrix[0], sizeof(float4)*4, cudaMemcpyHostToDevice);
+
+        applyTransformation(vertices, numVertices, matrixPtr);
+
+        CudaFree(matrixPtr);
+        CHECK_FOR_CUDA_ERROR();
+    }
+
+    
+    void CopyToGPU() {
+        CHECK_FOR_CUDA_ERROR();
+        // Copy vertices to VRAM
+        float4* vertPtr;
+        CudaMemAlloc((void**)&(vertPtr), sizeof(float4) * numVertices);
+        CudaMemcpy(vertPtr, vertices, sizeof(float4)*numVertices, cudaMemcpyHostToDevice);
+        vertices = vertPtr;
+        CHECK_FOR_CUDA_ERROR();
+
+        // Copy normals to VRAM
+        float4* normPtr;
+        CudaMemAlloc((void**)&(normPtr), sizeof(float4) * numNormals);
+        CudaMemcpy(normPtr, normals, sizeof(float4)*numNormals, cudaMemcpyHostToDevice);
+        normals = normPtr;
+        CHECK_FOR_CUDA_ERROR();
     }
 };
 

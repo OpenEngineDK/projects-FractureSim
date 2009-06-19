@@ -67,7 +67,7 @@ PolyShape::PolyShape(std::string name, float scale) {
 
     numNormals=0;
     for( it=nList.begin(); it!=nList.end(); it++ ) {
-        //        printf("[%i] %f %f %f\n", numVertices,(*it).x, (*it).y, (*it).z);
+        //printf("[%i] %f %f %f\n", numVertices,(*it).x, (*it).y, (*it).z);
         normals[numNormals++] = *it;
     }
 
