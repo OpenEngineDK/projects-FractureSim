@@ -41,24 +41,29 @@ struct VisualBuffer {
 
 
 struct Matrix4f {
-    float4 t;
-    float4 s;
     float4 row0;
     float4 row1;
     float4 row2;
     float4 row3;
 
     Matrix4f() { 
-        t = make_float4(0,0,0,0);
-        s = make_float4(1,1,1,0);
-        row0 = make_float4(1,0,0,0);
-        row1 = make_float4(0,1,0,0);
-        row2 = make_float4(0,0,1,0);
-        row3 = make_float4(0,0,0,1);
+        SetIdentityMatrix();
     }
 
-    Matrix4f(float4 pos) : t(pos) {
-        s = make_float4(1,1,1,0);   
+    __device__
+    Matrix4f(float4 pos) {
+        SetIdentityMatrixOnDevice();
+        SetPos(pos.x, pos.y, pos.z);
+    }
+
+    __device__
+    Matrix4f(float4 pos, float4 scale) {
+        SetIdentityMatrixOnDevice();
+        SetPos(pos.x, pos.y, pos.z);
+        SetScale(scale.x, scale.y, scale.z);
+    }
+
+    void SetIdentityMatrix() {
         row0 = make_float4(1,0,0,0);
         row1 = make_float4(0,1,0,0);
         row2 = make_float4(0,0,1,0);
@@ -66,24 +71,42 @@ struct Matrix4f {
     }
 
     __device__
-    void SetPos(float x, float y, float z) { t = make_float4(x,y,z,0); }
+    void SetIdentityMatrixOnDevice() {
+        row0 = make_float4(1,0,0,0);
+        row1 = make_float4(0,1,0,0);
+        row2 = make_float4(0,0,1,0);
+        row3 = make_float4(0,0,0,1);
+    }
+
     __device__
-    void SetScale(float x, float y, float z) { s = make_float4(x,y,z,0); }
+    void SetPos(float x, float y, float z) { 
+        row0.w = x;
+        row1.w = y;
+        row2.w = z;
+    }
+
+    __device__
+    void SetScale(float x, float y, float z) { 
+        row0.x *= x;
+        row1.y *= y;
+        row2.z *= z;
+    }
 
     __device__
     void CopyToBuf(float4* buf, int idx) {
         // Insert 4x4 transformation matrix into buffer        
-        buf[(idx*4)+0] = make_float4( row0.x*s.x, row0.y,     row0.z,     row0.w+t.x   );
-        buf[(idx*4)+1] = make_float4( row1.x,     row1.y*s.y, row1.z,     row1.w+t.y   );
-        buf[(idx*4)+2] = make_float4( row2.x,     row2.y,     row2.z*s.z, row2.w+t.z   );
-        buf[(idx*4)+3] = make_float4( row3.x,     row3.y,     row3.z,     row3.w       );
+        buf[(idx*4)+0] = row0;
+        buf[(idx*4)+1] = row1;
+        buf[(idx*4)+2] = row2;
+        buf[(idx*4)+3] = row3;
     }
 
+
     void GetTransformationMatrix(float4* matrix) {
-        matrix[0] = make_float4( row0.x*s.x, row0.y,     row0.z,     row0.w+t.x   );
-        matrix[1] = make_float4( row1.x,     row1.y*s.y, row1.z,     row1.w+t.y   );
-        matrix[2] = make_float4( row2.x,     row2.y,     row2.z*s.z, row2.w+t.z   );
-        matrix[3] = make_float4( row3.x,     row3.y,     row3.z,     row3.w       );
+        matrix[0] = row0;
+        matrix[1] = row1;
+        matrix[2] = row2;
+        matrix[3] = row3;
     }
 };
 

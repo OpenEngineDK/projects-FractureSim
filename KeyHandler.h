@@ -9,6 +9,7 @@
 #include <Math/Vector.h>
 
 #include "TLEDNode.h"
+#include "ForceModifier.h"
 
 using namespace OpenEngine;
 using namespace OpenEngine::Display;
@@ -118,6 +119,23 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 logger.info << "camera = {position: " << camera.GetPosition()
                             << ", direction: " << camera.GetDirection()
                             << "}" << logger.end;
+                break;
+
+            case KEY_LEFT:
+                tled->modifier.front()->Move(-2,0,0);
+                break;
+            case KEY_RIGHT:
+                tled->modifier.front()->Move(2,0,0);
+                break;
+            case KEY_UP:
+                tled->modifier.front()->Move(0,0,-2);
+                break;
+            case KEY_DOWN:
+                tled->modifier.front()->Move(0,0,2);
+                break;
+
+            case KEY_m:
+                ((ForceModifier*)tled->modifier.front())->SelectNodes(tled->solid);
                 break;
 
             case KEY_x:

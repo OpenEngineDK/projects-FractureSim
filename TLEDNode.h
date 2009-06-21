@@ -13,7 +13,7 @@
 #include "VboManager.h"
 #include "CrackStrategy.h"
 #include "Solid.h"
-#include "NodeConstraint.h"
+#include "Modifier.h"
 #include <string>
 
 using namespace OpenEngine;
@@ -26,7 +26,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     Solid* solid;
     Utils::Timer timer;
     VboManager* vbom;
-    std::list< NodeConstraint* > nodeConstraint;
+    std::list< Modifier* > modifier;
     unsigned int numIterations;
     bool paused, dump, renderPlane, useAlphaBlending;
     float minX;

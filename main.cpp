@@ -59,8 +59,8 @@ int main(int argc, char** argv) {
     //Vector<3,float> position(-100,30,0);
     //Vector<3,float> lookat(0,30,0);
 
-    Vector<3,float> position(10,3,30);
-    Vector<3,float> lookat(0,3,0);
+    Vector<3,float> position(0,25,130);
+    Vector<3,float> lookat(0,20,0);
 
     // Move the camera
     Camera* camera = setup->GetCamera();

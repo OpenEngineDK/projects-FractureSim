@@ -47,28 +47,7 @@ struct Tetrahedron {
         case 3: return w;
         }
         return -1;
-    }
-
-    /*
-    int GetEdgeStartIndex(int edgeNumber) { 
-        switch(edgeNumber) {
-        case 0: case 1: case 2: return x;
-        case 3: case 4: return y;
-        case 5: return z;
-        }
-        return -1;
-    }
-    
-    int GetEdgeEndIndex(int edgeNumber) { 
-        switch(edgeNumber) {
-        case 0: return y; 
-        case 1: case 3: return z;
-        case 2: case 4: case 5: return w;
-        }
-        return -1;
-        }*/
-
-    
+    }    
 };
 
 

@@ -249,12 +249,9 @@ updateStressTensors_k(Body body,
 	//if (me_idx>=1) return;
 
     float4 center = com[me_idx];
+    Matrix4f m(center);
 
     int e_idx = me_idx * 3;
-    Matrix4f m;
-    m.SetPos(center.x, center.y, center.z);
-    m.SetScale(1.0, 1.0, 1.0);
-    
     m.row0 = eigenVectors[e_idx+0];
     m.row1 = eigenVectors[e_idx+1];
     m.row2 = eigenVectors[e_idx+2];

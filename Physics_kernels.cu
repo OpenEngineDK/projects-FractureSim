@@ -28,7 +28,7 @@ void calculateGravityForces(Solid* solid) {
 }
 
 
-__global__ void solidCollisionConstraint_k
+__global__ void testCollision_k
 (Point* points, unsigned int numPoints, 
  float4* displacements, float4* oldDisplacements,
  float4* vertices, float4* normals, unsigned int numFaces,
@@ -40,7 +40,6 @@ __global__ void solidCollisionConstraint_k
     if( pointIdx >= numPoints || faceIdx >= numFaces ) return;
 
     // Get point
-    //    float3 point = make_float3(points[pointIdx]);
     float3 point = make_float3(points[pointIdx]+displacements[pointIdx]);
     // Get point on plane
     float3 pointOnPlane = make_float3(vertices[faceIdx*3]);
@@ -56,19 +55,19 @@ __global__ void solidCollisionConstraint_k
 }
 
 
-void solidCollisionConstraint(Solid* solid, PolyShape* obj, bool* intersect) {
+void testCollision(Solid* solid, PolyShape* bVolume, bool* intersect) {
     int pBlocks = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
-    int numFaces  = (int)((float)obj->numVertices/3);
+    int numFaces  = (int)((float)bVolume->numVertices/3);
 
     // Start kernel for each point in solid times each face in poly shape
-    solidCollisionConstraint_k
+    testCollision_k
         <<<make_uint3(pBlocks, numFaces,1), make_uint3(BLOCKSIZE,1,1)>>>
         (solid->vertexpool->data, 
          solid->vertexpool->size,
          solid->vertexpool->Ui_t,
          solid->vertexpool->Ui_tminusdt,
-         obj->vertices,
-         obj->normals,
+         bVolume->vertices,
+         bVolume->normals,
          numFaces,
          intersect);
     
@@ -104,20 +103,117 @@ void constrainIntersectingPoints(Solid* solid, bool* intersect) {
     CHECK_FOR_CUDA_ERROR();
 }
 
-__global__ 
-void loadPolyShapeIntoVBO_k(float4* vertices, unsigned int numVertices, float4* buf) {
-	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
-	if (me_idx>=numVertices) return;
-    buf[me_idx] = vertices[me_idx];
+__global__
+void fixIntersectingPoints_k
+(Point* points, unsigned int numPoints, 
+ float4* displacements, float4* oldDisplacements,
+ bool* intersect) {
+
+    int pointIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if( pointIdx >= numPoints ) return;
+
+    if( intersect[pointIdx] )
+        displacements[pointIdx] = oldDisplacements[pointIdx];
 }
 
-void loadPolyShapeIntoVBO(PolyShape* obj, float4* buf) {
-	int pointSize = (int)ceil(((float)obj->numVertices)/BLOCKSIZE);
-    loadPolyShapeIntoVBO_k
-        <<<make_uint3(pointSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
-        (obj->vertices, obj->numVertices, buf);
+void fixIntersectingPoints(Solid* solid, bool* intersect) {
+    int pBlocks = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
+
+    // Start kernel for each point in solid times each face in poly shape
+    constrainIntersectingPoints_k
+        <<<make_uint3(pBlocks, 1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (solid->vertexpool->data, 
+         solid->vertexpool->size,
+         solid->vertexpool->Ui_t,
+         solid->vertexpool->Ui_tminusdt,
+         intersect);
+    
     CHECK_FOR_CUDA_ERROR();
 }
+
+
+
+__global__
+void applyForceToIntersectingNodes_k
+(float* masses, float4* extForces, float4 force, bool* intersect, unsigned int numPoints) {
+    int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if( me_idx >= numPoints ) 
+        return;
+
+    float mass = masses[me_idx];
+
+    if( intersect[me_idx] )
+        extForces[me_idx] = force * mass;
+    else
+        extForces[me_idx] = make_float4(0);
+}
+
+void applyForceToIntersectingNodes(Solid* solid, float3 force, bool* intersect) {
+    int gridSize = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
+
+    // Start kernel for each point in solid times each face in poly shape
+    applyForceToIntersectingNodes_k
+        <<<make_uint3(gridSize, 1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (solid->vertexpool->mass,
+         solid->vertexpool->externalForces,
+         make_float4(force),
+         intersect, 
+         solid->vertexpool->size);
+    
+    CHECK_FOR_CUDA_ERROR();
+}
+
+
+
+__global__
+void colorSelection_k
+(Tetrahedron* tetra, unsigned int numTets,
+ float4* colArray, unsigned int size,
+ bool* intersect) {
+
+	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+	if (me_idx>=numTets) return;
+
+    float4 color = make_float4(1,0,0,1); 
+    Tetrahedron e = tetra[me_idx];
+    if( intersect[e.x] || intersect[e.y] || intersect[e.z] || intersect[e.w] ){
+        int colr_idx = me_idx*12;
+        for( int i=0; i<12; i++ )
+            colArray[colr_idx++] = color;
+    }
+}
+
+
+void colorSelection(Solid* solid, VisualBuffer* colorBuffer, bool* intersect) {
+    int gridSize = (int)ceil(((float)solid->body->numTetrahedra)/BLOCKSIZE);
+
+    // Start kernel for each point in solid times each face in poly shape
+    colorSelection_k
+        <<<make_uint3(gridSize, 1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (solid->body->tetrahedra, 
+         solid->body->numTetrahedra,
+         colorBuffer->buf, colorBuffer->numElm,
+         intersect);
+    
+    CHECK_FOR_CUDA_ERROR();
+}
+
+__global__
+void loadArrayIntoVBO_k(float4* array, unsigned int size, float4* vbo) {
+	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+	if (me_idx >= size) return;
+    vbo[me_idx] = array[me_idx];    
+}
+
+void loadArrayIntoVBO(float4* array, unsigned int size, float4* vbo) {
+	int gridSize = (int)ceil(((float)size)/BLOCKSIZE);
+    loadArrayIntoVBO_k
+        <<<make_uint3(gridSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (array, size, vbo);
+    CHECK_FOR_CUDA_ERROR();
+}
+
 
 __global__ void applyGroundConstraint_k
 (Point *points, float4 *displacements, float4 *oldDisplacements,
