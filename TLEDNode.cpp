@@ -8,6 +8,7 @@
 #include "ForceModifier.h"
 #include "SimpleCollisionModifier.h"
 
+#include "CudaMem.h"
 #include <string>
 #include <iostream>
 
@@ -44,6 +45,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
     solid->vertexpool->Move(100,5,0);
+
+    // Debug
+    displacement = (float4*)malloc(sizeof(float4)*solid->vertexpool->size);
 
     //precompute(solid, smallestAllowedVolume, smallestAllowedLength,
     //           timeStepFactor, damping);
@@ -100,7 +104,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     addForce->SetColorBufferForSelection(&vbom->GetBuf(BODY_COLORS));
     modifier.push_back(addForce);
 
-    FixedModifier* fixedBox1 = new FixedModifier(new PolyShape("Box12.obj", 20));
+    FixedModifier* fixedBox1 = new FixedModifier(new PolyShape("Box12.obj", 25));
     fixedBox1->Move(-9,15,0);
     modifier.push_back(fixedBox1);
 
@@ -168,6 +172,18 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     }
     else
         sim_clock.Stop();
+
+
+    // Debug
+    cudaMemcpy(displacement, solid->vertexpool->Ui_t, sizeof(float4)*solid->vertexpool->size, cudaMemcpyDeviceToHost);
+    float maxDisp = 0;
+    for( int i=0; i<solid->vertexpool->size; i++ )
+        if( length(displacement[i]) > maxDisp )
+            maxDisp = length(displacement[i]);
+
+    logger.info << "MaxDisplacement: " << maxDisp << logger.end;
+
+
 
     // Crack Tracking
     /*    try {

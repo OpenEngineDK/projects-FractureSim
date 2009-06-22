@@ -34,6 +34,8 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     bool exception;
     int crackTrackingItrCount;
     float timestep;
+
+    float4* displacement;
     
     TLEDNode(Solid* solid);
     virtual ~TLEDNode();
