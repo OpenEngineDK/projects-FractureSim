@@ -141,10 +141,10 @@ void applyForceToIntersectingNodes_k
     if( me_idx >= numPoints ) 
         return;
 
-    float mass = masses[me_idx];
+    //    float mass = masses[me_idx];
 
     if( intersect[me_idx] )
-        extForces[me_idx] = force * mass;
+        extForces[me_idx] = force;
     else
         extForces[me_idx] = make_float4(0);
 }

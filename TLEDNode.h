@@ -45,8 +45,8 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
 
     void StepPhysics();
 
-    void ApplyConstraints(Solid* solid);
-    void VisualizeConstraints();
+    void ApplyModifiers(Solid* solid);
+    void VisualizeModifiers();
 };
 
 #endif // _TLED_NODE_

@@ -51,10 +51,10 @@ Solid* SolidFactory::Create(std::string name) {
     } else if (name == "bar") {
         //Bar: vpool: 119, body tetrahedra: 328, surface triangles: 212
         loader = new TetGenLoader
-            (dataDir + "bar.ascii.1.node", 
-             dataDir + "bar.ascii.1.ele", 
-             dataDir + "bar.ascii.1.smesh");
-        scale = 10;
+            (dataDir + "testbar2.ascii.1.node", 
+             dataDir + "testbar2.ascii.1.ele", 
+             dataDir + "testbar2.ascii.1.smesh");
+        scale = 1;
     } else if (name == "bunny") {
         //bunny: vpool: , body tetrahedra: , surface triangles: 
         loader = new TetGenLoader

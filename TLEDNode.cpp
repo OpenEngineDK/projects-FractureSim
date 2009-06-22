@@ -16,7 +16,7 @@
 
 TLEDNode::TLEDNode(Solid* solid) {
     this->solid = solid;
-    numIterations = 250;
+    numIterations = 25;
     paused = true;
     renderPlane = false;
     useAlphaBlending = false;
@@ -43,13 +43,11 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
-    solid->vertexpool->Move(0,30,0);
-
+    solid->vertexpool->Move(100,5,0);
 
     //precompute(solid, smallestAllowedVolume, smallestAllowedLength,
     //           timeStepFactor, damping);
 	timestep = precompute(solid, 0.0f, 0.0f, 0.4f, 5.0f);
-
 
     // Initialize crack strategy
     crackStrategy = new CrackStrategyOne();
@@ -104,18 +102,20 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     modifier.push_back(leftBox);
  */
 
-    float3 force = make_float3(0, -9.820, 0);
+    float3 force = make_float3(0, -(float)pow(10,8)/15.0f, 0);
     ForceModifier* addForce = new ForceModifier(solid, new PolyShape("Box12.obj", 25), force);
-    addForce->Move(40,15,0);
+    addForce->Move(200,15,0);
     addForce->SetColorBufferForSelection(&vbom->GetBuf(BODY_COLORS));
     modifier.push_back(addForce);
 
-    FixedModifier* fixedBox = new FixedModifier(new PolyShape("Box12.obj", 25));
-    fixedBox->Move(-40,15,0);
-    modifier.push_back(fixedBox);
+    FixedModifier* fixedBox1 = new FixedModifier(new PolyShape("Box12.obj", 20));
+    fixedBox1->Move(-9,15,0);
+    modifier.push_back(fixedBox1);
 
-
-
+    /*FixedModifier* fixedBox2 = new FixedModifier(new PolyShape("Box12.obj", 25));
+    fixedBox2->Move(45,15,0);
+    modifier.push_back(fixedBox2);
+    */
     /*
     box = new PolyShape("Box12.obj", 15);
     NodeConstraint* rightBox = new NodeConstraint(box, &solidCollisionConstraint);
@@ -163,9 +163,8 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
             //calculateGravityForces(solid);
             calculateInternalForces(solid, vbom);
             updateDisplacement(solid);
-
-            //            ApplyConstraints(solid);
-            applyFloorConstraint(solid, 0);
+            ApplyModifiers(solid);
+            //            applyFloorConstraint(solid, 0);
 
             static int iterations = 0;
             iterations++;
@@ -183,7 +182,6 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
             }
             //if (iterations == 12982)
             //  paused = true;
-
         }
         timer.Reset();
     }
@@ -228,7 +226,7 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     }
        
 
-    ApplyConstraints(solid);
+    ApplyModifiers(solid);
 
     vbom->UnmapAllBufferObjects();
     
@@ -270,7 +268,7 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
                  vbom->GetBuf(BODY_NORMALS), useAlphaBlending);
 
     // Visualize constraints
-    VisualizeConstraints();
+    VisualizeModifiers();
 
      // needs to be last, because it is transparent
     if (renderPlane) 
@@ -281,14 +279,14 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
 }
 
 
-void TLEDNode::ApplyConstraints(Solid* solid) {
+void TLEDNode::ApplyModifiers(Solid* solid) {
     std::list<Modifier*>::iterator itr;
     for( itr=modifier.begin(); itr!=modifier.end(); itr++ ){
         (*itr)->Apply(solid);
     }
 }
 
-void TLEDNode::VisualizeConstraints() {
+void TLEDNode::VisualizeModifiers() {
     std::list<Modifier*>::iterator itr;
     for( itr=modifier.begin(); itr!=modifier.end(); itr++ ){
         (*itr)->Visualize();

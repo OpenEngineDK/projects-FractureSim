@@ -32,11 +32,12 @@ MaterialProperties* MaterialPropertiesFactory::Create(std::string name) {
         max_streach = 6000;
         max_compression = max_streach;
     } else if (name == "stiff") {
-        density = 0.001f;
-        mu = 1000007.0f;
-        lambda = 0.005f;
-        max_streach = 0;
-        max_compression = max_streach;
+        density = 2400; // kg / m^3
+        E = 21000 * MPa;
+        nu = 0.21;
+        float factor = 1; //50 virker
+        max_streach = 5 * factor * MPa; // Tensile strength
+        max_compression = 40 * MPa; // Compressive strength
     } else if (name == "yelly") {
         density = 0.001f;
         mu = 207.0f;

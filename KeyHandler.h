@@ -133,16 +133,16 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 break;
 
             case KEY_LEFT:
-                tled->modifier.front()->Move(-2,0,0);
+                tled->modifier.front()->Move(-1,0,0);
                 break;
             case KEY_RIGHT:
-                tled->modifier.front()->Move(2,0,0);
+                tled->modifier.front()->Move(1,0,0);
                 break;
             case KEY_UP:
-                tled->modifier.front()->Move(0,0,-2);
+                tled->modifier.front()->Move(0,0,-1);
                 break;
             case KEY_DOWN:
-                tled->modifier.front()->Move(0,0,2);
+                tled->modifier.front()->Move(0,0,1);
                 break;
 
             case KEY_m:
