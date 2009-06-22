@@ -65,33 +65,25 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     // Initialize the Visualizer
     vbom = new VboManager();
-
     // Surface
     vbom->AllocBuffer(SURFACE_VERTICES, solid->surface->numFaces, GL_TRIANGLES);
     vbom->AllocBuffer(SURFACE_NORMALS,  solid->surface->numFaces, GL_TRIANGLES);
-
     // Center of mass points
     vbom->AllocBuffer(CENTER_OF_MASS, solid->body->numTetrahedra, GL_POINTS);
-    
     // Body mesh is all tetrahedron faces with colors and normals
     vbom->AllocBuffer(BODY_MESH, solid->body->numTetrahedra*4, GL_TRIANGLES);
     vbom->AllocBuffer(BODY_COLORS, solid->body->numTetrahedra*12, GL_POINTS);
     vbom->AllocBuffer(BODY_NORMALS, solid->body->numTetrahedra*12, GL_POINTS);
     vbom->AllocBuffer(EIGEN_VECTORS, solid->body->numTetrahedra*3, GL_POINTS);
     vbom->AllocBuffer(EIGEN_VALUES, solid->body->numTetrahedra, GL_POINTS);
-
     // Stress tensors visualizes stress planes.
-    //vbom->AllocBuffer(STRESS_TENSOR_COLORS, solid->body->numTetrahedra, GL_POINTS);
     vbom->AllocBuffer(STRESS_TENSOR_VERTICES, solid->body->numTetrahedra, ps);
-    //vbom->AllocBuffer(STRESS_TENSOR_COLORS,   solid->body->numTetrahedra*ps.numVertices, GL_POINTS);
     vbom->AllocBuffer(STRESS_TENSOR_NORMALS,  solid->body->numTetrahedra*ps.numVertices, GL_POINTS);
-
     // Disabled to bypass rendering
     vbom->Disable(SURFACE_VERTICES);
     vbom->Disable(SURFACE_NORMALS);
     vbom->Disable(CENTER_OF_MASS);
     vbom->Disable(STRESS_TENSOR_VERTICES);
-    
     // Buffer setup
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
 
@@ -116,17 +108,6 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     fixedBox2->Move(45,15,0);
     modifier.push_back(fixedBox2);
     */
-    /*
-    box = new PolyShape("Box12.obj", 15);
-    NodeConstraint* rightBox = new NodeConstraint(box, &solidCollisionConstraint);
-    Matrix4f mat2(make_float4(40,0,0,0));
-    box->Transform(&mat2);
-    rightBox->LoadPolyShapeIntoVBO();
-    nodeConstraint.push_back(rightBox);
-    */
-
-
-
     PrintAllocedMemory();
 }
 
