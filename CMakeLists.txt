@@ -19,6 +19,8 @@ SET( PROJECT_SOURCES
   VertexPool.cpp
   Surface.cpp
   Solid.cpp
+  SolidFactory.cpp
+  MaterialPropertiesFactory.cpp
   Body.cpp
   GridNode.cpp
   CoordSystemNode.cpp

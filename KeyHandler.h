@@ -10,6 +10,8 @@
 
 #include "TLEDNode.h"
 #include "ForceModifier.h"
+#include "SolidFactory.h"
+#include "MaterialPropertiesFactory.h"
 
 using namespace OpenEngine;
 using namespace OpenEngine::Display;
@@ -22,10 +24,13 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
     Core::IEngine& engine;
     Math::Vector<3,float> eye;
     Math::Vector<3,float> point;
+    std::string solidname, mpname;
  public:
 
- KeyHandler(Camera& camera, TLEDNode* tled, Core::IEngine& engine)
-     : camera(camera), tled(tled), engine(engine) {}
+ KeyHandler(Camera& camera, TLEDNode* tled, Core::IEngine& engine, 
+            std::string solidname, std::string mpname)
+     : camera(camera), tled(tled), engine(engine),
+        solidname(solidname), mpname(mpname) {}
 
     void SetEye(Math::Vector<3,float> eye) {
         this->eye = eye;
@@ -35,6 +40,7 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
     }
     void Handle(KeyboardEventArg arg) {
         float xStep = 1.0f;
+        int numItr = 0;
         if (arg.type == EVENT_PRESS) {
             switch (arg.sym) {
             case KEY_r:
@@ -94,7 +100,7 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 Scene::ISceneNode* parentnode;
                 parentnode = tled->GetParent();
                 // Save numIterations
-                int numItr = tled->numIterations;
+                numItr = tled->numIterations;
 
                 // remove old node
                 parentnode->RemoveNode(tled);
@@ -102,11 +108,16 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 engine.ProcessEvent().Detach(*tled);
                 engine.DeinitializeEvent().Detach(*tled);
                 tled->Handle(Core::DeinitializeEventArg());
+
                 delete tled;
                 logger.info << "deletion of tled done" << logger.end;
 
-                // add new node
-                tled = new TLEDNode();
+                {
+                    // add new node
+                    Solid* solid = SolidFactory::Create(solidname);
+                    solid->SetMaterialProperties(MaterialPropertiesFactory::Create(mpname));
+                    tled = new TLEDNode(solid);
+                }
                 parentnode->AddNode(tled);
                 tled->Handle(Core::InitializeEventArg());
                 engine.ProcessEvent().Attach(*tled);

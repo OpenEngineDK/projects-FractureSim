@@ -48,10 +48,10 @@ using namespace OpenEngine::Resources;
  * method in Java.
  */
 int main(int argc, char** argv) {
- 
     // Create simple setup
-    SimpleSetup* setup = new SimpleSetup("TLED", new Viewport(0,0,1280,1024));
+    SimpleSetup* setup = new SimpleSetup("TLED");
 
+    if (argc == 3) {
     // Print usage info.
     logger.info << "========= Running OpenEngine Test Project =========";
     logger.info << logger.end;
@@ -96,13 +96,19 @@ int main(int argc, char** argv) {
     bn->AddNode(new GridNode(1000,30,color));
     bn->AddNode(new CoordSystemNode());
 
-    TLEDNode* tled = new TLEDNode();
+    std::string solidname = argv[1];
+    std::string mpname = argv[2];
+    Solid* solid = SolidFactory::Create(solidname);
+    solid->SetMaterialProperties(MaterialPropertiesFactory::Create(mpname));
+
+    TLEDNode* tled = new TLEDNode(solid);
     bn->AddNode(tled);
     setup->GetEngine().InitializeEvent().Attach(*tled);
     setup->GetEngine().ProcessEvent().Attach(*tled);
     setup->GetEngine().DeinitializeEvent().Attach(*tled);
 
-    KeyHandler* kh = new KeyHandler(*camera, tled, setup->GetEngine());
+    KeyHandler* kh = new KeyHandler(*camera, tled, setup->GetEngine(),
+                                    solidname, mpname);
     kh->SetEye(position);
     kh->SetPoint(lookat);
     setup->GetKeyboard().KeyEvent().Attach(*kh);
@@ -115,6 +121,13 @@ int main(int argc, char** argv) {
     // delete the entire scene
     delete setup->GetScene();
     // Return when the engine stops.
+
+    }
+    else {
+        logger.info << "please specify solid name and material properties: ex "
+                    << argv[0] << " bar concrete" << logger.end;
+    }
+    delete setup;
     return EXIT_SUCCESS;
 }
 

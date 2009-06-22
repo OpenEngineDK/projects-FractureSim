@@ -138,6 +138,7 @@ float CPUPrecalculation
     float totalSmallestVolume = 9e9;
     float totalLargestVolume = 0;
 
+    double totalMass = 0;
     double totalVolume = 0;
     Tetrahedron *htetrahedra = solid->body->tetrahedra;
     Point* hpoints = solid->vertexpool->data;
@@ -262,6 +263,8 @@ float CPUPrecalculation
             totalVolume += volume;
             initialVolume[counter] = volume;
 
+            ///printf("volume[%i]: %f, ",i,volume);
+
             //if (volume<0.1) {
                 /*static unsigned int index = 0;
                 index++;
@@ -302,6 +305,8 @@ float CPUPrecalculation
 
             // x=a, y=b, z=c, w=d
             float tMass = volume * density;
+            totalMass += tMass;
+            ///printf("mass[%i]: %f \n",i,tMass);
             mass[htetrahedra[i].x] += tMass * av/tv;
             mass[htetrahedra[i].y] += tMass * bv/tv;
             mass[htetrahedra[i].z] += tMass * cv/tv;
@@ -338,6 +343,10 @@ float CPUPrecalculation
         tets[i].w = -1;
     }
 
+    // override mass distrubution by constant mass
+    for(unsigned int i=0; i< solid->vertexpool->size;i++)
+        mass[i] = totalMass / (solid->vertexpool->size);
+
 
     // ?!? mesh->numTetrahedra = counter;
     solid->body->numTetrahedra = tmpTetCount;
@@ -348,12 +357,15 @@ float CPUPrecalculation
     printf("Smalest edge: %f\n", minEdge);
     printf("Largest edge: %f\n", maxEdge);
     printf("Min/Max edge ratio: %f\n", maxEdge/minEdge);
-    printf("Smalest volume: %f\n", totalSmallestVolume);
-    printf("Largest volume: %f\n", totalLargestVolume);
+    printf("Smalest volume: %f M^3\n", totalSmallestVolume);
+    printf("Largest volume: %f M^3\n", totalLargestVolume);
     printf("Min/Max volume ratio: %f\n",
            totalLargestVolume/totalSmallestVolume);
-    printf("Total volume: %f\n", totalVolume);
-    printf("Average volume: %f\n", totalVolume/solid->body->numTetrahedra);
+    printf("Total volume: %f M^3\n", totalVolume);
+    printf("Average volume: %f M^3\n", totalVolume/solid->body->numTetrahedra);
+
+    printf("Total mass: %f kg\n", totalMass);
+    printf("Average mass: %f kg\n", totalMass/solid->body->numTetrahedra);
 
 //		for (int i=0; i<solid->vertexpool->size; i++) {
 //			printf("Vertex %i: %f, %f, %f\n", i, 
@@ -364,6 +376,7 @@ float CPUPrecalculation
         if (mass[i] == 0) {
             printf("warning: point without mass detected\n");
         }
+        ///printf("point mass[%i]: %f \n",i,mass[i]);
     }
 
 	//	for (int i = 0; i < mesh->numWriteIndices; i++) {
@@ -416,11 +429,12 @@ void moveAccordingToBoundingBox(Solid* solid) {
     solid->vertexpool->Move(-center[0], -min[1], -center[2]);
 }
 
-void precompute(Solid* solid, 
-                float density, float smallestAllowedVolume, 
-                float smallestAllowedLength, float mu,
-                float lambda, float timeStepFactor, float damping) {
+float precompute(Solid* solid, 
+                float smallestAllowedVolume, 
+                float smallestAllowedLength,
+                float timeStepFactor, float damping) {
 
+    float density = solid->mp->density;
 	float smallestLength =
         CPUPrecalculation(solid, solid->vertexpool->maxNumForces,
                           density, smallestAllowedVolume,
@@ -434,27 +448,12 @@ void precompute(Solid* solid,
     solid->surface->ConvertToCuda();
     CHECK_FOR_CUDA_ERROR();
 
-    // mu and lambda is Lame's constants used for calculating
-    // Young's modulus and Poisson's ratio.
 
-    // E is Young's modulus, it is a material constant defining axial
-    // deformations within the material. 
-    // It simply tells how much a material will stretch or compress
-    // when forces are applied.
-    // [Ref: FEM, Smith, page 661, C.8a]
-    // [Ref: Fysik-bog, Erik, page. 168];
-	float E = mu*(3.0f*lambda+2.0f*mu)/(lambda+mu);
+    float E = solid->mp->E;
+    float nu = solid->mp->nu;
 
-    // mu is Poisson's ratio. 
-    // (From wiki) When a sample of material is stretched in one direction, it
-    // tends to contract (or rarely, expand) in the other two
-    // directions. Conversely, when a sample of material is compressed
-    // in one direction, it tends to expand in the other two
-    // directions. Poisson's ratio (ν) is a measure of this tendency.
-    // [Ref: FEM, Smith, page 661, C.8b]
-    // [Ref: Fysik-bog, Erik, page. 171]
-	float nu = lambda/(2.0f*(lambda+mu));
- 
+    float M = (E*(1.0f-nu))/((1.0f+nu)*(1.0f-2.0f*nu)); //P-wave modulus
+
     // c is the dilatational wave speed of the material. This constant
     // says something about how sound travels through solid materials.
     // We use it for defining the critical delta time step. 
@@ -462,24 +461,28 @@ void precompute(Solid* solid,
     // keep out time step below the critical delta time step.
     // [Ref: TLED-article formula 17]
     // [Ref: Fysik-bog, Erik, page. 198]
-	float c = sqrt((E*(1.0f-nu))/(density*(1.0f+nu)*(1.0f-2.0f*nu)));
+	float c = sqrt(M/density); // speed of pressure wave (P-wave)
 
 	// the factor is to account for changes i c during deformation
     // [ref: TLED-article formula 16]
-	float timeStep = timeStepFactor*smallestLength/c;
+	float timeStep = timeStepFactor * smallestLength/c;
 
 
-    logger.info << "time step: " << timeStep << logger.end;
-    logger.info << "time step squared: " << timeStep*timeStep << logger.end;
+    logger.info << "time step: " << timeStep 
+                << "sec = " << timeStep*1000.0f << "milli Sec" << logger.end;
+    logger.info << "time step squared: " << timeStep*timeStep 
+                << "sec" << logger.end;
 
 	solid->state->timeStep = timeStep;
-	solid->state->mu = mu;
-	solid->state->lambda = lambda;
+	solid->state->mu = E/(2*(1+nu)); // (G)
+	solid->state->lambda = (E*nu)/((1+nu)*(1-2*nu));
 
     // [Ref: TLED-article, formula 11,12,13]
     precalculateABC(timeStep, damping, solid->vertexpool);
 
     precalculateShapeFunctionDerivatives(solid);
+
+    return timeStep;
 }
 
 // Returns true if the two tetrahedrons share a face, equal to

@@ -24,7 +24,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     CrackStrategy* crackStrategy;
     Scene::TransformationNode* plane;
     Solid* solid;
-    Utils::Timer timer;
+    Utils::Timer timer, sim_clock;
     VboManager* vbom;
     std::list< Modifier* > modifier;
     unsigned int numIterations;
@@ -33,8 +33,9 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     bool crackTrackAllWay;
     bool exception;
     int crackTrackingItrCount;
+    float timestep;
     
-    TLEDNode();
+    TLEDNode(Solid* solid);
     virtual ~TLEDNode();
 
     virtual void Apply(Renderers::IRenderingView* view);

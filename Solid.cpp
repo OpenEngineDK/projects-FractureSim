@@ -1,6 +1,4 @@
-
 #include "Solid.h"
-
 
 Solid::Solid() {
     vertexpool = NULL;
@@ -44,4 +42,8 @@ bool Solid::IsInitialized() {
         return false;
     else
         return true;
+}
+
+void Solid::SetMaterialProperties(MaterialProperties* mp) {
+    this->mp = mp;
 }

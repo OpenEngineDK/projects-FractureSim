@@ -1,7 +1,4 @@
 #include "TLEDNode.h"
-#include "MshObjLoader.h"
-#include "TetGenLoader.h"
-#include "TypeConverter.h"
 #include "Precompute.h"
 #include "Physics_kernels.h"
 #include "HelperFunctions.h"
@@ -17,9 +14,9 @@
 #include <Math/Vector.h>
 #include <Logging/Logger.h>
 
-TLEDNode::TLEDNode() {
-    solid = NULL;
-    numIterations = 25;
+TLEDNode::TLEDNode(Solid* solid) {
+    this->solid = solid;
+    numIterations = 250;
     paused = true;
     renderPlane = false;
     useAlphaBlending = false;
@@ -30,6 +27,7 @@ TLEDNode::TLEDNode() {
     crackTrackAllWay = false;
     exception = false;
     crackTrackingItrCount = 0;
+    timestep = 0.0;
 }
 
 TLEDNode::~TLEDNode() {
@@ -43,96 +41,16 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "CUDA info:" << PRINT_CUDA_DEVICE_INFO() << logger.end;
     logger.info << "TLEDNode initialization start" << logger.end;
 
-    ISolidLoader* loader = NULL;
-    std::string dataDir = "projects/TLED/data/RegistrationShapes/";
-
-    
-    //PROSTATE: vpool: 3386, body tetrahedra: 16068, surface triangles: 2470
-    /*loader = new MshObjLoader(dataDir + "PROSTATE.msh",
-                              dataDir + "PROSTATE.obj");
-    */
-    //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
-    /*loader = new MshObjLoader(dataDir + "tand2.msh",
-                              dataDir + "tand2.obj");
-      
-    */
-    //tetrahedra: vpool: 4, body tetrahedra: 1, surface triangles: 4
-    /*loader = new TetGenLoader
-    (dataDir + "tetrahedron.ascii.1.node",
-     dataDir + "tetrahedron.ascii.1.ele",
-     dataDir + "tetrahedron.ascii.1.smesh");
-    */
-
-    /*    //box: vpool: 14, body tetrahedra: 17, surface triangles: 24
-    loader = new TetGenLoader
-    (dataDir + "box.ascii.1.node",
-     dataDir + "box.ascii.1.ele",
-     dataDir + "box.ascii.1.smesh");
-    */
-    //tetrahedra: vpool: 119, body tetrahedra: 328, surface triangles: 212
-    /*    loader = new TetGenLoader
-        (dataDir + "sphere.ascii.1.node", 
-         dataDir + "sphere.ascii.1.ele", 
-         dataDir + "sphere.ascii.1.smesh");
-    */
-
-    //Bar: vpool: X, body tetrahedra: X, surface triangles: X
-      loader = new TetGenLoader
-        (dataDir + "bar.ascii.1.node", 
-         dataDir + "bar.ascii.1.ele", 
-         dataDir + "bar.ascii.1.smesh");
-    
-
-    /*
-    //bunny: vpool: , body tetrahedra: , surface triangles: 
-    loader = new TetGenLoader
-    (dataDir + "bunny.ascii.1.node",
-     dataDir + "bunny.ascii.1.ele",
-     dataDir + "bunny.ascii.1.smesh");
-    */
-
-    loader->Load();
-
-    logger.info << "number of vertices: "
-                << loader->GetVertexPool().size() << logger.end;
-    logger.info << "number of body tetrahedra: " 
-                << loader->GetBody().size() << logger.end;
-    logger.info << "number of surface triangles: " 
-                << loader->GetSurface().size() << logger.end;
-
-    CHECK_FOR_CUDA_ERROR();
-    solid = new Solid();
-	solid->state = new TetrahedralTLEDState(); 
-    solid->vertexpool = TypeConverter
-        ::ConvertToVertexPool(loader->GetVertexPool());
-    solid->body = TypeConverter
-        ::ConvertToBody(loader->GetBody());
-    solid->surface = TypeConverter
-        ::ConvertToSurface(loader->GetSurface());
-
-    // scaling factors for the different models
-    //solid->vertexpool->Scale(1.1); // blob
-    //solid->vertexpool->Scale(5); // tand2, tetrahedra and box
-    //solid->vertexpool->Scale(10);
-    //solid->vertexpool->Scale(30); // bunny
-    //solid->vertexpool->Scale(0.3); // sphere
-    solid->vertexpool->Scale(10.0); // bar
-
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
-    solid->vertexpool->Move(0,5,0);
-    
-    //precompute(solid, density, smallestAllowedVolume, smallestAllowedLength,
-    //           mu, lambda, timeStepFactor, damping);
-    //precompute(solid, 0.001f, 0.0f, 0.0f, 1000007.0f, 0.005f, 0.4f, 50.0f); //stiff
-    //precompute(solid, 24000.0f, 0.0f, 0.0f,
-    //       75000000000.0f, 2045000000.0f, 0.4f, 100.0f); //concrete
-    //precompute(solid, 2.4f, 0.0f, 0.0f,
-    //       136360000000.0f, 8334000000.0f, 0.4f, 100.0f); //concrete moded
-    //precompute(solid, 0.001f, 0.0f, 0.0f, 207.0f, 2500.0f, 0.3f, 10.0f); //yelly
-	//precompute(solid, 0.001f, 0.0f, 0.0f, 80007.0f, 49329.0f, 0.5f, 50.0f); //soft
-    precompute(solid, 0.001f, 0.0f, 0.0f, 2007.0f, 25000.0f, 0.2f, 10.0f); //yelly
-    
+    solid->vertexpool->Move(0,30,0);
+
+
+    //precompute(solid, smallestAllowedVolume, smallestAllowedLength,
+    //           timeStepFactor, damping);
+	timestep = precompute(solid, 0.0f, 0.0f, 0.4f, 5.0f);
+
+
     // Initialize crack strategy
     crackStrategy = new CrackStrategyOne();
     
@@ -185,7 +103,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     leftBox->Move(-40,0,0);
     modifier.push_back(leftBox);
  */
-    float3 force = make_float3(0, -9820.0, 0);
+
+    float3 force = make_float3(0, -9.820, 0);
     ForceModifier* addForce = new ForceModifier(solid, new PolyShape("Box12.obj", 25), force);
     addForce->Move(40,15,0);
     addForce->SetColorBufferForSelection(&vbom->GetBuf(BODY_COLORS));
@@ -194,7 +113,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     FixedModifier* fixedBox = new FixedModifier(new PolyShape("Box12.obj", 25));
     fixedBox->Move(-40,15,0);
     modifier.push_back(fixedBox);
-   
+
 
 
     /*
@@ -231,22 +150,45 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     plane->SetPosition(Vector<3,float>(minX,0.0,0.0));
 
     // skip physics if delta time is to low
-    const unsigned int deltaTime = 50000;
+    const unsigned int deltaTime = 50000 * 0;
 
 	// Update all visualization data
     vbom->MapAllBufferObjects();   
 
+    static Utils::Time oldtime;
     if( !paused &&
         timer.GetElapsedTime() > Utils::Time(deltaTime)) {
+        sim_clock.Start();
         for (unsigned int i=0; i<numIterations; i++) {
             //calculateGravityForces(solid);
             calculateInternalForces(solid, vbom);
             updateDisplacement(solid);
-            ApplyConstraints(solid);
-            //applyFloorConstraint(solid, 0);
+
+            //            ApplyConstraints(solid);
+            applyFloorConstraint(solid, 0);
+
+            static int iterations = 0;
+            iterations++;
+            if ((iterations % 1000) == 0) {
+                Utils::Time time = sim_clock.GetElapsedTime();
+                try {
+                    logger.info << "iterations: " << iterations
+                                << " sim-time: " << Utils
+                        ::Time((unsigned long)(iterations * timestep * 1000000))
+                                << " time: " << time
+                                << " delta: " << time - oldtime
+                                << logger.end;
+                } catch(Core::Exception) {} //happens on reset
+                oldtime = time;
+            }
+            //if (iterations == 12982)
+            //  paused = true;
+
         }
         timer.Reset();
     }
+    else
+        sim_clock.Stop();
 
     // Crack Tracking
     /*    try {

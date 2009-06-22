@@ -35,4 +35,4 @@ public:
 
 };
 
-#endif _CRACK_STRATEGY_H_
+#endif //_CRACK_STRATEGY_H_

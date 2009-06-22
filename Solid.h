@@ -4,6 +4,7 @@
 #include "VertexPool.h"
 #include "Body.h"
 #include "Surface.h"
+#include "MaterialProperties.h"
 
 struct TetrahedralTLEDState {
     // global state
@@ -17,6 +18,7 @@ class Solid {
     Body* body;
     Surface* surface;
     TetrahedralTLEDState* state;
+    MaterialProperties* mp;
 
     Solid();
     ~Solid();
@@ -25,6 +27,8 @@ class Solid {
     void Print();
     bool IsInitialized();
 
+
+    void SetMaterialProperties(MaterialProperties* mp);
 };
 
 #endif // _SOLID_

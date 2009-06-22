@@ -2,6 +2,7 @@
 #include "CudaMem.h"
 #include "Body.h"
 #include <Logging/Logger.h>
+#include <cstring>
 
 Body::Body() {}
 

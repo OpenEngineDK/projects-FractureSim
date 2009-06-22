@@ -53,4 +53,4 @@ private:
 
 };
 
-#endif _CRACK_STRATEGY_ONE_H_
+#endif // _CRACK_STRATEGY_ONE_H_

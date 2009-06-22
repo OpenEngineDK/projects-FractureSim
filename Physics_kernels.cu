@@ -15,7 +15,7 @@ __global__ void calculateDrivingForces_k
 		return;
 
 	externalForces[me_idx] =
-        make_float4(0, -9820*masses[me_idx], 0, 0); // for mm.
+        make_float4(0, -9.820*masses[me_idx], 0, 0); // for m.
 }
 
 void calculateGravityForces(Solid* solid) {
@@ -230,6 +230,7 @@ __global__ void applyGroundConstraint_k
 //	printf("%f, %f, %f \n", displacement.x, displacement.y, displacement.z);
 
 	if( (me.x+displacement.x > -10.0 && me.x+displacement.x < 10.0) && (me.y+displacement.y)<lowestYValue) {
+        //if((me.y+displacement.y)<lowestYValue) {
 		displacements[me_idx].y = lowestYValue - me.y;
 		//oldDisplacements[me_idx] = displacements[me_idx];
 	}
@@ -266,7 +267,7 @@ struct Matrix6x3 { float e[6*3]; };
 
 texture<float4,  1, cudaReadModeElementType> Ui_t_1d_tex;
 texture<float,  1, cudaReadModeElementType> V0_1d_tex;
-texture<float4,  1, cudaReadModeElementType> _tex;
+//texture<float4,  1, cudaReadModeElementType> _tex;
 
 #define h(i,j) (sfdm.e[(i-1)*3+(j-1)])
 #define u(i,j) (displacements.e[(i-1)*3+(j-1)])
@@ -278,11 +279,14 @@ texture<float4,  1, cudaReadModeElementType> _tex;
 
 
 __global__ void
-calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
-                  int4 *writeIndices, float4 *pointForces, int maxPointForces, float mu, float lambda, 
+calculateForces_k(Matrix4x3 *shape_function_derivatives,
+                  Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
+                  int4 *writeIndices, float4 *pointForces, int maxPointForces,
+                  float mu, float lambda, 
                   float4* principalStress,  bool* maxStressExceeded, 
                   unsigned int numTets, float4* colrBuf, float4* tensorColr, 
-                  float4* eigenVectors, float4* eigenValues) {
+                  float4* eigenVectors, float4* eigenValues,
+                  float max_streach, float max_compression) {
 
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -493,10 +497,10 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 
     // The eigenvalue determines the highest principal stress, 
     // if it exceeds the max stress we raise a flag.
-    double MAX_STRESS = 13000.0;
-    //    double MAX_STRESS = 3000000.0;
-    if( abs(principalStress[me_idx].w) > MAX_STRESS )
+    if( abs(principalStress[me_idx].w) > max_streach )
         *maxStressExceeded = true;
+    //if( principalStress[me_idx].w < -max_compression )
+    //    *maxCompressionExceeded = true;
 
     // Eigen value one corresponds to eigen vector one, etc.. 
     eigenValues[me_idx] = make_float4(eValue[0], eValue[1], eValue[2], 0);
@@ -528,7 +532,8 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives, Tetrahedron *tetrahedra
 
     // ---------- COLORS -------------------
     //float4 col = make_float4((numTets/me_idx), 0.5, 0.1, 1.0);
-    float4 col = GetColor(-longestEv, -1000.0, 1500.0);
+    //float4 col = GetColor(-longestEv, -1000.0, 1500.0);
+    float4 col = GetColor(-longestEv, -max_streach, max_streach);
     int colr_idx = me_idx*12;
 
     colrBuf[colr_idx++] = col;
@@ -662,23 +667,25 @@ void calculateInternalForces(Solid* solid, VboManager* vbom)  {
 
     // run kernel (BLOCKSIZE=128)
 	int tetSize = (int)ceil(((float)mesh->numTetrahedra)/BLOCKSIZE);
-	calculateForces_k<<<make_uint3(tetSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>(
-		(Matrix4x3 *)mesh->shape_function_deriv,
-		mesh->tetrahedra,
-		solid->vertexpool->Ui_t,
-		mesh->volume,
-		mesh->writeIndices,
-		solid->vertexpool->pointForces,
-		solid->vertexpool->maxNumForces,
-		state->mu,
-		state->lambda,
-		solid->body->principalStress,
-        solid->body->maxStressExceeded,
-        mesh->numTetrahedra,
-        vbom->GetBuf(BODY_COLORS).buf,
-        vbom->GetBuf(STRESS_TENSOR_COLORS).buf,
-        vbom->GetBuf(EIGEN_VECTORS).buf,
-        vbom->GetBuf(EIGEN_VALUES).buf);
+	calculateForces_k<<<make_uint3(tetSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        ((Matrix4x3 *)mesh->shape_function_deriv,
+         mesh->tetrahedra,
+         solid->vertexpool->Ui_t,
+         mesh->volume,
+         mesh->writeIndices,
+         solid->vertexpool->pointForces,
+         solid->vertexpool->maxNumForces,
+         state->mu,
+         state->lambda,
+         solid->body->principalStress,
+         solid->body->maxStressExceeded,
+         mesh->numTetrahedra,
+         vbom->GetBuf(BODY_COLORS).buf,
+         vbom->GetBuf(STRESS_TENSOR_COLORS).buf,
+         vbom->GetBuf(EIGEN_VECTORS).buf,
+         vbom->GetBuf(EIGEN_VALUES).buf,
+         solid->mp->max_streach,
+         solid->mp->max_compression);
 
 	// free textures
 	cudaUnbindTexture( V0_1d_tex );

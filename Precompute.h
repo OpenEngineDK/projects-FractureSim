@@ -5,10 +5,10 @@
 
 void moveAccordingToBoundingBox(Solid* solid);
 
-void precompute(Solid* solid, 
-                float density, float smallestAllowedVolume, 
-                float smallestAllowedLength, float mu,
-                float lambda, float timeStepFactor, float damping);
+float precompute(Solid* solid, 
+                float smallestAllowedVolume, 
+                float smallestAllowedLength,
+                float timeStepFactor, float damping);
 
 void createNeighbourList(Solid* solid);
 
