@@ -44,7 +44,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
-    solid->vertexpool->Move(100,5,0);
+    //    solid->vertexpool->Move(100,5,0);
+    solid->vertexpool->Move(100,200,0);
 
     // Debug
     displacement = (float4*)malloc(sizeof(float4)*solid->vertexpool->size);
@@ -65,7 +66,6 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     PolyShape ps("FlightArrow7.obj", 0.5f);
     //PolyShape ps("Box12.obj");
     //PolyShape ps("Sphere80.obj");
-    
 
     // Initialize the Visualizer
     vbom = new VboManager();
@@ -105,9 +105,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     modifier.push_back(addForce);
 
     FixedModifier* fixedBox1 = new FixedModifier(new PolyShape("Box12.obj", 25));
-    fixedBox1->Move(-9,15,0);
+    fixedBox1->Move(-9,200,0);
     modifier.push_back(fixedBox1);
-
+    
     /*FixedModifier* fixedBox2 = new FixedModifier(new PolyShape("Box12.obj", 25));
     fixedBox2->Move(45,15,0);
     modifier.push_back(fixedBox2);
@@ -149,7 +149,7 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
             calculateInternalForces(solid, vbom);
             updateDisplacement(solid);
             ApplyModifiers(solid);
-            //            applyFloorConstraint(solid, 0);
+            //applyFloorConstraint(solid, 0);
 
             static int iterations = 0;
             iterations++;
@@ -173,15 +173,21 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     else
         sim_clock.Stop();
 
+    
 
     // Debug
     cudaMemcpy(displacement, solid->vertexpool->Ui_t, sizeof(float4)*solid->vertexpool->size, cudaMemcpyDeviceToHost);
     float maxDisp = 0;
-    for( int i=0; i<solid->vertexpool->size; i++ )
-        if( length(displacement[i]) > maxDisp )
+    float minY = 0;
+    for( unsigned int i=0; i<solid->vertexpool->size; i++ ) {
+        if( length(displacement[i]) > maxDisp ) 
             maxDisp = length(displacement[i]);
-
-    logger.info << "MaxDisplacement: " << maxDisp << logger.end;
+       if( displacement[i].y < minY ) 
+           minY = displacement[i].y;
+    }
+    
+    
+    logger.info << "MaxDisplacement: " << maxDisp << ", MinY = " << minY << logger.end;
 
 
 
@@ -221,7 +227,6 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         applyTransformation(vbom->GetBuf(STRESS_TENSOR_VERTICES),
                             vbom->GetBuf(STRESS_TENSOR_NORMALS));    
     }
-       
 
     ApplyModifiers(solid);
 
@@ -271,8 +276,8 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
     if (renderPlane) 
         plane->Accept(*view);
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    crackStrategy->RenderDebugInfo(solid);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    //    crackStrategy->RenderDebugInfo(solid);
 }
 
 

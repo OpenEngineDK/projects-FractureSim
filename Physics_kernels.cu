@@ -438,7 +438,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     S(2,1) = S(1,2);
     S(3,2) = S(2,3);
     S(3,1) = S(1,3);
-
+    
     // Calculate eigen vectors and values and map to colors
     double eVector[3][3];
     double eValue[3];
@@ -552,7 +552,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
     
- 
+    
 /*	printf("\nHyper-elastic stresses for tetrahedron %i: \n", me_idx);
 	printf("%f, %f, %f \n", S(1,1), S(1,2), S(1,3));
 	printf("%f, %f, %f \n", S(2,1), S(2,2), S(2,3));
@@ -569,9 +569,9 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 	{
 		//Calculate B_L from B_L0 and deformation gradients (a is the node number)
 
-		Matrix6x3 b_tensor;
-
-		B(1,1) = h(a, 1)*X(1, 1);  
+        Matrix6x3 b_tensor;
+        
+        B(1,1) = h(a, 1)*X(1, 1);  
 		B(1,2) = h(a, 1)*X(2, 1);  
 		B(1,3) = h(a, 1)*X(3, 1);  
 
@@ -594,15 +594,16 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 		B(6,1) = h(a, 3)*X(1, 1) + h(a, 1)*X(1, 3);  
 		B(6,2) = h(a, 3)*X(2, 1) + h(a, 1)*X(2, 3);  
 		B(6,3) = h(a, 3)*X(3, 1) + h(a, 1)*X(3, 3);
-
-/*		printf("\nSubmatrix for a=%i of the stationary strain-displacement matrix for tetrahedron %i: \n", a, me_idx);
+        
+        /*
+		printf("\nSubmatrix for a=%i of the stationary strain-displacement matrix for tetrahedron %i: \n", a, me_idx);
 		printf("%f, %f, %f \n", B(1,1), B(1,2), B(1,3));
 		printf("%f, %f, %f \n", B(2,1), B(2,2), B(2,3));
 		printf("%f, %f, %f \n", B(3,1), B(3,2), B(3,3));
 		printf("%f, %f, %f \n", B(4,1), B(4,2), B(4,3));
 		printf("%f, %f, %f \n", B(5,1), B(5,2), B(5,3));
 		printf("%f, %f, %f \n", B(6,1), B(6,2), B(6,3));
-*/
+        */
 		//calculate forces
 		float4 force;
 		force.x = V*(B(1, 1)*S(1, 1)+B(2, 1)*S(2, 2)+B(3, 1)*S(3, 3)+B(4, 1)*S(1, 2)+B(5, 1)*S(2, 3)+B(6, 1)*S(1, 3));
@@ -725,12 +726,7 @@ updateDisplacements_k(float4 *Ui_t, float4 *Ui_tminusdt, float *M, float4 *Ri, f
 	float y = ABCi.x * (R.y - F.y) + ABCi.y * Uit.y + ABCi.z * Uitminusdt.y;
 	float z = ABCi.x * (R.z - F.z) + ABCi.y * Uit.z + ABCi.z * Uitminusdt.z;
 
-/*	float x = ABCi.x * (-F.x) + ABCi.y * Ui_t[me_idx].x + ABCi.z * Ui_tminusdt[me_idx].x;
-	float y = ABCi.x * (-F.x) + ABCi.y * Ui_t[me_idx].y + ABCi.z * Ui_tminusdt[me_idx].y;
-	float z = ABCi.x * (-F.x ) + ABCi.y * Ui_t[me_idx].z + ABCi.z * Ui_tminusdt[me_idx].z;
-*/
-	Ui_tminusdt[me_idx] = make_float4(x,y,z,0);//XXXXXXXXXXXXXXXXXXXXX
-
+	Ui_tminusdt[me_idx] = make_float4(x,y,z,0);
 }
 
 void updateDisplacement(Solid* solid) {

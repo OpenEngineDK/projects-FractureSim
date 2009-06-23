@@ -34,6 +34,7 @@ Solid* SolidFactory::Create(std::string name) {
             (dataDir + "tetrahedron.ascii.1.node",
              dataDir + "tetrahedron.ascii.1.ele",
              dataDir + "tetrahedron.ascii.1.smesh");
+        scale = 5.0;
     } else if (name == "box") {
         //box: vpool: 14, body tetrahedra: 17, surface triangles: 24
         loader = new TetGenLoader

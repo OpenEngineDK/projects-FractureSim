@@ -38,7 +38,14 @@ MaterialProperties* MaterialPropertiesFactory::Create(std::string name) {
         float factor = 1; //50 virker
         max_streach = 5 * factor * MPa; // Tensile strength
         max_compression = 40 * MPa; // Compressive strength
-    } else if (name == "yelly") {
+    } else if (name == "test") {
+        density = 240; // kg / m^3
+        E = 210 * GPa;
+        nu = 0.21;
+        float factor = 1; //50 virker
+        max_streach = 0;
+        max_compression = max_streach;
+    }else if (name == "yelly") {
         density = 240; // kg / m^3
         E = 210 * MPa;
         nu = 0.21;
