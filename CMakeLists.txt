@@ -35,6 +35,7 @@ SET( PROJECT_SOURCES
   FixedModifier.cpp
   ForceModifier.cpp
   SimpleCollisionModifier.cpp
+  MovableCollisionModifier.cpp
 )
 
 # Include needed to use SDL under Mac OS X

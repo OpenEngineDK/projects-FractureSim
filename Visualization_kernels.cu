@@ -38,7 +38,7 @@ void applyTransformation_k(float4* modelVert, float4* mat, float4* vert,
 	int me_idx = (numVerts*blockIdx.x) + threadIdx.x;
 
 	if (threadIdx.x>=numVerts)
-		return;
+        return;
     
     int m_idx = 4*blockIdx.x;
 
@@ -255,6 +255,8 @@ updateStressTensors_k(Body body,
     m.row0 = eigenVectors[e_idx+0];
     m.row1 = eigenVectors[e_idx+1];
     m.row2 = eigenVectors[e_idx+2];
+
+    m.SetPos(center.x, center.y, center.z);
 
     m.CopyToBuf(matBuf, me_idx);
 }

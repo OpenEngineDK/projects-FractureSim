@@ -14,7 +14,7 @@ __global__ void calculateDrivingForces_k
 	if (me_idx>=numPoints)
 		return;
 
-	externalForces[me_idx] =
+    externalForces[me_idx] =
         make_float4(0, -9.820*masses[me_idx], 0, 0); // for m.
 }
 
@@ -143,7 +143,8 @@ void applyForceToIntersectingNodes_k
 
     //    float mass = masses[me_idx];
 
-    if( intersect[me_idx] )
+    //if( intersect[me_idx] )
+    if( me_idx == 0 )
         extForces[me_idx] = force;
     else
         extForces[me_idx] = make_float4(0);
@@ -164,7 +165,81 @@ void applyForceToIntersectingNodes(Solid* solid, float3 force, bool* intersect) 
     CHECK_FOR_CUDA_ERROR();
 }
 
+__global__
+void moveIntersectingNodeToSurface_k
+(Point* points, unsigned int numPoints, 
+ float4* displacements, float4* oldDisplacements,
+ float4* vertices, float4* normals, unsigned int numFaces,
+ bool* intersect) {
 
+    int pointIdx = blockIdx.x * blockDim.x + threadIdx.x;    
+    if( pointIdx >= numPoints || !intersect[pointIdx] ) return;
+
+    // If the point intersects with the volume iterate through all faces
+    // to find shortest distance to plane and project the point onto the plane.
+    float surfDist = 9e9; // float::max
+    int faceIdxWithShortestDist = -1;
+    for( int i=0; i<numFaces; i++ ) {
+        int faceIdx = blockIdx.y * blockDim.y + i;
+
+        // Get point
+        float3 point = make_float3(points[pointIdx]+displacements[pointIdx]);
+        // Get point on plane
+        float3 pointOnPlane = make_float3(vertices[faceIdx*3]);
+        // Get normal to plane
+        float3 planeNorm = make_float3(normals[faceIdx*3]);
+
+        // Point plane distance: D = planeNormal dot (point - pointOnPlane)
+        float dist = dot( planeNorm, (point - pointOnPlane));
+        if(  abs(dist) < surfDist ) {
+            surfDist = abs(dist);
+            faceIdxWithShortestDist = faceIdx;
+        }
+    }
+
+    // Project the point onto the plane with shortest distance
+    if( faceIdxWithShortestDist > -1 ){
+       float3 point = make_float3(points[pointIdx]+displacements[pointIdx]);
+       // Get normal to plane
+        float3 planeNorm = make_float3(normals[faceIdxWithShortestDist*3]);
+        //planeNorm = normalize(planeNorm);
+
+        float3 diff = (planeNorm * surfDist);
+        diff *= 0.01f;
+
+        //printf("PlaneNorm %f %f %f - surfDist %f - diff %f,%f,%f\n", planeNorm.x, planeNorm.y, planeNorm.z, surfDist, diff.x, diff.y, diff.z);
+
+        displacements[pointIdx].x += diff.x;
+        displacements[pointIdx].y += diff.y;
+        displacements[pointIdx].z += diff.z;
+        
+        //oldDisplacements[pointIdx] = displacements[pointIdx];
+
+    }
+
+}
+
+
+
+void moveIntersectingNodeToSurface(Solid* solid, PolyShape* bVolume, bool* intersect){
+
+    int pBlocks = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
+    int numFaces  = (int)((float)bVolume->numVertices/3);
+
+    // Start kernel for each point in solid times each face in poly shape
+    moveIntersectingNodeToSurface_k
+        <<<make_uint3(pBlocks, 1, 1), make_uint3(BLOCKSIZE,1,1)>>>
+        (solid->vertexpool->data, 
+         solid->vertexpool->size,
+         solid->vertexpool->Ui_t,
+         solid->vertexpool->Ui_tminusdt,
+         bVolume->vertices,
+         bVolume->normals,
+         numFaces,
+         intersect);
+    
+    CHECK_FOR_CUDA_ERROR();
+}
 
 __global__
 void colorSelection_k
@@ -299,6 +374,13 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 		return;
 	
 	Matrix4x3 sfdm = shape_function_derivatives[me_idx];
+    /*if( me_idx == 0 ){
+        printf("sfdm %f,%f,%f \n", h(1,1),h(1,2),h(1,3));
+        printf("sfdm %f,%f,%f \n", h(2,1),h(2,2),h(2,3));
+        printf("sfdm %f,%f,%f \n", h(3,1),h(3,2),h(3,3));
+        printf("sfdm %f,%f,%f \n", h(4,1),h(4,2),h(4,3));
+
+    }*/
 	Matrix4x3 displacements;
 
 	//fill in displacement values in u (displacements)
@@ -308,6 +390,8 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 	float3 U2 = make_float3(tex1Dfetch( Ui_t_1d_tex, e.y ));
 	float3 U3 = make_float3(tex1Dfetch( Ui_t_1d_tex, e.z ));
 	float3 U4 = make_float3(tex1Dfetch( Ui_t_1d_tex, e.w ));
+
+    //    printf("U1: %f,%f,%f \n", U1.x, U1.y, U1.z);
 
 	displacements.e[0] = U1.x;
 	displacements.e[1] = U1.y;
@@ -359,11 +443,11 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 	X(3,2) = (u(1,3)*h(1,2)+u(2,3)*h(2,2)+u(3,3)*h(3,2)+u(4,3)*h(4,2));
 	X(3,3) = (u(1,3)*h(1,3)+u(2,3)*h(2,3)+u(3,3)*h(3,3)+u(4,3)*h(4,3)+1.0f);
 
-/*	printf("\nDeformation gradient tensor for tetrahedron %i: \n", me_idx);
+	/*printf("\nDeformation gradient tensor for tetrahedron %i: \n", me_idx);
 	printf("%f, %f, %f \n", X(1,1), X(1,2), X(1,3));
 	printf("%f, %f, %f \n", X(2,1), X(2,2), X(2,3));
 	printf("%f, %f, %f \n", X(3,1), X(3,2), X(3,3));
-*/
+    */
     // [Ref: TLED-article, formel 2]
     // X transposed multiplied with self, to obtain tensor without rotation.
     // calculate Right Cauchy-Green deformation tensor C
@@ -438,7 +522,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     S(2,1) = S(1,2);
     S(3,2) = S(2,3);
     S(3,1) = S(1,3);
-    
+      
     // Calculate eigen vectors and values and map to colors
     double eVector[3][3];
     double eValue[3];
@@ -551,7 +635,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
     colrBuf[colr_idx++] = col;
-    
+  
     
 /*	printf("\nHyper-elastic stresses for tetrahedron %i: \n", me_idx);
 	printf("%f, %f, %f \n", S(1,1), S(1,2), S(1,3));
@@ -604,12 +688,21 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 		printf("%f, %f, %f \n", B(5,1), B(5,2), B(5,3));
 		printf("%f, %f, %f \n", B(6,1), B(6,2), B(6,3));
         */
+      
 		//calculate forces
 		float4 force;
 		force.x = V*(B(1, 1)*S(1, 1)+B(2, 1)*S(2, 2)+B(3, 1)*S(3, 3)+B(4, 1)*S(1, 2)+B(5, 1)*S(2, 3)+B(6, 1)*S(1, 3));
 		force.y = V*(B(1, 2)*S(1, 1)+B(2, 2)*S(2, 2)+B(3, 2)*S(3, 3)+B(4, 2)*S(1, 2)+B(5, 2)*S(2, 3)+B(6, 2)*S(1, 3));
 		force.z = V*(B(1, 3)*S(1, 1)+B(2, 3)*S(2, 2)+B(3, 3)*S(3, 3)+B(4, 3)*S(1, 2)+B(5, 3)*S(2, 3)+B(6, 3)*S(1, 3));
 		force.w = 0;
+
+        if( me_idx == 0 && a == 1 ){
+            //printf("forceY = %f, %f, %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f\n", force.y, V, B(1, 2), S(1, 1), B(2, 2), S(2, 2), B(3, 2), S(3, 3), B(4, 2), S(1, 2), B(5, 2), S(2, 3), B(6, 2), S(1, 3));
+            //printf("h(a, 2) = %f\n", h(a, 2));
+        }
+
+        //if( me_idx == 0 && a == 1 )
+        //    printf("forceY = %f\n", force.y);
 
         /*
         float maxForce = 100000 * 10;
@@ -696,7 +789,9 @@ void calculateInternalForces(Solid* solid, VboManager* vbom)  {
 
 
 __global__ void
-updateDisplacements_k(float4 *Ui_t, float4 *Ui_tminusdt, float *M, float4 *Ri, float4 *Fi, int maxNumForces, float4 *ABC, unsigned int numPoints)
+updateDisplacements_k(float4 *Ui_t, float4 *Ui_tminusdt, float *M, 
+                      float4 *Ri, float4 *Fi, int maxNumForces, 
+                      float4 *ABC, unsigned int numPoints)
 {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -715,14 +810,15 @@ updateDisplacements_k(float4 *Ui_t, float4 *Ui_tminusdt, float *M, float4 *Ri, f
 		F.y += force_to_add.y;
 		F.z += force_to_add.z;
 	}
-//	printf("Accumulated node %i force: %f, %f, %f \n", me_idx, F.x, F.y, F.z);
+    //	printf("Accumulated node %i force: %f, %f, %f \n", me_idx, F.x, F.y, F.z);
 
 	float4 ABCi = ABC[me_idx];
 	float4 Uit = Ui_t[me_idx];
 	float4 Uitminusdt = Ui_tminusdt[me_idx];
 
 	float4 R = Ri[me_idx];
-	float x = ABCi.x * (R.x - F.x) + ABCi.y * Uit.x + ABCi.z * Uitminusdt.x;
+    //	printf("R %f, %f, %f \n", R.x, R.y, R.z);
+    float x = ABCi.x * (R.x - F.x) + ABCi.y * Uit.x + ABCi.z * Uitminusdt.x;
 	float y = ABCi.x * (R.y - F.y) + ABCi.y * Uit.y + ABCi.z * Uitminusdt.y;
 	float z = ABCi.x * (R.z - F.z) + ABCi.y * Uit.z + ABCi.z * Uitminusdt.z;
 
@@ -742,4 +838,6 @@ void updateDisplacement(Solid* solid) {
 	float4 *temp = solid->vertexpool->Ui_t;
 	solid->vertexpool->Ui_t = solid->vertexpool->Ui_tminusdt;
 	solid->vertexpool->Ui_tminusdt = temp;
+
+    //printf("Ui_tminusdt[0]: %f, %f, %f\n", temp[0].x, temp[0].y, temp[0].z);
 }

@@ -1,13 +1,13 @@
 
-#include "SimpleCollisionModifier.h"
+#include "MovableCollisionModifier.h"
 #include "Physics_kernels.h"
 #include "Solid.h"
 
-SimpleCollisionModifier::SimpleCollisionModifier(PolyShape* bVolume) : Modifier(bVolume) {}
+MovableCollisionModifier::MovableCollisionModifier(PolyShape* bVolume) : Modifier(bVolume) {}
 
-SimpleCollisionModifier::~SimpleCollisionModifier() {}
+MovableCollisionModifier::~MovableCollisionModifier() {}
 
-void SimpleCollisionModifier::ApplyModifierStrategy(Solid* solid) {
+void MovableCollisionModifier::ApplyModifierStrategy(Solid* solid) {
     // Initialize points to be in front of all planes  
     CudaMemset(pIntersect, true, sizeof(bool)*solid->vertexpool->size);
 
@@ -16,4 +16,7 @@ void SimpleCollisionModifier::ApplyModifierStrategy(Solid* solid) {
 
     // Call constraint function
     constrainIntersectingPoints(solid, pIntersect);
+
+    // Call constraint function
+    moveIntersectingNodeToSurface(solid, bVolume, pIntersect);
 }

@@ -46,6 +46,7 @@ struct Matrix4f {
     float4 row2;
     float4 row3;
 
+    
     Matrix4f() { 
         SetIdentityMatrix();
     }
@@ -86,10 +87,22 @@ struct Matrix4f {
     }
 
     __device__
+    float4 GetPos(){
+        return make_float4(row0.w,row1.w,row2.w,0);
+    }
+
+    __device__
     void SetScale(float x, float y, float z) { 
         row0.x *= x;
         row1.y *= y;
         row2.z *= z;
+    }
+
+    __device__
+    void RotateY(float rot){
+        row0 = make_float4(cos(rot),  0, sin(rot), 0);
+        row1 = make_float4(    0,     1,     0,    0);
+        row2 = make_float4(-sin(rot), 0, cos(rot), 0);      
     }
 
     __device__
@@ -161,7 +174,8 @@ struct PolyShape {
     unsigned int numNormals;
 
     PolyShape() {}
-    PolyShape(std::string name, float scale = 1.0f);
+    //PolyShape(std::string name, float scale = 1.0f);
+    PolyShape(std::string name, float scaleX = 1.0f, float scaleY = 1.0f, float scaleZ = 1.0f);
 
     void Transform(Matrix4f* matrix) {
         float4 transMatrix[4];

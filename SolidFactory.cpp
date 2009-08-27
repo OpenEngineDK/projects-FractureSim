@@ -23,6 +23,12 @@ Solid* SolidFactory::Create(std::string name) {
         loader = new MshObjLoader(dataDir + "PROSTATE.msh",
                                   dataDir + "PROSTATE.obj");
         scale = 1.1;
+    } else if (name == "tooth") {
+       loader = new TetGenLoader
+            (dataDir + "fake-tooth-halfway-ascii.1.node",
+             dataDir + "fake-tooth-halfway-ascii.1.ele",
+             dataDir + "fake-tooth-halfway-ascii.1.smesh");
+        scale = 5.0;
     } else if (name == "tand2") {
         //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
         loader = new MshObjLoader(dataDir + "tand2.msh",

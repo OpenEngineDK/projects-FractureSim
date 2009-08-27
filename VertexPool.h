@@ -17,6 +17,7 @@ struct VertexPool {
     VertexPool();
     VertexPool(unsigned int size);
     void Scale(float scale);
+    void Scale(float x, float y, float z);
     void Move(float dx, float dy, float dz);
     void Print();
     void GetTetrahedronVertices(Tetrahedron tetra, float4* vertices);

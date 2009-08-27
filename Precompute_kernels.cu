@@ -24,7 +24,7 @@ __global__ void precalculateABC_kernel
 	float Bi = ((2.0f*Mii)/deltasqr)*Ai;
 	float Ci = (Dii/twodelta)*Ai - 0.5f*Bi;
 
-    ////printf("ABC for node %i: %e, %e, %e \n", me_idx, Ai, Bi, Ci);
+    //printf("ABC for node %i: %e, %e, %e \n", me_idx, Ai, Bi, Ci);
 
 	ABCm[me_idx] = make_float4(Ai,Bi,Ci,Mii);
 }
@@ -56,7 +56,42 @@ __global__ void precalculateShapeFunctionDerivatives_kernel
 	float4 c = points[tet.z];
 	float4 d = points[tet.w];
 
-	float denominator = 
+    double A = c.y*d.x*b.z;
+    double B = a.x*c.y*d.z;
+    double C = a.y*d.x*c.z;
+    double D = c.x*b.y*a.z;
+    double E = c.x*d.y*a.z;
+    double F = a.x*b.y*d.z;
+    double G = a.x*b.y*c.z;
+    double H = c.x*b.y*d.z;
+    double I = c.x*a.y*d.z;
+    double J = a.y*c.x*b.z;
+    double K = a.y*d.x*b.z;
+    double L = d.x*b.y*c.z;
+    double M = b.x*c.y*a.z;
+    double N = b.x*d.y*c.z;
+    double O = b.x*a.y*c.z;
+    double P = b.x*c.y*d.z;
+    double Q = b.x*d.y*a.z;
+    double R = b.x*a.y*d.z;
+    double S = d.y*c.x*b.z;
+    double T = d.y*a.x*b.z;
+    double U = d.y*a.x*c.z;
+    double V = c.y*a.x*b.z;
+    double X = d.x*c.y*a.z;
+    double Y = d.x*b.y*a.z;
+
+    double denominator =
+        A + B + C -
+        D + E - F +
+        G + H - I +
+        J - K - L +
+        M + N - O -
+        P - Q + R -
+        S + T - U - 
+        V - X + Y;
+    /*
+	double denominator = 
         c.y*d.x*b.z + a.x*c.y*d.z + a.y*d.x*c.z - 
         c.x*b.y*a.z + c.x*d.y*a.z - a.x*b.y*d.z +
 		a.x*b.y*c.z + c.x*b.y*d.z - c.x*a.y*d.z +
@@ -65,12 +100,35 @@ __global__ void precalculateShapeFunctionDerivatives_kernel
         b.x*c.y*d.z - b.x*d.y*a.z + b.x*a.y*d.z - 
         d.y*c.x*b.z + d.y*a.x*b.z - d.y*a.x*c.z -
         c.y*a.x*b.z - d.x*c.y*a.z + d.x*b.y*a.z;
+    */
+    //    printf("denominator %f \n", denominator);
 
 	ShapeFunctionDerivatives sfd;	
     // shape function (x,y,z) = c1 + c2*x + c3*y + c4*z
     // C-a2
-	sfd.h1.x = (c.y*d.z - b.y*d.z + b.y*c.z +
+    double h1_A = c.y*d.z;
+    double h1_B = b.y*d.z;
+    double h1_C = b.y*c.z;
+    double h1_D = d.y*b.z;
+    double h1_E = d.y*c.z;
+    double h1_F = c.y*b.z;
+ 
+    //printf("a(x,y,z) = (%E,%E,%E)\n", a.x, a.y, a.z);
+    //printf("b(x,y,z) = (%E,%E,%E)\n", b.x, b.y, b.z);
+    //printf("c(x,y,z) = (%E,%E,%E)\n", c.x, c.y, c.z);
+    //printf("d(x,y,z) = (%E,%E,%E)\n", d.x, d.y, d.z); 
+
+    double tmp = h1_A - h1_B + h1_C + h1_D - h1_E - h1_F;
+
+	sfd.h1.x = (double)tmp / (double)denominator;
+
+    //printf("h1.x = %E - %E, %E, %E, %E, %E, %E\n", sfd.h1.x, h1_A, h1_B, h1_C, h1_D, h1_E, h1_F);
+
+    /*	sfd.h1.x = (c.y*d.z - b.y*d.z + b.y*c.z +
                 d.y*b.z - d.y*c.z - c.y*b.z)/denominator;
+    */
+
+
     // C-a3
     sfd.h1.y = -(-c.x*b.z + d.x*b.z + c.x*d.z -
                  b.x*d.z + b.x*c.z - d.x*c.z)/denominator;
@@ -98,13 +156,13 @@ __global__ void precalculateShapeFunctionDerivatives_kernel
                 b.x*c.z + a.x*b.z - c.x*b.z)/denominator;
 	sfd.h4.z = -(-a.x*c.y - b.x*a.y + b.x*c.y +
                  a.x*b.y - c.x*b.y + c.x*a.y)/denominator;
-
-/*	printf("\nFor tetrahedron %i: \n", me_idx);
+    
+    /*printf("\nFor tetrahedron %i: \n", me_idx);
 	printf("h1 derivatives: %f, %f, %f \n", sfd.h1.x, sfd.h1.y, sfd.h1.z);
 	printf("h2 derivatives: %f, %f, %f \n", sfd.h2.x, sfd.h2.y, sfd.h2.z);
 	printf("h3 derivatives: %f, %f, %f \n", sfd.h3.x, sfd.h3.y, sfd.h3.z);
 	printf("h4 derivatives: %f, %f, %f \n", sfd.h4.x, sfd.h4.y, sfd.h4.z);
-*/
+    */
 	shape_function_derivatives[me_idx] = sfd;
 }
 

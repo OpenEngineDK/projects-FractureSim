@@ -27,10 +27,15 @@ VertexPool::VertexPool(unsigned int size) {
 }
 
 void VertexPool::Scale(float scale) {
+    Scale(scale, scale, scale);
+}
+
+
+void VertexPool::Scale(float x, float y, float z) {
     for (unsigned int i=0; i<size;i++) {
-        data[i].x = data[i].x * scale;
-        data[i].y = data[i].y * scale;
-        data[i].z = data[i].z * scale;
+        data[i].x = data[i].x * x;
+        data[i].y = data[i].y * y;
+        data[i].z = data[i].z * z;
     }
 }
     

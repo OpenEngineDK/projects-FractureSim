@@ -33,14 +33,14 @@ MaterialProperties* MaterialPropertiesFactory::Create(std::string name) {
         max_compression = max_streach;
     } else if (name == "stiff") {
         density = 2400; // kg / m^3
-        E = 21000 * MPa;
+        E = 20 * GPa;
         nu = 0.21;
         float factor = 1; //50 virker
         max_streach = 5 * factor * MPa; // Tensile strength
         max_compression = 40 * MPa; // Compressive strength
-    } else if (name == "test") {
-        density = 240; // kg / m^3
-        E = 210 * GPa;
+    } else if (name == "steel") {
+        density = 7860; // kg / m^3
+        E = 200 * GPa;
         nu = 0.21;
         float factor = 1; //50 virker
         max_streach = 0;
@@ -57,7 +57,7 @@ MaterialProperties* MaterialPropertiesFactory::Create(std::string name) {
         density = 2400; // kg / m^3
         E = 41000 * MPa;
         nu = 0.21;
-        float factor = 1; //50 virker
+        float factor = 35; //50 virker
         max_streach = 5 * factor * MPa; // Tensile strength
         max_compression = 40 * factor * MPa; // Compressive strength
     } else if (name == "concrete_moded") {

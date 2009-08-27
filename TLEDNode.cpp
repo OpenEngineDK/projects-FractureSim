@@ -7,6 +7,7 @@
 #include "FixedModifier.h"
 #include "ForceModifier.h"
 #include "SimpleCollisionModifier.h"
+#include "MovableCollisionModifier.h"
 
 #include "CudaMem.h"
 #include <string>
@@ -14,6 +15,10 @@
 
 #include <Math/Vector.h>
 #include <Logging/Logger.h>
+
+static const float POS_X = 0.0;
+static const float POS_Y = 10.5;
+static const float POS_Z = 0.0;
 
 TLEDNode::TLEDNode(Solid* solid) {
     this->solid = solid;
@@ -26,6 +31,7 @@ TLEDNode::TLEDNode(Solid* solid) {
     dump = false;
     timer.Start();
     crackTrackAllWay = false;
+    crackTrackingEnabled = true;
     exception = false;
     crackTrackingItrCount = 0;
     timestep = 0.0;
@@ -45,14 +51,16 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
     //    solid->vertexpool->Move(100,5,0);
-    solid->vertexpool->Move(100,200,0);
+    solid->vertexpool->Move(POS_X, POS_Y, POS_Z);
+    //    solid->vertexpool->Scale(0.4, 1.0, 1.0);
+    //    solid->vertexpool->Scale(0.8, 2.0, 2.0);
 
     // Debug
     displacement = (float4*)malloc(sizeof(float4)*solid->vertexpool->size);
 
     //precompute(solid, smallestAllowedVolume, smallestAllowedLength,
     //           timeStepFactor, damping);
-	timestep = precompute(solid, 0.0f, 0.0f, 0.4f, 5.0f);
+	timestep = precompute(solid, 0.0f, 0.0f, 0.5f, 0.5f);
 
     // Initialize crack strategy
     crackStrategy = new CrackStrategyOne();
@@ -63,7 +71,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "TLEDNode initialization done" << logger.end;
 
     // Load polygon model for visualization
-    PolyShape ps("FlightArrow7.obj", 0.5f);
+    PolyShape ps("FlightArrow7.obj");
     //PolyShape ps("Box12.obj");
     //PolyShape ps("Sphere80.obj");
 
@@ -91,26 +99,46 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     // Buffer setup
     vbom->GetBuf(CENTER_OF_MASS).SetColor(0.0, 0.0, 1.0, 1.0);
 
-
     // Add node constraints
-    /* SimpleCollisionModifier* leftBox = new SimpleCollisionModifier(new PolyShape("Box12.obj", 15));
-    leftBox->Move(-40,0,0);
-    modifier.push_back(leftBox);
- */
+    // Elevator tool
+    PolyShape* toolShape = new PolyShape("Box9.obj", 0.4, 20.0, 20.0);
+    MovableCollisionModifier* tool = new MovableCollisionModifier(toolShape);
+    modifier.push_back(tool);
+    
+    //tool->Scale(0.1, 1.0, 1.0);
+    //tool->Move(20, 20, 0);
+   
 
-    float3 force = make_float3(0, -(float)pow(10,8)/15.0f, 0);
+    /*    Matrix4f* transformShape = new Matrix4f();
+    transformShape->SetPos(25, 30, 0);
+    transformShape->SetScale(0.2, 1.0, 1.0);
+    toolShape->Transform(transformShape);
+    */
+
+    /*
+      // Box on the ground
+    SimpleCollisionModifier* leftBox = new SimpleCollisionModifier(new PolyShape("Box12.obj", 35));
+    leftBox->Move(0,0,0);
+    modifier.push_back(leftBox);
+    */
+    /*    float3 force = make_float3(0, -(float)(2.5 * pow(10,9)), 0);
     ForceModifier* addForce = new ForceModifier(solid, new PolyShape("Box12.obj", 25), force);
-    addForce->Move(200,15,0);
+    addForce->Move(20, POS_Y, POS_Z);
     addForce->SetColorBufferForSelection(&vbom->GetBuf(BODY_COLORS));
     modifier.push_back(addForce);
-
-    FixedModifier* fixedBox1 = new FixedModifier(new PolyShape("Box12.obj", 25));
-    fixedBox1->Move(-9,200,0);
-    modifier.push_back(fixedBox1);
     
-    /*FixedModifier* fixedBox2 = new FixedModifier(new PolyShape("Box12.obj", 25));
-    fixedBox2->Move(45,15,0);
+    FixedModifier* fixedBox1 = new FixedModifier(new PolyShape("Box12.obj", 25));
+    fixedBox1->Move(-15, POS_Y, POS_Z);
+    modifier.push_back(fixedBox1);
+    */
+
+    FixedModifier* fixedBox2 = new FixedModifier(new PolyShape("Box12.obj", 20, 20, 20));
+    fixedBox2->Move(-20,20,0);
     modifier.push_back(fixedBox2);
+    /*
+    FixedModifier* fixedBox3 = new FixedModifier(new PolyShape("Box12.obj", 20, 20, 20));
+    fixedBox3->Move(20,20,0);
+    modifier.push_back(fixedBox3);
     */
     PrintAllocedMemory();
 }
@@ -140,17 +168,21 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
 	// Update all visualization data
     vbom->MapAllBufferObjects();   
 
+    static int numItr = 0;
     static Utils::Time oldtime;
     if( !paused &&
         timer.GetElapsedTime() > Utils::Time(deltaTime)) {
         sim_clock.Start();
         for (unsigned int i=0; i<numIterations; i++) {
             //calculateGravityForces(solid);
+            ApplyModifiers(solid);
             calculateInternalForces(solid, vbom);
             updateDisplacement(solid);
-            ApplyModifiers(solid);
             //applyFloorConstraint(solid, 0);
 
+            //            if( numItr++ > 100 )
+            //  exit(0);
+            
             static int iterations = 0;
             iterations++;
             if ((iterations % 1000) == 0) {
@@ -173,10 +205,8 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     else
         sim_clock.Stop();
 
-    
-
     // Debug
-    cudaMemcpy(displacement, solid->vertexpool->Ui_t, sizeof(float4)*solid->vertexpool->size, cudaMemcpyDeviceToHost);
+    /*    cudaMemcpy(displacement, solid->vertexpool->Ui_t, sizeof(float4)*solid->vertexpool->size, cudaMemcpyDeviceToHost);
     float maxDisp = 0;
     float minY = 0;
     for( unsigned int i=0; i<solid->vertexpool->size; i++ ) {
@@ -185,30 +215,30 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
        if( displacement[i].y < minY ) 
            minY = displacement[i].y;
     }
-    
-    
     logger.info << "MaxDisplacement: " << maxDisp << ", MinY = " << minY << logger.end;
-
+    */
 
 
     // Crack Tracking
-    /*    try {
-        if( crackStrategy->CrackInitialized(solid) && !exception ) {
-            
-            while(crackTrackAllWay && !crackStrategy->FragmentationDone()){
-                crackStrategy->ApplyCrackTracking(solid);
+    if( crackTrackingEnabled ){
+        try {
+            if( crackStrategy->CrackInitialized(solid) && !exception ) {
                 
-                if( crackTrackingItrCount++ > 100 ) break;
-            } 
-            if( !crackTrackAllWay )
-                paused = true;
+                while(crackTrackAllWay && !crackStrategy->FragmentationDone()){
+                    crackStrategy->ApplyCrackTracking(solid);
+                    
+                    if( crackTrackingItrCount++ > 100 ) break;
+                } 
+                if( !crackTrackAllWay )
+                    paused = true;
+            }
+        }catch(Core::Exception ex) { 
+            paused = true; 
+            exception = true;
+            logger.info << "EXCEPTION: " << ex.what() << logger.end;
         }
-    }catch(Core::Exception ex) { 
-        paused = true; 
-        exception = true;
-        logger.info << "EXCEPTION: " << ex.what() << logger.end;
     }
-    */
+
     if( vbom->IsEnabled(SURFACE_VERTICES) )
         updateSurface(solid, vbom);
     
@@ -228,6 +258,7 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
                             vbom->GetBuf(STRESS_TENSOR_NORMALS));    
     }
 
+    // The modifiers needs to be applied again here for the selection tool
     ApplyModifiers(solid);
 
     vbom->UnmapAllBufferObjects();
@@ -235,11 +266,12 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     // press x to dump
     if( dump ) {
         //float* data;
-        vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VALUES), "./eigValues.dump"); 
+        //vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VALUES), "./eigValues.dump"); 
         vbom->CopyBufferDeviceToHost(vbom->GetBuf(EIGEN_VECTORS), "./eigVectors.dump");   
         //vbom->CopyBufferDeviceToHost(vbom->GetBuf(STRESS_TENSORS), "./matrixBuffer.dump");   
        
-        //vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(STRESS_TENSOR_VERTICES));
+        vbom->dumpBufferToFile("./com.txt", vbom->GetBuf(CENTER_OF_MASS));
+        vbom->dumpBufferToFile("./dump.txt", vbom->GetBuf(STRESS_TENSOR_VERTICES));
         dump = false;
     }
 }
@@ -256,6 +288,7 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
 
     if (!solid->IsInitialized()) return;
 
+    
     // These buffers will only be rendered if they are enabled.
     vbom->Render(CENTER_OF_MASS);
 
@@ -269,15 +302,17 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
                  vbom->GetBuf(BODY_COLORS),
                  vbom->GetBuf(BODY_NORMALS), useAlphaBlending);
 
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    crackStrategy->RenderDebugInfo(solid);
+    
     // Visualize constraints
     VisualizeModifiers();
 
      // needs to be last, because it is transparent
     if (renderPlane) 
         plane->Accept(*view);
-
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    //    crackStrategy->RenderDebugInfo(solid);
+    
+    
 }
 
 

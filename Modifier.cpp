@@ -10,26 +10,48 @@ Modifier::Modifier(PolyShape* bVolume) : bVolume(bVolume), pIntersect(NULL),
                                          vertexCpuPtr(NULL), normalCpuPtr(NULL),
                                          mainMemUpdated(false)
 {
+    transform = new Matrix4f();
+    position = make_float4(0);
     CopyToGPU();
 }
 
 
 Modifier::~Modifier() {
+    delete transform;
 }
 
 void Modifier::Move(float x, float y, float z) {
-    Matrix4f mat(make_float4(x,y,z,0));
+    float4 move = make_float4(x,y,z,0);
+    position += move;
+    Matrix4f mat(move);
     bVolume->Transform(&mat);
+
     LoadBoundingVolumeIntoVBO();  
 }
 
 void Modifier::Scale(float x, float y, float z) {
-    Matrix4f mat(make_float4(x,y,z,0));
+    Matrix4f mat;
+    mat.SetScale(x,y,z);
     bVolume->Transform(&mat);
     LoadBoundingVolumeIntoVBO();  
 }
 
 void Modifier::Rotate(float x, float y, float z) {
+    Matrix4f orgin(position);
+    orgin.row0.w *= -1;
+    orgin.row1.w *= -1;
+    orgin.row2.w *= -1;
+    bVolume->Transform(&orgin);
+    
+    Matrix4f rot;
+    rot.RotateY(y);
+    bVolume->Transform(&rot);
+
+    Matrix4f pos(position);
+    bVolume->Transform(&pos);
+
+    LoadBoundingVolumeIntoVBO();
+
 }
     
 int Modifier::GetNumVertices(){
@@ -53,7 +75,7 @@ void Modifier::SetColorBufferForSelection(VisualBuffer* colBuf) {
 
 void Modifier::Visualize() {
     if( vertexVboID > 0 ) {  
-        glColor4f(0, 0, 0.8, 0.5);
+        glColor4f(0, 0, 0.8, 1.0);
         glEnable(GL_NORMALIZE); 
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_LIGHTING);

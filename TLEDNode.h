@@ -28,7 +28,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     VboManager* vbom;
     std::list< Modifier* > modifier;
     unsigned int numIterations;
-    bool paused, dump, renderPlane, useAlphaBlending;
+    bool paused, dump, renderPlane, useAlphaBlending, crackTrackingEnabled;
     float minX;
     bool crackTrackAllWay;
     bool exception;

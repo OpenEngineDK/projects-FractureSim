@@ -36,6 +36,9 @@ private:
     float4* vertexCpuPtr;
     float4* normalCpuPtr;
 
+    float4 position;
+    Matrix4f* transform;
+
     bool mainMemUpdated;
     
     virtual void ApplyModifierStrategy(Solid* solid) = 0;

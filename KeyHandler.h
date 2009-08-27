@@ -80,6 +80,10 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
             case KEY_b:
                 tled->useAlphaBlending = !tled->useAlphaBlending;
                 break;
+            case KEY_0: 
+                tled->crackTrackingEnabled = !tled->crackTrackingEnabled;
+                logger.info << "CrackTrackingEnabled = " << tled->crackTrackingEnabled << logger.end;
+                break;
             case KEY_c:
                 try {
                     tled->crackStrategy->ApplyCrackTracking(tled->solid);
@@ -133,18 +137,23 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 break;
 
             case KEY_LEFT:
-                tled->modifier.front()->Move(-1,0,0);
+                tled->modifier.front()->Move(-0.05,0,0);
                 break;
             case KEY_RIGHT:
-                tled->modifier.front()->Move(1,0,0);
+                tled->modifier.front()->Move(0.05,0,0);
                 break;
             case KEY_UP:
-                tled->modifier.front()->Move(0,0,-1);
+                tled->modifier.front()->Move(0,0.04,0);
                 break;
             case KEY_DOWN:
-                tled->modifier.front()->Move(0,0,1);
+                tled->modifier.front()->Move(0,-0.04,0);
                 break;
-
+            case KEY_j:
+                tled->modifier.front()->Rotate(0, 0.004, 0);
+                break;
+            case KEY_h:
+                tled->modifier.front()->Rotate(0, -0.004, 0);
+                break;
             case KEY_m:
                 ((ForceModifier*)tled->modifier.front())->SelectNodes(tled->solid);
                 break;
