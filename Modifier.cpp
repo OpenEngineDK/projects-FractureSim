@@ -12,6 +12,7 @@ Modifier::Modifier(PolyShape* bVolume) : bVolume(bVolume), pIntersect(NULL),
 {
     transform = new Matrix4f();
     position = make_float4(0);
+    color = make_float4(1.0,0,0,1.0);
     CopyToGPU();
 }
 
@@ -36,7 +37,8 @@ void Modifier::Scale(float x, float y, float z) {
     LoadBoundingVolumeIntoVBO();  
 }
 
-void Modifier::Rotate(float x, float y, float z) {
+
+void Modifier::RotateX(float radian) {
     Matrix4f orgin(position);
     orgin.row0.w *= -1;
     orgin.row1.w *= -1;
@@ -44,15 +46,62 @@ void Modifier::Rotate(float x, float y, float z) {
     bVolume->Transform(&orgin);
     
     Matrix4f rot;
-    rot.RotateY(y);
+    rot.RotateX(radian);
     bVolume->Transform(&rot);
+ 
+    Matrix4f rotN;
+    rotN.RotateX(radian);
+    bVolume->TransformNormals(&rotN);
 
     Matrix4f pos(position);
     bVolume->Transform(&pos);
 
     LoadBoundingVolumeIntoVBO();
-
 }
+
+void Modifier::RotateY(float radian) {
+    Matrix4f orgin(position);
+    orgin.row0.w *= -1;
+    orgin.row1.w *= -1;
+    orgin.row2.w *= -1;
+    bVolume->Transform(&orgin);
+    
+    Matrix4f rot;
+    rot.RotateY(radian);
+    bVolume->Transform(&rot);
+
+    Matrix4f rotN;
+    rotN.RotateY(radian);
+    bVolume->TransformNormals(&rotN);
+
+    Matrix4f pos(position);
+    bVolume->Transform(&pos);
+
+    LoadBoundingVolumeIntoVBO();
+}
+
+
+void Modifier::RotateZ(float radian) {
+    Matrix4f orgin(position);
+    orgin.row0.w *= -1;
+    orgin.row1.w *= -1;
+    orgin.row2.w *= -1;
+    bVolume->Transform(&orgin);
+    
+    Matrix4f rot;
+    rot.RotateZ(radian);
+    bVolume->Transform(&rot);
+
+    Matrix4f rotN;
+    rotN.RotateZ(radian);
+    bVolume->TransformNormals(&rotN);
+
+    Matrix4f pos(position);
+    bVolume->Transform(&pos);
+
+    LoadBoundingVolumeIntoVBO();
+}
+
     
 int Modifier::GetNumVertices(){
     return bVolume->numVertices;
@@ -75,7 +124,7 @@ void Modifier::SetColorBufferForSelection(VisualBuffer* colBuf) {
 
 void Modifier::Visualize() {
     if( vertexVboID > 0 ) {  
-        glColor4f(0, 0, 0.8, 1.0);
+        glColor4f(color.x, color.y, color.z, color.w);
         glEnable(GL_NORMALIZE); 
         glEnable(GL_COLOR_MATERIAL);
         glEnable(GL_LIGHTING);
@@ -96,6 +145,11 @@ void Modifier::Visualize() {
     }    
 }
 
+
+void Modifier::SelectNodes(Solid* solid) {
+    // Initialize points to be in front of all planes  
+    CudaMemset(pIntersect, true, sizeof(bool)*solid->vertexpool->size);
+}
 
 void Modifier::CopyToGPU() {
     bVolume->CopyToGPU();
@@ -120,6 +174,9 @@ void Modifier::VisualizeNormals() {
         // Copy back all normals from VRAM
         vertexCpuPtr = (float4*)malloc(sizeof(float4)*bVolume->numVertices);
         normalCpuPtr = (float4*)malloc(sizeof(float4)*bVolume->numNormals);
+        mainMemUpdated = true;
+    }
+    else {
         cudaError_t vStat = CudaMemcpy(vertexCpuPtr, bVolume->vertices, 
                                        sizeof(float4)*bVolume->numVertices, 
                                        cudaMemcpyDeviceToHost);
@@ -128,12 +185,12 @@ void Modifier::VisualizeNormals() {
                                        sizeof(float4)*bVolume->numNormals, 
                                        cudaMemcpyDeviceToHost);
 
-        if( vStat == cudaSuccess && nStat == cudaSuccess )
-            mainMemUpdated = true;
-        else
-            logger.info << "VisualizeNormals: Copying data device to host failed!" << logger.end;
+        //        if( vStat == cudaSuccess && nStat == cudaSuccess )
+        //    mainMemUpdated = true;
+        //else
+        //    logger.info << "VisualizeNormals: Copying data device to host failed!" << logger.end;
 
-    } else {
+        //} else {
         glLineWidth(2.0);
         glColor4f(1,0,0,1);
         glBegin(GL_LINES);

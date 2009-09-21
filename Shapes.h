@@ -99,10 +99,24 @@ struct Matrix4f {
     }
 
     __device__
+    void RotateX(float rot){
+        row0 = make_float4(    1,     0,        0,         0);
+        row1 = make_float4(    0,  cos(rot), -sin(rot),    0);
+        row2 = make_float4(    0,  sin(rot),  cos(rot),    0);      
+    }
+
+    __device__
     void RotateY(float rot){
         row0 = make_float4(cos(rot),  0, sin(rot), 0);
         row1 = make_float4(    0,     1,     0,    0);
         row2 = make_float4(-sin(rot), 0, cos(rot), 0);      
+    }
+
+    __device__
+    void RotateZ(float rot){
+        row0 = make_float4(cos(rot), -sin(rot), 0, 0);
+        row1 = make_float4(sin(rot),  cos(rot), 0, 0);
+        row2 = make_float4(    0,        0,     1, 0);      
     }
 
     __device__
@@ -190,6 +204,21 @@ struct PolyShape {
         CudaFree(matrixPtr);
         CHECK_FOR_CUDA_ERROR();
     }
+
+    void TransformNormals(Matrix4f* matrix) {
+        float4 transMatrix[4];
+        matrix->GetTransformationMatrix(transMatrix);
+   
+        float4* matrixPtr;
+        CudaMemAlloc((void**)&(matrixPtr), sizeof(float4) * 4);
+        CudaMemcpy(matrixPtr, &transMatrix[0], sizeof(float4)*4, cudaMemcpyHostToDevice);
+
+        applyTransformation(normals, numNormals, matrixPtr);
+
+        CudaFree(matrixPtr);
+        CHECK_FOR_CUDA_ERROR();
+    }
+
 
     
     void CopyToGPU() {

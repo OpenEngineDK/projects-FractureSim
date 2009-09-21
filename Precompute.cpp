@@ -441,7 +441,6 @@ float precompute(Solid* solid,
                           smallestAllowedLength);
 
 
-
     CHECK_FOR_CUDA_ERROR();
     solid->vertexpool->ConvertToCuda();
     solid->body->ConvertToCuda();

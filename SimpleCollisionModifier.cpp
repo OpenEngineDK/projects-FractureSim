@@ -3,7 +3,10 @@
 #include "Physics_kernels.h"
 #include "Solid.h"
 
-SimpleCollisionModifier::SimpleCollisionModifier(PolyShape* bVolume) : Modifier(bVolume) {}
+SimpleCollisionModifier::SimpleCollisionModifier(PolyShape* bVolume) : Modifier(bVolume) {
+    color = make_float4(0.87, 0.87, 0.2, 1.0);
+
+}
 
 SimpleCollisionModifier::~SimpleCollisionModifier() {}
 

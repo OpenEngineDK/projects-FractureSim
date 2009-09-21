@@ -8,6 +8,7 @@ void testCollision(Solid* solid, PolyShape* bVolume, bool* intersect);
 void constrainIntersectingPoints(Solid* solid, bool* intersect);
 void fixIntersectingPoints(Solid* solid, bool* intersect);
 void applyForceToIntersectingNodes(Solid* solid, float3 force, bool* intersect);
+void applyDisplacementToIntersectingNodes(Solid* solid, float3 disp, bool* intersect);
 void moveIntersectingNodeToSurface(Solid* solid, PolyShape* bVolume, bool* intersect);
 
 void colorSelection(Solid* solid, VisualBuffer* colorBuffer, bool* intersect);

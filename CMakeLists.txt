@@ -34,6 +34,7 @@ SET( PROJECT_SOURCES
   Modifier.cpp
   FixedModifier.cpp
   ForceModifier.cpp
+  DisplacementModifier.cpp
   SimpleCollisionModifier.cpp
   MovableCollisionModifier.cpp
 )

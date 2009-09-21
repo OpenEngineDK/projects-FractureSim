@@ -13,10 +13,12 @@ public:
     ~ForceModifier();
 
     void SelectNodes(Solid* solid);
-       
+    void SetForce(float3 force);
+
+    float3 addForce;       
 private:
     bool selectionMade;
-    float3 addForce;
+
 
     void ApplyModifierStrategy(Solid* solid);
 

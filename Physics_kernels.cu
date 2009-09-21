@@ -4,7 +4,6 @@
 #include "eig3.h"
 #include "ColorRamp.h"
 
-
 #define BLOCKSIZE 128
 
 __global__ void calculateDrivingForces_k
@@ -49,6 +48,7 @@ __global__ void testCollision_k
     // Point plane distance: D = planeNormal dot (point - pointOnPlane)
     float distance = dot( planeNorm, (point - pointOnPlane) );
 
+    // if point is in front of just one plane it is not intersection.
     if( distance > 0 ){
         intersect[pointIdx] = false;
     }
@@ -132,7 +132,6 @@ void fixIntersectingPoints(Solid* solid, bool* intersect) {
 }
 
 
-
 __global__
 void applyForceToIntersectingNodes_k
 (float* masses, float4* extForces, float4 force, bool* intersect, unsigned int numPoints) {
@@ -141,11 +140,14 @@ void applyForceToIntersectingNodes_k
     if( me_idx >= numPoints ) 
         return;
 
-    //    float mass = masses[me_idx];
-
-    //if( intersect[me_idx] )
-    if( me_idx == 0 )
-        extForces[me_idx] = force;
+    /*if( intersect[me_idx] ){
+        sel++;
+        printf("[Physics] selected %i, total %i\n", me_idx, sel);
+    }
+    */
+    //    if( me_idx == 3 && intersect[me_idx] ) 
+    if( intersect[me_idx] ) 
+         extForces[me_idx] = force;
     else
         extForces[me_idx] = make_float4(0);
 }
@@ -159,6 +161,37 @@ void applyForceToIntersectingNodes(Solid* solid, float3 force, bool* intersect) 
         (solid->vertexpool->mass,
          solid->vertexpool->externalForces,
          make_float4(force),
+         intersect, 
+         solid->vertexpool->size);
+    
+    CHECK_FOR_CUDA_ERROR();
+}
+
+
+__global__
+void applyDisplacementToIntersectingNodes_k
+(float* masses, float4* displacements, float4* oldDisplacements, 
+float4 disp, bool* intersect, unsigned int numPoints) {
+    int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if( me_idx >= numPoints ) 
+        return;
+
+    if( intersect[me_idx] ){
+        displacements[me_idx] += disp;
+    }
+}
+
+void applyDisplacementToIntersectingNodes(Solid* solid, float3 disp, bool* intersect){
+    int gridSize = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
+
+    // Start kernel for each point in solid times each face in poly shape
+    applyDisplacementToIntersectingNodes_k
+        <<<make_uint3(gridSize, 1,1), make_uint3(BLOCKSIZE,1,1)>>>
+        (solid->vertexpool->mass,
+         solid->vertexpool->Ui_t,
+         solid->vertexpool->Ui_tminusdt,
+         make_float4(disp),
          intersect, 
          solid->vertexpool->size);
     
@@ -205,16 +238,13 @@ void moveIntersectingNodeToSurface_k
         //planeNorm = normalize(planeNorm);
 
         float3 diff = (planeNorm * surfDist);
-        diff *= 0.01f;
+        diff *= 0.001f;
 
         //printf("PlaneNorm %f %f %f - surfDist %f - diff %f,%f,%f\n", planeNorm.x, planeNorm.y, planeNorm.z, surfDist, diff.x, diff.y, diff.z);
 
         displacements[pointIdx].x += diff.x;
         displacements[pointIdx].y += diff.y;
         displacements[pointIdx].z += diff.z;
-        
-        //oldDisplacements[pointIdx] = displacements[pointIdx];
-
     }
 
 }
@@ -250,7 +280,7 @@ void colorSelection_k
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 	if (me_idx>=numTets) return;
 
-    float4 color = make_float4(1,0,0,1); 
+    float4 color = make_float4(0.5,0.5,0.5,1.0); 
     Tetrahedron e = tetra[me_idx];
     if( intersect[e.x] || intersect[e.y] || intersect[e.z] || intersect[e.w] ){
         int colr_idx = me_idx*12;
@@ -351,7 +381,9 @@ texture<float,  1, cudaReadModeElementType> V0_1d_tex;
 #define C(i,j) (cauchy_green_deformation.e[(i-1)*3+(j-1)])
 #define CI(i,j) (c_inverted.e[(i-1)*3+(j-1)])
 #define S(i,j) (s_tensor.e[(i-1)*3+(j-1)])
+#define E(i,j) (e_tensor.e[(i-1)*3+(j-1)])
 
+int itrCount=0;
 
 __global__ void
 calculateForces_k(Matrix4x3 *shape_function_derivatives,
@@ -579,6 +611,35 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     // this defines the principal stress
     principalStress[me_idx] = major;
 
+    
+	Matrix3x3 e_tensor;
+    
+	E(1,1) = (C(1,1)-1.0)/2.0;
+	E(2,2) = (C(2,2)-1.0)/2.0;
+	E(3,3) = (C(3,3)-1.0)/2.0;
+	E(1,2) = (C(1,2)-1.0)/2.0;
+	E(2,3) = (C(2,3)-1.0)/2.0;
+	E(1,3) = (C(1,3)-1.0)/2.0;
+
+    // Calculate eigen vectors and values and map to colors
+    double eVectorStrain[3][3];
+    double eValueStrain[3];
+    e_tensor.calcEigenDecomposition(eVectorStrain, eValueStrain);
+    double maxStrain = max( max( eValueStrain[0], eValueStrain[1]), eValueStrain[2] );
+
+    // Data for stress/strain curve 
+    //if( me_idx==654) // && (itrCount++)%100)
+        // Green-Lagrangian strain measure
+        //printf("%E \t %E\n", abs(maxStrain), abs(major.w));
+        //        printf("%E \t", (C(1,1)-1.0)/2.0);
+        //        printf("%E \t %E\n", (C(1,1)-1.0)/2.0, abs(major.w));
+        // Deformation gradient tensor
+        //printf("%E \t %E\n", abs(X(1,1))-1.0, abs(major.w));
+        // Inverse cauchy green
+        //printf("%E \t %E\n", CI(1,1), abs(major.w));
+        //printf("%E \t %E\n", J, abs(major.w));
+   
+
     // The eigenvalue determines the highest principal stress, 
     // if it exceeds the max stress we raise a flag.
     if( abs(principalStress[me_idx].w) > max_streach )
@@ -618,6 +679,8 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     //float4 col = make_float4((numTets/me_idx), 0.5, 0.1, 1.0);
     //float4 col = GetColor(-longestEv, -1000.0, 1500.0);
     float4 col = GetColor(-longestEv, -max_streach, max_streach);
+    //    float4 col = make_float4(1.0, 1.0, 1.0, 1.0);
+    
     int colr_idx = me_idx*12;
 
     colrBuf[colr_idx++] = col;
@@ -678,6 +741,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 		B(6,1) = h(a, 3)*X(1, 1) + h(a, 1)*X(1, 3);  
 		B(6,2) = h(a, 3)*X(2, 1) + h(a, 1)*X(2, 3);  
 		B(6,3) = h(a, 3)*X(3, 1) + h(a, 1)*X(3, 3);
+
         
         /*
 		printf("\nSubmatrix for a=%i of the stationary strain-displacement matrix for tetrahedron %i: \n", a, me_idx);
@@ -696,10 +760,10 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 		force.z = V*(B(1, 3)*S(1, 1)+B(2, 3)*S(2, 2)+B(3, 3)*S(3, 3)+B(4, 3)*S(1, 2)+B(5, 3)*S(2, 3)+B(6, 3)*S(1, 3));
 		force.w = 0;
 
-        if( me_idx == 0 && a == 1 ){
+        //if( me_idx == 0 && a == 1 ){
             //printf("forceY = %f, %f, %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f,  %f\n", force.y, V, B(1, 2), S(1, 1), B(2, 2), S(2, 2), B(3, 2), S(3, 3), B(4, 2), S(1, 2), B(5, 2), S(2, 3), B(6, 2), S(1, 3));
             //printf("h(a, 2) = %f\n", h(a, 2));
-        }
+        //}
 
         //if( me_idx == 0 && a == 1 )
         //    printf("forceY = %f\n", force.y);
@@ -716,6 +780,8 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 			forces[a-1] = make_float4(0,0,0,0);
 	}
 
+
+  
 /*	printf("\nFor tetrahedron %i: \n", me_idx);
 	printf("node1 (%i) force: %f, %f, %f \n", e.x, forces[0].x, forces[0].y, forces[0].z);
 	printf("node2 (%i) force: %f, %f, %f \n", e.y, forces[1].x, forces[1].y, forces[1].z);
@@ -742,6 +808,11 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 	pointForces[maxPointForces * e.z + writeIndices[me_idx].z] = forces[2];
 	pointForces[maxPointForces * e.w + writeIndices[me_idx].w] = forces[3];
 
+
+    //    if( me_idx==1000 ){
+    //    float absForce = (abs(forces[0].x) + abs(forces[1].x) + abs(forces[2].x) + abs(forces[3].x)) / 4.0f;
+    //    printf("%E \t %E\n", abs(principalStress[me_idx].w),  absForce);
+    //}
 //	printf("Max num forces: %i\n", maxPointForces);
 
 //	printf("%i, %i, %i, %i \n", writeIndices[me_idx].x, writeIndices[me_idx].y, writeIndices[me_idx].z, writeIndices[me_idx].w );

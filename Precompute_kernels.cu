@@ -39,6 +39,9 @@ void precalculateABC(float timeStep, float damping, VertexPool* vertexpool) {
     CHECK_FOR_CUDA_ERROR();
 }
 
+double total = 0;
+int counter = 0;
+
 __global__ void precalculateShapeFunctionDerivatives_kernel
 (ShapeFunctionDerivatives *shape_function_derivatives, 
  Tetrahedron *tetrahedra, Point *points, unsigned int numTets) {
@@ -157,12 +160,19 @@ __global__ void precalculateShapeFunctionDerivatives_kernel
 	sfd.h4.z = -(-a.x*c.y - b.x*a.y + b.x*c.y +
                  a.x*b.y - c.x*b.y + c.x*a.y)/denominator;
     
-    /*printf("\nFor tetrahedron %i: \n", me_idx);
+    /*  printf("\nFor tetrahedron %i: \n", me_idx);
 	printf("h1 derivatives: %f, %f, %f \n", sfd.h1.x, sfd.h1.y, sfd.h1.z);
 	printf("h2 derivatives: %f, %f, %f \n", sfd.h2.x, sfd.h2.y, sfd.h2.z);
 	printf("h3 derivatives: %f, %f, %f \n", sfd.h3.x, sfd.h3.y, sfd.h3.z);
 	printf("h4 derivatives: %f, %f, %f \n", sfd.h4.x, sfd.h4.y, sfd.h4.z);
-    */
+    float l1 = length(sfd.h1);
+    float l2 = length(sfd.h2);
+    float l3 = length(sfd.h3);
+    float l4 = length(sfd.h4);
+    total += l1+l2+l3+l4;
+    counter++;
+    printf("L1 = %f, L2 = %f, L3 = %f, L4 = %f, total = %f, agv = %f", l1,l2,l3,l4, total, total/counter);
+*/
 	shape_function_derivatives[me_idx] = sfd;
 }
 

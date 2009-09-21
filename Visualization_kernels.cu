@@ -131,6 +131,8 @@ __global__ void
 updateCenterOfMass_k(float4* buf, Body body, Point* points, float4* displacements) {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
+    //if( me_idx!=654) return; // TEMP TEST
+
 	if (me_idx>=body.numTetrahedra) return;
 
     Tetrahedron tetra = body.tetrahedra[me_idx];
@@ -257,7 +259,13 @@ updateStressTensors_k(Body body,
     m.row2 = eigenVectors[e_idx+2];
 
     m.SetPos(center.x, center.y, center.z);
-
+    /*
+    printf("{%f,%f,%f,%f - %f,%f,%f,%f - %f,%f,%f,%f - %f,%f,%f,%f}\n", 
+           m.row0.x, m.row0.y, m.row0.z, m.row0.w,
+           m.row1.x, m.row1.y, m.row1.z, m.row1.w,
+           m.row2.x, m.row2.y, m.row2.z, m.row2.w,
+           m.row3.x, m.row3.y, m.row3.z, m.row3.w);
+    */
     m.CopyToBuf(matBuf, me_idx);
 }
 

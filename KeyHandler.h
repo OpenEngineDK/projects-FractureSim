@@ -137,9 +137,11 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 break;
 
             case KEY_LEFT:
+                //tled->modifier.front()->Move(0,0,-0.5);
                 tled->modifier.front()->Move(-0.05,0,0);
                 break;
             case KEY_RIGHT:
+                //tled->modifier.front()->Move(0,0,0.5);
                 tled->modifier.front()->Move(0.05,0,0);
                 break;
             case KEY_UP:
@@ -149,15 +151,17 @@ class KeyHandler : public Core::IListener<KeyboardEventArg> {
                 tled->modifier.front()->Move(0,-0.04,0);
                 break;
             case KEY_j:
-                tled->modifier.front()->Rotate(0, 0.004, 0);
+                tled->modifier.front()->RotateZ(0.004);
                 break;
             case KEY_h:
-                tled->modifier.front()->Rotate(0, -0.004, 0);
+                tled->modifier.front()->RotateZ(-0.004);
                 break;
             case KEY_m:
-                ((ForceModifier*)tled->modifier.front())->SelectNodes(tled->solid);
+                ((Modifier*)tled->modifier.front())->SelectNodes(tled->solid);
                 break;
-
+            case KEY_y:
+                tled->modifier.back()->Move(-0.1,0,0);
+                break;
             case KEY_x:
                 tled->dump = true;
                 break;

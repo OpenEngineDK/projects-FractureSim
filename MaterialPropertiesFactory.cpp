@@ -52,10 +52,18 @@ MaterialProperties* MaterialPropertiesFactory::Create(std::string name) {
         float factor = 1; //50 virker
         max_streach = 0;
         max_compression = max_streach;
+    } else if (name == "dentine") {
+        //from: http://www.engineeringtoolbox.com/concrete-properties-d_1223.html
+        density = 2400; // kg / m^3
+        E = 15 * GPa;
+        nu = 0.21;
+        float factor = 35; //50 virker
+        max_streach = 5 * factor * MPa; // Tensile strength
+        max_compression = 40 * factor * MPa; // Compressive strength
     } else if (name == "concrete") {
         //from: http://www.engineeringtoolbox.com/concrete-properties-d_1223.html
         density = 2400; // kg / m^3
-        E = 41000 * MPa;
+        E = 41 * GPa;
         nu = 0.21;
         float factor = 35; //50 virker
         max_streach = 5 * factor * MPa; // Tensile strength

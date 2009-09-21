@@ -248,7 +248,7 @@ void VboManager::Render(VisualBuffer& vert) {
         //glFrontFace(GL_CCW);
 
         glBindBuffer(GL_ARRAY_BUFFER, vert.vboID);
-        glPointSize(2);
+        glPointSize(10);
         glVertexPointer(3, GL_FLOAT, sizeof(float4), 0);
         glEnableClientState(GL_VERTEX_ARRAY);
         glDrawArrays(vert.mode, 0, vert.numIndices);

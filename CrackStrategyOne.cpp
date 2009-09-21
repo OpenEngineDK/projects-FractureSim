@@ -445,8 +445,8 @@ void CrackStrategyOne::ApplyCrackTracking(Solid* solid) {
                 }
             }
         }
-        else
-            throw Core::Exception("ERROR: Unable to crack tetrahedron with specified plane");
+        //else
+        //    throw Core::Exception("ERROR: Unable to crack tetrahedron with specified plane");
     }
     // Update crack front set
     //crackFront.clear();
@@ -668,7 +668,7 @@ void CrackStrategyOne::RenderDebugInfo(Solid* solid) {
     
     std::list<float3>::iterator pointItr = debugPointOnPlane.begin();;
     std::list<float3>::iterator planeItr = debugPlaneNorm.begin();
-    glLineWidth(3.0);
+    /*glLineWidth(3.0);
     glBegin(GL_LINES);
     for( ; planeItr!=debugPlaneNorm.end(); planeItr++, pointItr++ ) {
         float3 norm = *planeItr;
@@ -681,7 +681,7 @@ void CrackStrategyOne::RenderDebugInfo(Solid* solid) {
         glVertex3f(norm.x+point.x, norm.y+point.y, norm.z+point.z);
     }
     glEnd();
-    
+    */
 
 
 

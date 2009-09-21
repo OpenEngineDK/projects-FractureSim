@@ -14,6 +14,9 @@
 #include "CrackStrategy.h"
 #include "Solid.h"
 #include "Modifier.h"
+#include "DisplacementModifier.h"
+#include "MovableCollisionModifier.h"
+#include "ForceModifier.h"
 #include <string>
 
 using namespace OpenEngine;
@@ -37,6 +40,10 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
 
     float4* displacement;
     
+    DisplacementModifier* addDisp;
+    MovableCollisionModifier* tool;
+    ForceModifier* addForce;
+       
     TLEDNode(Solid* solid);
     virtual ~TLEDNode();
 

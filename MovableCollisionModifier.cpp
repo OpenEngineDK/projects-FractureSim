@@ -3,7 +3,9 @@
 #include "Physics_kernels.h"
 #include "Solid.h"
 
-MovableCollisionModifier::MovableCollisionModifier(PolyShape* bVolume) : Modifier(bVolume) {}
+MovableCollisionModifier::MovableCollisionModifier(PolyShape* bVolume) : Modifier(bVolume) {
+    color = make_float4(0.1, 0.3, 0.23, 0.7);
+}
 
 MovableCollisionModifier::~MovableCollisionModifier() {}
 

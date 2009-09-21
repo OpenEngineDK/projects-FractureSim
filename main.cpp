@@ -56,12 +56,16 @@ int main(int argc, char** argv) {
     logger.info << "========= Running OpenEngine Test Project =========";
     logger.info << logger.end;
    
-    //Vector<3,float> position(-100,30,0);
-    //Vector<3,float> lookat(0,30,0);
+    Vector<3,float> position(-7, 2, 15);
+    Vector<3,float> lookat(-2, 0, 0);
+    //    Vector<3,float> lookat(-50, 10, 0);
 
-    Vector<3,float> position(0,20,30);
-    //Vector<3,float> position(0,15020,130);
-    Vector<3,float> lookat(0,20,0);
+    //    Vector<3,float> position(0,30,-200);
+    //Vector<3,float> lookat(0,10,0);
+
+    // tooth viewpoint
+    //    Vector<3,float> position(100,40,0);
+    //Vector<3,float> lookat(0,12,0);
 
     // Move the camera
     Camera* camera = setup->GetCamera();
@@ -88,7 +92,8 @@ int main(int argc, char** argv) {
     PointLightNode* pln = new PointLightNode();
     TransformationNode* lightPos = new TransformationNode();
     lightPos->AddNode(pln);
-    lightPos->SetPosition(Vector<3,float>(0,1000,1000));
+    lightPos->SetPosition(Vector<3,float>(500,1000,500));
+    //   lightPos->SetPosition(Vector<3,float>(5000,10000,-5500));
     root->AddNode(lightPos);
 
     Scene::BlendingNode* bn = new Scene::BlendingNode();

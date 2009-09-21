@@ -3,7 +3,9 @@
 #include "Physics_kernels.h"
 
 
-FixedModifier::FixedModifier(PolyShape* bVolume) : Modifier(bVolume) {}
+FixedModifier::FixedModifier(PolyShape* bVolume) : Modifier(bVolume) {
+    color = make_float4(0.04, 0.6, 0.05, 0.7);
+}
 
 FixedModifier::~FixedModifier() {}
 
