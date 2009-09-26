@@ -1,0 +1,51 @@
+# Distribution file for the FractureSim project.
+# http://www.openengine.dk/wiki/Projects/FractureSim
+
+# main repository
+darcs / http://openengine.dk/code/openengine
+darcs-dev / fh.daimi.au.dk:/users/cgd/code/openengine
+
+# project repository
+darcs /projects/FractureSim http://openengine.dk/code/projects/FractureSim
+darcs-dev /projects/FractureSim fh.daimi.au.dk:/users/cgd/code/projects/FractureSim
+
+# required extensions
+darcs /extensions/SetupHelpers           http://openengine.dk/code/extensions/SetupHelpers
+darcs /extensions/HUD                    http://openengine.dk/code/extensions/HUD
+darcs /extensions/SDL                    http://openengine.dk/code/extensions/SDL
+darcs /extensions/OpenGLRenderer         http://openengine.dk/code/extensions/OpenGLRenderer
+darcs /extensions/TGAResource            http://openengine.dk/code/extensions/TGAResource
+darcs /extensions/OBJResource            http://openengine.dk/code/extensions/OBJResource
+darcs /extensions/AccelerationStructures http://openengine.dk/code/extensions/AccelerationStructures
+darcs /extensions/GenericHandlers        http://openengine.dk/code/extensions/GenericHandlers
+darcs /extensions/CUDA                   http://openengine.dk/code/extensions/CUDA
+darcs /extensions/ActionMappers          http://openengine.dk/code/extensions/ActionMappers
+
+
+darcs-dev /extensions/SetupHelpers           fh.daimi.au.dk:/users/cgd/code/extensions/SetupHelpers
+darcs-dev /extensions/HUD                    fh.daimi.au.dk:/users/cgd/code/extensions/HUD
+darcs-dev /extensions/SDL                    fh.daimi.au.dk:/users/cgd/code/extensions/SDL
+darcs-dev /extensions/OpenGLRenderer         fh.daimi.au.dk:/users/cgd/code/extensions/OpenGLRenderer
+darcs-dev /extensions/TGAResource            fh.daimi.au.dk:/users/cgd/code/extensions/TGAResource
+darcs-dev /extensions/OBJResource            fh.daimi.au.dk:/users/cgd/code/extensions/OBJResource
+darcs-dev /extensions/AccelerationStructures fh.daimi.au.dk:/users/cgd/code/extensions/AccelerationStructures
+darcs-dev /extensions/GenericHandlers        fh.daimi.au.dk:/users/cgd/code/extensions/GenericHandlers
+darcs-dev /extensions/CUDA                   fh.daimi.au.dk:/users/cgd/code/extensions/CUDA
+darcs-dev /extensions/ActionMappers          fh.daimi.au.dk:/users/cgd/code/extensions/ActionMappers
+
+# windows libraries
+win32 /libraries http://openengine.dk/data/libraries/boost-win32.zip
+win32 /libraries http://openengine.dk/data/libraries/glew-win32.zip
+win32 /libraries http://openengine.dk/data/libraries/sdl-win32.zip
+win32 /libraries http://openengine.dk/data/libraries/dlls-win32.zip
+
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/bar_2_5x2_5x2_5.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/bar_5x5x5.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/bar_10x10x10.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/bar_20x20x20.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/test_tooth_high_res.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/test_tooth.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/tooth_noslice_simple.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/tooth_noslice.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/tooth_slice_simple.zip
+any /projects/FractureSim/data/movies    http://www.openengine.dk/data/projects/FractureSim/tooth_slice.zip
