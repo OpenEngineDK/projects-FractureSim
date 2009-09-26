@@ -23,7 +23,7 @@ static const float POS_Z = 0.0;
 
 TLEDNode::TLEDNode(Solid* solid) {
     this->solid = solid;
-    numIterations = 15;
+    numIterations = 50;
     paused = true;
     renderPlane = false;
     useAlphaBlending = false;
@@ -52,9 +52,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     logger.info << "pre computing" << logger.end;
     moveAccordingToBoundingBox(solid);
     //    solid->vertexpool->Move(0,1.5,0);
-    solid->vertexpool->Move(20,0,0);
+    //solid->vertexpool->Move(20,0,0);
     solid->vertexpool->Move(POS_X, POS_Y, POS_Z);
-    solid->vertexpool->Scale(0.1, 0.1, 0.1);
+    //    solid->vertexpool->Scale(0.1, 0.1, 0.1);
     //    solid->vertexpool->Scale(0.8, 2.0, 2.0);
 
     // Debug
@@ -62,7 +62,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
     //precompute(solid, smallestAllowedVolume, smallestAllowedLength,
     //           timeStepFactor, damping);
-	timestep = precompute(solid, 0.0f, 0.0f, 0.5f, 10.5f);
+	timestep = precompute(solid, 0.0f, 0.0f, 0.5f, 0.5f);
      
     // Initialize crack strategy
     crackStrategy = new CrackStrategyOne();
@@ -106,7 +106,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
 
     // ----- Basic beam bending setup ------ //
-    
+    /*    
     float scale = 3;
     float3 force = make_float3(0, -(float)(1.0 * pow(10,7)), 0);
     ForceModifier* addForce = new ForceModifier(solid, new PolyShape("Box12.obj", scale, scale*2, scale*2), force);
@@ -119,31 +119,30 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     //fixedBox2->Move(-70,POS_Y,POS_Z);
     fixedBox2->Move(-5.0,POS_Y,POS_Z);
     modifier.push_back(fixedBox2);
-        
+    */  
 
     // ---  Stress-strain curve setup ---- //
-    //float scale = 3;
-    /*float3 force = make_float3((float)(5.0 * pow(10,8))/38.0f, 0, 0);
+    float scale = 30;
+    float3 force = make_float3((float)(1.0 * pow(10,6))/9.0f, 0, 0);
     //float3 force = make_float3(0, 0, 0);
     addForce = new ForceModifier(solid, new PolyShape("Box12.obj", scale, scale*2, scale*2), force);
-    addForce->Move(89, POS_Y, POS_Z);
+    addForce->Move(90, POS_Y, POS_Z);
     addForce->SetColorBufferForSelection(&vbom->GetBuf(BODY_COLORS));
     modifier.push_back(addForce);
-    */
-    /*         
+    
+    /*             
     float3 disp = make_float3(0, 0, 0);
     addDisp = new DisplacementModifier(solid, new PolyShape("Box12.obj", scale,scale*2,scale*2), disp);
-    //    addDisp->Move(89, POS_Y, POS_Z);
-    addDisp->Move(5, POS_Y, POS_Z);
+    addDisp->Move(90, POS_Y, POS_Z);
+    //addDisp->Move(5, POS_Y, POS_Z);
     addDisp->SetColorBufferForSelection(&vbom->GetBuf(BODY_COLORS));
     modifier.push_back(addDisp);
-    
-    
-    FixedModifier* fixedBox2 = new FixedModifier(new PolyShape("Box12.obj", scale, scale*2, scale*2));
-    //fixedBox2->Move(-94,POS_Y,POS_Z);
-    fixedBox2->Move(-5,POS_Y,POS_Z);
-    modifier.push_back(fixedBox2);
     */
+    FixedModifier* fixedBox2 = new FixedModifier(new PolyShape("Box12.obj", scale, scale*2, scale*2));
+    fixedBox2->Move(-90,POS_Y,POS_Z);
+    //fixedBox2->Move(-5,POS_Y,POS_Z);
+    modifier.push_back(fixedBox2);
+    
 
     // ----- Mesh independence setup ----- //
     /*
@@ -223,7 +222,7 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     */
 
     // ------ Crack real tooth model with elevator tool ---------- //
-    /*    
+    /*
     float scale = 35;
     PolyShape* toolShape = new PolyShape("Box12.obj", 20.0, 0.8, 20.0);
     tool = new MovableCollisionModifier(toolShape);
@@ -270,7 +269,7 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         sim_clock.Start();
 
         // Use this for stress/strain test to increase stretch
-        //        addDisp->addDisplacement += make_float3(0.0002f, 0, 0);
+        //        addDisp->addDisplacement += make_float3(0.0001f, 0, 0);
 
         //        float3 force = make_float3((float)(3.28 * pow(10,10))/33.0f, 0, 0);
         /*        float maxForce = (float)((1.0*pow(10,20)));
@@ -292,8 +291,8 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
      
             //            if( numItr++ > 100 )
             //  exit(0);
-            
-            /*    static int iterations = 0;
+            /*            
+            static int iterations = 0;
             iterations++;
             if ((iterations % 1000) == 0) {
                 Utils::Time time = sim_clock.GetElapsedTime();
@@ -316,7 +315,8 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
         sim_clock.Stop();
 
     // Debug
-    /*    cudaMemcpy(displacement, solid->vertexpool->Ui_t, sizeof(float4)*solid->vertexpool->size, cudaMemcpyDeviceToHost);
+    
+    cudaMemcpy(displacement, solid->vertexpool->Ui_t, sizeof(float4)*solid->vertexpool->size, cudaMemcpyDeviceToHost);
     float maxDisp = 0;
     //float minX = 0;
     float maxX = 0;
@@ -330,10 +330,10 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     //printf("%E \n", addForce->addForce.x/28.0f);
     //    printf("%E \t %E\n", ((160.0f+maxDisp)/160.0f)-1.0, addForce->addForce.x*28.0f);
     //    printf("%E \t %E \t %E\n", ((160.0f+maxDisp)/160.0f)-1.0, addForce->addForce.x*20.0f, maxDisp);
-    static int p = 0;
-    if( p++ % 10 == 0 )
-        logger.info << "MaxDisp(Axial/Total): (" << maxX << "/" << maxDisp << ")" << logger.end;
-    */
+    //    static int p = 0;
+    //if( p++ % 10 == 0 )
+    logger.info << "MaxDisp(Axial/Total): (" << maxX << "/" << maxDisp << ")" << logger.end;
+    
     // Crack Tracking
     if( crackTrackingEnabled ){
         try {

@@ -139,10 +139,9 @@ void applyForceToIntersectingNodes_k
     
     if( me_idx >= numPoints ) 
         return;
-
-    /*if( intersect[me_idx] ){
-        sel++;
-        printf("[Physics] selected %i, total %i\n", me_idx, sel);
+    /*
+    if( intersect[me_idx] ){
+        printf("[Physics] selected %i, total %i\n", me_idx);
     }
     */
     //    if( me_idx == 3 && intersect[me_idx] ) 
@@ -628,9 +627,9 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     double maxStrain = max( max( eValueStrain[0], eValueStrain[1]), eValueStrain[2] );
 
     // Data for stress/strain curve 
-    //if( me_idx==654) // && (itrCount++)%100)
+    //    if( me_idx==654) // && (itrCount++)%100)
         // Green-Lagrangian strain measure
-        //printf("%E \t %E\n", abs(maxStrain), abs(major.w));
+              //  printf("%E \t %E\n", abs(maxStrain), abs(major.w));
         //        printf("%E \t", (C(1,1)-1.0)/2.0);
         //        printf("%E \t %E\n", (C(1,1)-1.0)/2.0, abs(major.w));
         // Deformation gradient tensor

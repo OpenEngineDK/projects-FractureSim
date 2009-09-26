@@ -28,7 +28,7 @@ void DisplacementModifier::SelectNodes(Solid* solid) {
 
 void DisplacementModifier::ApplyModifierStrategy(Solid* solid) {
     // Call constraint function
-    fixIntersectingPoints(solid, pIntersect);
+    //    fixIntersectingPoints(solid, pIntersect);
 
     // Call constraint function
     if( selectionMade )

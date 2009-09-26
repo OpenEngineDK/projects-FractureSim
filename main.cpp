@@ -56,16 +56,19 @@ int main(int argc, char** argv) {
     logger.info << "========= Running OpenEngine Test Project =========";
     logger.info << logger.end;
    
-    Vector<3,float> position(-7, 2, 15);
-    Vector<3,float> lookat(-2, 0, 0);
-    //    Vector<3,float> lookat(-50, 10, 0);
+    //Vector<3,float> position(-7, 2, 15);
+    //Vector<3,float> lookat(-2, 0, 0);
+    //Vector<3,float> lookat(-50, 10, 0);
 
-    //    Vector<3,float> position(0,30,-200);
-    //Vector<3,float> lookat(0,10,0);
+    Vector<3,float> position(0,30,200);
+    Vector<3,float> lookat(0,10,0);
 
     // tooth viewpoint
-    //    Vector<3,float> position(100,40,0);
+    //Vector<3,float> position(10,40,100);
     //Vector<3,float> lookat(0,12,0);
+
+    //Vector<3,float> position(30,56,27);
+    //Vector<3,float> lookat(0,47,0);
 
     // Move the camera
     Camera* camera = setup->GetCamera();
