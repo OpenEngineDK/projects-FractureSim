@@ -18,7 +18,7 @@ Solid* SolidFactory::Create(std::string name) {
     std::string dataDir = "projects/FractureSim/data/solids/";
 
     float scale = 1.0;
-    if (name == "tetrahedra") {
+    if (name == "tetrahedron") {
         //tetrahedra: vpool: 4, body tetrahedra: 1, surface triangles: 4
         loader = new TetGenLoader
             (dataDir + "tetrahedron.1.node",
@@ -90,15 +90,15 @@ Solid* SolidFactory::Create(std::string name) {
     } else if (name == "test_tooth") {
        loader = new TetGenLoader
             (dataDir + "test_tooth.1.node",
-             dataDir + "test-tooth.1.ele",
+             dataDir + "test_tooth.1.ele",
              dataDir + "test_tooth.1.smesh");
-        scale = 1.0;
+        scale = 5.0;
     } else if (name == "test_tooth_high_res") {
        loader = new TetGenLoader
             (dataDir + "test_tooth_high_res.1.node",
-             dataDir + "test-tooth_high_res.1.ele",
+             dataDir + "test_tooth_high_res.1.ele",
              dataDir + "test_tooth_high_res.1.smesh");
-        scale = 1.0;
+        scale = 5.0;
     } else
         throw Core::Exception("unknown solid");
 
