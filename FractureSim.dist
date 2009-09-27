@@ -39,13 +39,21 @@ win32 /libraries http://openengine.dk/data/libraries/glew-win32.zip
 win32 /libraries http://openengine.dk/data/libraries/sdl-win32.zip
 win32 /libraries http://openengine.dk/data/libraries/dlls-win32.zip
 
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/bar_2_5x2_5x2_5.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/bar_5x5x5.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/bar_10x10x10.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/bar_20x20x20.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/test_tooth_high_res.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/test_tooth.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/tooth_noslice_simple.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/tooth_noslice.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/tooth_slice_simple.zip
-any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/tooth_slice.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/tetrahedron.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/box.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/sphere.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/bar_2_5x2_5x2_5.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/bar_5x5x5.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/bar_10x10x10.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/bar_20x20x20.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/test_tooth_high_res.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/test_tooth.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/tooth_noslice_simple.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/tooth_noslice.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/tooth_slice_simple.zip
+any /projects/FractureSim/data/solids    http://www.openengine.dk/data/projects/FractureSim/solids/tooth_slice.zip
+
+any /projects/FractureSim/data/models    http://www.openengine.dk/data/projects/FractureSim/models/flightArrow7.zip
+any /projects/FractureSim/data/models    http://www.openengine.dk/data/projects/FractureSim/models/box12.zip
+any /projects/FractureSim/data/models    http://www.openengine.dk/data/projects/FractureSim/models/sphere180.zip
+any /projects/FractureSim/data/models    http://www.openengine.dk/data/projects/FractureSim/models/sphere80.zip

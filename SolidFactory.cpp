@@ -18,113 +18,87 @@ Solid* SolidFactory::Create(std::string name) {
     std::string dataDir = "projects/TLED/data/RegistrationShapes/";
 
     float scale = 1.0;
-    if (name == "prostate") {
-        //PROSTATE: vpool: 3386, body tetrahedra: 16068, surface triangles: 2470
-        loader = new MshObjLoader(dataDir + "PROSTATE.msh",
-                                  dataDir + "PROSTATE.obj");
-        scale = 1.1;
-    } else if (name == "fake-tooth") {
-       loader = new TetGenLoader
-            (dataDir + "fake-tooth-halfway-upright-ascii.1.node",
-             dataDir + "fake-tooth-halfway-upright-ascii.1.ele",
-             dataDir + "fake-tooth-halfway-upright-ascii.1.smesh");
-        scale = 5.0;
-    } else if (name == "tand2") {
-        //tand2: vpool: 865, body tetrahedra: 3545, surface triangles: 946
-        loader = new MshObjLoader(dataDir + "tand2.msh",
-                                  dataDir + "tand2.obj");
-        scale = 5;
-    } else if (name == "tetrahedra") {
+    if (name == "tetrahedra") {
         //tetrahedra: vpool: 4, body tetrahedra: 1, surface triangles: 4
         loader = new TetGenLoader
-            (dataDir + "tetrahedron.ascii.1.node",
-             dataDir + "tetrahedron.ascii.1.ele",
-             dataDir + "tetrahedron.ascii.1.smesh");
+            (dataDir + "tetrahedron.1.node",
+             dataDir + "tetrahedron.1.ele",
+             dataDir + "tetrahedron.1.smesh");
         scale = 5.0;
     } else if (name == "box") {
         //box: vpool: 14, body tetrahedra: 17, surface triangles: 24
         loader = new TetGenLoader
-            (dataDir + "box.ascii.1.node",
-             dataDir + "box.ascii.1.ele",
-             dataDir + "box.ascii.1.smesh");
+            (dataDir + "box.1.node",
+             dataDir + "box.1.ele",
+             dataDir + "box.1.smesh");
         scale = 10;
     } else if (name == "sphere") {
         //sphere: vpool: 119, body tetrahedra: 328, surface triangles: 212
         loader = new TetGenLoader
-            (dataDir + "sphere.ascii.1.node", 
-             dataDir + "sphere.ascii.1.ele", 
-             dataDir + "sphere.ascii.1.smesh");
+            (dataDir + "sphere.1.node", 
+             dataDir + "sphere.1.ele", 
+             dataDir + "sphere.1.smesh");
         scale = 0.3;
-    } else if (name == "bar") {
-        //Bar: vpool: 119, body tetrahedra: 328, surface triangles: 212
+    } else if (name == "bar_20x20x20" || name == "bar20") {
         loader = new TetGenLoader
-            (dataDir + "testbar2.ascii.1.node", 
-             dataDir + "testbar2.ascii.1.ele", 
-             dataDir + "testbar2.ascii.1.smesh");
+            (dataDir + "bar_20x20x20.1.node", 
+             dataDir + "bar_20x20x20.1.ele", 
+             dataDir + "bar_20x20x20.1.smesh");
         scale = 1;
-    } else if (name == "smallbar") {
-        //Bar: vpool: 119, body tetrahedra: 328, surface triangles: 212
+    } else if (name == "bar_10x10x10" || name == "bar10") {
         loader = new TetGenLoader
-            (dataDir + "bar.ascii.1.node", 
-             dataDir + "bar.ascii.1.ele", 
-             dataDir + "bar.ascii.1.smesh");
+            (dataDir + "bar_10x10x10.1.node", 
+             dataDir + "bar_10x10x10.1.ele", 
+             dataDir + "bar_10x10x10.1.smesh");
         scale = 1;
-    } else if (name == "bar-low") {
-        //Bar: tetrahedra: 964
+    } else if (name == "bar_5x5x5" || name == "bar5") {
         loader = new TetGenLoader
-            (dataDir + "testbar2-5x5.ascii.1.node", 
-             dataDir + "testbar2-5x5.ascii.1.ele", 
-             dataDir + "testbar2-5x5.ascii.1.smesh");
+            (dataDir + "bar_5x5x5.1.node", 
+             dataDir + "bar_5x5x5.1.ele", 
+             dataDir + "bar_5x5x5.1.smesh");
         scale = 1;
-    } else if (name == "bar0") {
-        //Bar: tetrahedra: 4658
+    } else if (name == "bar_2_5x2_5x2_5" || name == "bar2_5") {
         loader = new TetGenLoader
-            (dataDir + "testbar2-10x10.ascii.1.node", 
-             dataDir + "testbar2-10x10.ascii.1.ele", 
-             dataDir + "testbar2-10x10.ascii.1.smesh");
+            (dataDir + "bar_2_5x2_5x2_5.1.node", 
+             dataDir + "bar_2_5x2_5x2_5.1.ele", 
+             dataDir + "bar_2_5x2_5x2_5.1.smesh");
         scale = 1;
-    } else if (name == "bar1") {
-        //Bar: tetrahedra: 21809
-        loader = new TetGenLoader
-            (dataDir + "testbar2-5x5.ascii.1.node", 
-             dataDir + "testbar2-5x5.ascii.1.ele", 
-             dataDir + "testbar2-5x5.ascii.1.smesh");
-        scale = 1;
-    } else if (name == "bar2") {
-        //Bar: tetrahedra: 21809
-        loader = new TetGenLoader
-            (dataDir + "testbar2-2-5x2-5.ascii.1.node", 
-             dataDir + "testbar2-2-5x2-5.ascii.1.ele", 
-             dataDir + "testbar2-2-5x2-5.ascii.1.smesh");
-        scale = 1;
-    } else if (name == "bar3") {
-        //Bar: tetrahedra: 21809
-        loader = new TetGenLoader
-            (dataDir + "testbar2-1-25x1-25.1.node", 
-             dataDir + "testbar2-1-25x1-25.1.ele", 
-             dataDir + "testbar2-1-25x1-25.1.smesh");
-        scale = 1;
-    }else if (name == "bunny") {
-        //bunny: vpool: , body tetrahedra: , surface triangles: 
-        loader = new TetGenLoader
-            (dataDir + "bunny.ascii.1.node",
-             dataDir + "bunny.ascii.1.ele",
-             dataDir + "bunny.ascii.1.smesh");
-        scale = 30;
-    } else if (name == "tooth") {
-        //bunny: vpool: , body tetrahedra: , surface triangles: 
+    } else if (name == "tooth_slice") {
         loader = new TetGenLoader
             (dataDir + "tooth_slice.1.node",
              dataDir + "tooth_slice.1.ele",
              dataDir + "tooth_slice.1.smesh");
-        scale = 30;
-    } else if (name == "tooth-no-groove") {
-        //bunny: vpool: , body tetrahedra: , surface triangles: 
+        scale = 10;
+    } else if (name == "tooth_noslice") {
         loader = new TetGenLoader
             (dataDir + "tooth_noslice.1.node",
              dataDir + "tooth_noslice.1.ele",
              dataDir + "tooth_noslice.1.smesh");
-        scale = 30;
+        scale = 10;
+    } else if (name == "tooth_slice_simple") {
+        loader = new TetGenLoader
+            (dataDir + "tooth_slice_simple.1.node",
+             dataDir + "tooth_slice_simple.1.ele",
+             dataDir + "tooth_slice_simple.1.smesh");
+        scale = 10;
+    } else if (name == "tooth_noslice_simple") {
+        loader = new TetGenLoader
+            (dataDir + "tooth_noslice_simple.1.node",
+             dataDir + "tooth_noslice_simple.1.ele",
+             dataDir + "tooth_noslice_simple.1.smesh");
+        scale = 10;
+    } else if (name == "test_tooth") {
+       loader = new TetGenLoader
+            (dataDir + "test_tooth.1.node",
+             dataDir + "test-tooth.1.ele",
+             dataDir + "test_tooth.1.smesh");
+        scale = 1.0;
+    } else if (name == "test_tooth_high_res") {
+       loader = new TetGenLoader
+            (dataDir + "test_tooth_high_res.1.node",
+             dataDir + "test-tooth_high_res.1.ele",
+             dataDir + "test_tooth_high_res.1.smesh");
+        scale = 1.0;
     } else
         throw Core::Exception("unknown solid");
 
