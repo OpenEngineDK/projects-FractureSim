@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
     kh->SetPoint(lookat);
     setup->GetKeyboard().KeyEvent().Attach(*kh);
 
-    setup->AddDataDirectory("projects/TLED/data/models/");
+    setup->AddDataDirectory("projects/FractureSim/data/models/");
 
      // Start the engine.
     setup->GetEngine().Start();

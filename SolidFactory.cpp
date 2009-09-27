@@ -15,7 +15,7 @@ Solid* SolidFactory::Create(std::string name) {
     Solid* solid = new Solid();
 
     ISolidLoader* loader = NULL;
-    std::string dataDir = "projects/TLED/data/RegistrationShapes/";
+    std::string dataDir = "projects/FractureSim/data/solids/";
 
     float scale = 1.0;
     if (name == "tetrahedra") {
