@@ -28,7 +28,7 @@ void calculateGravityForces(Solid* solid) {
 
 
 __global__ void testCollision_k
-(Point* points, unsigned int numPoints, 
+(Point* points, unsigned int numPoints,
  float4* displacements, float4* oldDisplacements,
  float4* vertices, float4* normals, unsigned int numFaces,
  bool* intersect) {
@@ -62,7 +62,7 @@ void testCollision(Solid* solid, PolyShape* bVolume, bool* intersect) {
     // Start kernel for each point in solid times each face in poly shape
     testCollision_k
         <<<make_uint3(pBlocks, numFaces,1), make_uint3(BLOCKSIZE,1,1)>>>
-        (solid->vertexpool->data, 
+        (solid->vertexpool->data,
          solid->vertexpool->size,
          solid->vertexpool->Ui_t,
          solid->vertexpool->Ui_tminusdt,
@@ -75,9 +75,8 @@ void testCollision(Solid* solid, PolyShape* bVolume, bool* intersect) {
 }
 
 
-__global__
-void constrainIntersectingPoints_k
-(Point* points, unsigned int numPoints, 
+__global__ void constrainIntersectingPoints_k
+(Point* points, unsigned int numPoints,
  float4* displacements, float4* oldDisplacements,
  bool* intersect) {
 
@@ -94,7 +93,7 @@ void constrainIntersectingPoints(Solid* solid, bool* intersect) {
     // Start kernel for each point in solid times each face in poly shape
     constrainIntersectingPoints_k
         <<<make_uint3(pBlocks, 1,1), make_uint3(BLOCKSIZE,1,1)>>>
-        (solid->vertexpool->data, 
+        (solid->vertexpool->data,
          solid->vertexpool->size,
          solid->vertexpool->Ui_t,
          solid->vertexpool->Ui_tminusdt,
@@ -103,9 +102,8 @@ void constrainIntersectingPoints(Solid* solid, bool* intersect) {
     CHECK_FOR_CUDA_ERROR();
 }
 
-__global__
-void fixIntersectingPoints_k
-(Point* points, unsigned int numPoints, 
+__global__ void fixIntersectingPoints_k
+(Point* points, unsigned int numPoints,
  float4* displacements, float4* oldDisplacements,
  bool* intersect) {
 
@@ -122,7 +120,7 @@ void fixIntersectingPoints(Solid* solid, bool* intersect) {
     // Start kernel for each point in solid times each face in poly shape
     constrainIntersectingPoints_k
         <<<make_uint3(pBlocks, 1,1), make_uint3(BLOCKSIZE,1,1)>>>
-        (solid->vertexpool->data, 
+        (solid->vertexpool->data,
          solid->vertexpool->size,
          solid->vertexpool->Ui_t,
          solid->vertexpool->Ui_tminusdt,
@@ -132,20 +130,19 @@ void fixIntersectingPoints(Solid* solid, bool* intersect) {
 }
 
 
-__global__
-void applyForceToIntersectingNodes_k
+__global__ void applyForceToIntersectingNodes_k
 (float* masses, float4* extForces, float4 force, bool* intersect, unsigned int numPoints) {
     int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
     
-    if( me_idx >= numPoints ) 
+    if( me_idx >= numPoints )
         return;
     /*
     if( intersect[me_idx] ){
         printf("[Physics] selected %i, total %i\n", me_idx);
     }
     */
-    //    if( me_idx == 3 && intersect[me_idx] ) 
-    if( intersect[me_idx] ) 
+    //    if( me_idx == 3 && intersect[me_idx] )
+    if( intersect[me_idx] )
          extForces[me_idx] = force;
     else
         extForces[me_idx] = make_float4(0);
@@ -160,20 +157,19 @@ void applyForceToIntersectingNodes(Solid* solid, float3 force, bool* intersect) 
         (solid->vertexpool->mass,
          solid->vertexpool->externalForces,
          make_float4(force),
-         intersect, 
+         intersect,
          solid->vertexpool->size);
     
     CHECK_FOR_CUDA_ERROR();
 }
 
 
-__global__
-void applyDisplacementToIntersectingNodes_k
-(float* masses, float4* displacements, float4* oldDisplacements, 
+__global__ void applyDisplacementToIntersectingNodes_k
+(float* masses, float4* displacements, float4* oldDisplacements,
 float4 disp, bool* intersect, unsigned int numPoints) {
     int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
     
-    if( me_idx >= numPoints ) 
+    if( me_idx >= numPoints )
         return;
 
     if( intersect[me_idx] ){
@@ -191,7 +187,7 @@ void applyDisplacementToIntersectingNodes(Solid* solid, float3 disp, bool* inter
          solid->vertexpool->Ui_t,
          solid->vertexpool->Ui_tminusdt,
          make_float4(disp),
-         intersect, 
+         intersect,
          solid->vertexpool->size);
     
     CHECK_FOR_CUDA_ERROR();
@@ -199,12 +195,12 @@ void applyDisplacementToIntersectingNodes(Solid* solid, float3 disp, bool* inter
 
 __global__
 void moveIntersectingNodeToSurface_k
-(Point* points, unsigned int numPoints, 
+(Point* points, unsigned int numPoints,
  float4* displacements, float4* oldDisplacements,
  float4* vertices, float4* normals, unsigned int numFaces,
  bool* intersect) {
 
-    int pointIdx = blockIdx.x * blockDim.x + threadIdx.x;    
+    int pointIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if( pointIdx >= numPoints || !intersect[pointIdx] ) return;
 
     // If the point intersects with the volume iterate through all faces
@@ -258,7 +254,7 @@ void moveIntersectingNodeToSurface(Solid* solid, PolyShape* bVolume, bool* inter
     // Start kernel for each point in solid times each face in poly shape
     moveIntersectingNodeToSurface_k
         <<<make_uint3(pBlocks, 1, 1), make_uint3(BLOCKSIZE,1,1)>>>
-        (solid->vertexpool->data, 
+        (solid->vertexpool->data,
          solid->vertexpool->size,
          solid->vertexpool->Ui_t,
          solid->vertexpool->Ui_tminusdt,
@@ -270,8 +266,7 @@ void moveIntersectingNodeToSurface(Solid* solid, PolyShape* bVolume, bool* inter
     CHECK_FOR_CUDA_ERROR();
 }
 
-__global__
-void colorSelection_k
+__global__ void colorSelection_k
 (Tetrahedron* tetra, unsigned int numTets,
  float4* colArray, unsigned int size,
  bool* intersect) {
@@ -279,7 +274,7 @@ void colorSelection_k
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 	if (me_idx>=numTets) return;
 
-    float4 color = make_float4(0.5,0.5,0.5,1.0); 
+    float4 color = make_float4(0.5,0.5,0.5,1.0);
     Tetrahedron e = tetra[me_idx];
     if( intersect[e.x] || intersect[e.y] || intersect[e.z] || intersect[e.w] ){
         int colr_idx = me_idx*12;
@@ -295,7 +290,7 @@ void colorSelection(Solid* solid, VisualBuffer* colorBuffer, bool* intersect) {
     // Start kernel for each point in solid times each face in poly shape
     colorSelection_k
         <<<make_uint3(gridSize, 1,1), make_uint3(BLOCKSIZE,1,1)>>>
-        (solid->body->tetrahedra, 
+        (solid->body->tetrahedra,
          solid->body->numTetrahedra,
          colorBuffer->buf, colorBuffer->numElm,
          intersect);
@@ -303,11 +298,10 @@ void colorSelection(Solid* solid, VisualBuffer* colorBuffer, bool* intersect) {
     CHECK_FOR_CUDA_ERROR();
 }
 
-__global__
-void loadArrayIntoVBO_k(float4* array, unsigned int size, float4* vbo) {
+__global__ void loadArrayIntoVBO_k(float4* array, unsigned int size, float4* vbo) {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
 	if (me_idx >= size) return;
-    vbo[me_idx] = array[me_idx];    
+    vbo[me_idx] = array[me_idx];
 }
 
 void loadArrayIntoVBO(float4* array, unsigned int size, float4* vbo) {
@@ -344,7 +338,7 @@ void applyFloorConstraint(Solid* solid, float floorYPosition) {
 	int pointSize = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
 	applyGroundConstraint_k
         <<<make_uint3(pointSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
-        (solid->vertexpool->data, solid->vertexpool->Ui_t, 
+        (solid->vertexpool->data, solid->vertexpool->Ui_t,
          solid->vertexpool->Ui_tminusdt, floorYPosition,
          solid->vertexpool->size);
     CHECK_FOR_CUDA_ERROR();
@@ -352,13 +346,12 @@ void applyFloorConstraint(Solid* solid, float floorYPosition) {
 
 //note: supposed to be castable to a ShapeFunctionDerivatives object
 struct Matrix4x3 { float e[12]; };
-struct Matrix3x3 { 
-    float e[9]; 
+struct Matrix3x3 {
+    float e[9];
 
     // Matrix3x3 *Must* be symmetric. Returns eigenvectors in columns of V
     // and corresponding eigenvalues in d.
-    __device__
-    void calcEigenDecomposition(double V[3][3], double d[3]) {
+    __device__ void calcEigenDecomposition(double V[3][3], double d[3]) {
         double A[3][3];
         for(int i=0; i<3; i++)
             for(int j=0; j<3; j++)
@@ -382,15 +375,14 @@ texture<float,  1, cudaReadModeElementType> V0_1d_tex;
 #define S(i,j) (s_tensor.e[(i-1)*3+(j-1)])
 #define E(i,j) (e_tensor.e[(i-1)*3+(j-1)])
 
-int itrCount=0;
+/* int itrCount=0; */
 
-__global__ void
-calculateForces_k(Matrix4x3 *shape_function_derivatives,
-                  Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0, 
+__global__ void calculateForces_k(Matrix4x3 *shape_function_derivatives,
+                  Tetrahedron *tetrahedra, float4 *Ui_t, float *V_0,
                   int4 *writeIndices, float4 *pointForces, int maxPointForces,
-                  float mu, float lambda, 
-                  float4* principalStress,  bool* maxStressExceeded, 
-                  unsigned int numTets, float4* colrBuf, float4* tensorColr, 
+                  float mu, float lambda,
+                  float4* principalStress,  bool* maxStressExceeded,
+                  unsigned int numTets, float4* colrBuf, float4* tensorColr,
                   float4* eigenVectors, float4* eigenValues,
                   float max_streach, float max_compression) {
 
@@ -401,7 +393,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 
 	Tetrahedron e = tetrahedra[me_idx];
 
-	if (e.x < 0) 
+	if (e.x < 0)
 		return;
 	
 	Matrix4x3 sfdm = shape_function_derivatives[me_idx];
@@ -462,7 +454,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 
     // [Ref: TLED-article, formel 23]
 	//Calculate deformation gradients
-	X(1,1) = (u(1,1)*h(1,1)+u(2,1)*h(2,1)+u(3,1)*h(3,1)+u(4,1)*h(4,1)+1.0f); 
+	X(1,1) = (u(1,1)*h(1,1)+u(2,1)*h(2,1)+u(3,1)*h(3,1)+u(4,1)*h(4,1)+1.0f);
 	X(1,2) = (u(1,1)*h(1,2)+u(2,1)*h(2,2)+u(3,1)*h(3,2)+u(4,1)*h(4,2));
 	X(1,3) = (u(1,1)*h(1,3)+u(2,1)*h(2,3)+u(3,1)*h(3,3)+u(4,1)*h(4,3));
 
@@ -484,16 +476,16 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     // calculate Right Cauchy-Green deformation tensor C
     Matrix3x3 cauchy_green_deformation;
 
-	C(1,1) = X(1, 1)*X(1, 1) + X(2, 1)*X(2, 1) + X(3, 1)*X(3, 1); 
-	C(1,2) = X(1, 1)*X(1, 2) + X(2, 1)*X(2, 2) + X(3, 1)*X(3, 2); 
-	C(1,3) = X(1, 1)*X(1, 3) + X(2, 1)*X(2, 3) + X(3, 1)*X(3, 3); 
+	C(1,1) = X(1, 1)*X(1, 1) + X(2, 1)*X(2, 1) + X(3, 1)*X(3, 1);
+	C(1,2) = X(1, 1)*X(1, 2) + X(2, 1)*X(2, 2) + X(3, 1)*X(3, 2);
+	C(1,3) = X(1, 1)*X(1, 3) + X(2, 1)*X(2, 3) + X(3, 1)*X(3, 3);
 
-	C(2,1) = X(1, 1)*X(1, 2) + X(2, 1)*X(2, 2) + X(3, 1)*X(3, 2); 
-	C(2,2) = X(1, 2)*X(1, 2) + X(2, 2)*X(2, 2) + X(3, 2)*X(3, 2); 
+	C(2,1) = X(1, 1)*X(1, 2) + X(2, 1)*X(2, 2) + X(3, 1)*X(3, 2);
+	C(2,2) = X(1, 2)*X(1, 2) + X(2, 2)*X(2, 2) + X(3, 2)*X(3, 2);
 	C(2,3) = X(1, 2)*X(1, 3) + X(2, 2)*X(2, 3) + X(3, 2)*X(3, 3);
 
-	C(3,1) = X(1, 1)*X(1, 3) + X(2, 1)*X(2, 3) + X(3, 1)*X(3, 3); 
-	C(3,2) = X(1, 2)*X(1, 3) + X(2, 2)*X(2, 3) + X(3, 2)*X(3, 3); 
+	C(3,1) = X(1, 1)*X(1, 3) + X(2, 1)*X(2, 3) + X(3, 1)*X(3, 3);
+	C(3,2) = X(1, 2)*X(1, 3) + X(2, 2)*X(2, 3) + X(3, 2)*X(3, 3);
 	C(3,3) = X(1, 3)*X(1, 3) + X(2, 3)*X(2, 3) + X(3, 3)*X(3, 3);
 /*
 	printf("\nRight Cauchy-Green deformation tensor for tetrahedron %i: \n", me_idx);
@@ -506,19 +498,19 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     // [Ref. TLED-article] calculated for use in stress tensor
 	Matrix3x3 c_inverted;
 
-	float denominator = (C(3, 1)*C(1, 2)*C(2, 3) - C(3, 1)*C(1, 3)*C(2, 2) - C(2, 1)*C(1, 2)*C(3, 3) 
+	float denominator = (C(3, 1)*C(1, 2)*C(2, 3) - C(3, 1)*C(1, 3)*C(2, 2) - C(2, 1)*C(1, 2)*C(3, 3)
 		+ C(2, 1)*C(1, 3)*C(3, 2) + C(1, 1)*C(2, 2)*C(3, 3) - C(1, 1)*C(2, 3)*C(3, 2));
 
-	CI(1,1) = (C(2, 2)*C(3, 3) - C(2, 3)*C(3, 2))/denominator; 
-	CI(1,2) = (-C(1, 2)*C(3, 3) + C(1, 3)*C(3, 2))/denominator; 
-	CI(1,3) = (C(1, 2)*C(2, 3) - C(1, 3)*C(2, 2))/denominator; 
+	CI(1,1) = (C(2, 2)*C(3, 3) - C(2, 3)*C(3, 2))/denominator;
+	CI(1,2) = (-C(1, 2)*C(3, 3) + C(1, 3)*C(3, 2))/denominator;
+	CI(1,3) = (C(1, 2)*C(2, 3) - C(1, 3)*C(2, 2))/denominator;
 
-	CI(2,1) = (-C(2, 1)*C(3, 3) + C(3, 1)*C(2, 3))/denominator; 
-	CI(2,2) = (-C(3, 1)*C(1, 3) + C(1, 1)*C(3, 3))/denominator; 
-	CI(2,3) = (-C(1, 1)*C(2, 3) + C(2, 1)*C(1, 3))/denominator; 
+	CI(2,1) = (-C(2, 1)*C(3, 3) + C(3, 1)*C(2, 3))/denominator;
+	CI(2,2) = (-C(3, 1)*C(1, 3) + C(1, 1)*C(3, 3))/denominator;
+	CI(2,3) = (-C(1, 1)*C(2, 3) + C(2, 1)*C(1, 3))/denominator;
 
-	CI(3,1) = (-C(3, 1)*C(2, 2) + C(2, 1)*C(3, 2))/denominator; 
-	CI(3,2) = (-C(1, 1)*C(3, 2) + C(3, 1)*C(1, 2))/denominator; 
+	CI(3,1) = (-C(3, 1)*C(2, 2) + C(2, 1)*C(3, 2))/denominator;
+	CI(3,2) = (-C(1, 1)*C(3, 2) + C(3, 1)*C(1, 2))/denominator;
 	CI(3,3) = (-C(2, 1)*C(1, 2) + C(1, 1)*C(2, 2))/denominator;
 
 /*	printf("\nInverted right Cauchy-Green deformation tensor for tetrahedron %i: \n", me_idx);
@@ -542,7 +534,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 	Matrix3x3 s_tensor;
     
 	S(1,1) = mu*(1.0f-CI(1,1)) + lambda*J*(J-1.0f)*CI(1,1);
-	S(2,2) = mu*(1.0f-CI(2,2)) + lambda*J*(J-1.0f)*CI(2,2); 
+	S(2,2) = mu*(1.0f-CI(2,2)) + lambda*J*(J-1.0f)*CI(2,2);
 	S(3,3) = mu*(1.0f-CI(3,3)) + lambda*J*(J-1.0f)*CI(3,3);
 	S(1,2) = mu*(-CI(1,2)) + lambda*J*(J-1.0f)*CI(1,2);
 	S(2,3) = mu*(-CI(2,3)) + lambda*J*(J-1.0f)*CI(2,3);
@@ -557,8 +549,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
     // Calculate eigen vectors and values and map to colors
     double eVector[3][3];
     double eValue[3];
-    s_tensor.calcEigenDecomposition(eVector, eValue);
-
+    s_tensor.calcEigenDecomposition(eVector, eValue);    
     
     float4 major;
     float4 medium;
@@ -580,7 +571,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
             }
         }
         else {
-            // 2,0,1 
+            // 2,0,1
             major  = make_float4(eVector[0][2],eVector[1][2],eVector[2][2], eValue[2]);
             medium = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
             minor  = make_float4(eVector[0][1],eVector[1][1],eVector[2][1], eValue[1]);
@@ -606,7 +597,7 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
         minor  = make_float4(eVector[0][0],eVector[1][0],eVector[2][0], eValue[0]);
     }
 
-    // Find and save largest Eigen value and corresponding Eigen vector because 
+    // Find and save largest Eigen value and corresponding Eigen vector because
     // this defines the principal stress
     principalStress[me_idx] = major;
 
@@ -617,16 +608,25 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 	E(2,2) = (C(2,2)-1.0)/2.0;
 	E(3,3) = (C(3,3)-1.0)/2.0;
 	E(1,2) = (C(1,2)-1.0)/2.0;
-	E(2,3) = (C(2,3)-1.0)/2.0;
+    E(2,3) = (C(2,3)-1.0)/2.0;
 	E(1,3) = (C(1,3)-1.0)/2.0;
 
     // Calculate eigen vectors and values and map to colors
-    double eVectorStrain[3][3];
-    double eValueStrain[3];
-    e_tensor.calcEigenDecomposition(eVectorStrain, eValueStrain);
-    double maxStrain = max( max( eValueStrain[0], eValueStrain[1]), eValueStrain[2] );
 
-    // Data for stress/strain curve 
+
+
+     double eVectorStrain[3][3];
+     double eValueStrain[3];
+
+     Matrix3x3 wtf_tensor = e_tensor;
+     wtf_tensor.calcEigenDecomposition(eVectorStrain, eValueStrain);
+     //e_tensor = wtf_tensor;
+
+     //e_tensor.calcEigenDecomposition(eVectorStrain, eValueStrain);
+     
+     double maxStrain = max( max( eValueStrain[0], eValueStrain[1]), eValueStrain[2] );
+     
+    // Data for stress/strain curve
     //    if( me_idx==654) // && (itrCount++)%100)
         // Green-Lagrangian strain measure
               //  printf("%E \t %E\n", abs(maxStrain), abs(major.w));
@@ -639,14 +639,14 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
         //printf("%E \t %E\n", J, abs(major.w));
    
 
-    // The eigenvalue determines the highest principal stress, 
+    // The eigenvalue determines the highest principal stress,
     // if it exceeds the max stress we raise a flag.
     if( abs(principalStress[me_idx].w) > max_streach )
         *maxStressExceeded = true;
     //if( principalStress[me_idx].w < -max_compression )
     //    *maxCompressionExceeded = true;
 
-    // Eigen value one corresponds to eigen vector one, etc.. 
+    // Eigen value one corresponds to eigen vector one, etc..
     eigenValues[me_idx] = make_float4(eValue[0], eValue[1], eValue[2], 0);
 
     // Clear fourth component being the Eigen value
@@ -717,28 +717,28 @@ calculateForces_k(Matrix4x3 *shape_function_derivatives,
 
         Matrix6x3 b_tensor;
         
-        B(1,1) = h(a, 1)*X(1, 1);  
-		B(1,2) = h(a, 1)*X(2, 1);  
-		B(1,3) = h(a, 1)*X(3, 1);  
+        B(1,1) = h(a, 1)*X(1, 1);
+		B(1,2) = h(a, 1)*X(2, 1);
+		B(1,3) = h(a, 1)*X(3, 1);
 
 		B(2,1) = h(a, 2)*X(1, 2);
 		B(2,2) = h(a, 2)*X(2, 2);
 		B(2,3) = h(a, 2)*X(3, 2);
 
-		B(3,1) = h(a, 3)*X(1, 3);  
-		B(3,2) = h(a, 3)*X(2, 3);  
-		B(3,3) = h(a, 3)*X(3, 3);  
+		B(3,1) = h(a, 3)*X(1, 3);
+		B(3,2) = h(a, 3)*X(2, 3);
+		B(3,3) = h(a, 3)*X(3, 3);
 
-		B(4,1) = h(a, 2)*X(1, 1) + h(a, 1)*X(1, 2);  
-		B(4,2) = h(a, 2)*X(2, 1) + h(a, 1)*X(2, 2);  
-		B(4,3) = h(a, 2)*X(3, 1) + h(a, 1)*X(3, 2);  
+		B(4,1) = h(a, 2)*X(1, 1) + h(a, 1)*X(1, 2);
+		B(4,2) = h(a, 2)*X(2, 1) + h(a, 1)*X(2, 2);
+		B(4,3) = h(a, 2)*X(3, 1) + h(a, 1)*X(3, 2);
 
-		B(5,1) = h(a, 3)*X(1, 2) + h(a, 2)*X(1, 3);  
-		B(5,2) = h(a, 3)*X(2, 2) + h(a, 2)*X(2, 3);  
+		B(5,1) = h(a, 3)*X(1, 2) + h(a, 2)*X(1, 3);
+		B(5,2) = h(a, 3)*X(2, 2) + h(a, 2)*X(2, 3);
 		B(5,3) = h(a, 3)*X(3, 2) + h(a, 2)*X(3, 3);
 
-		B(6,1) = h(a, 3)*X(1, 1) + h(a, 1)*X(1, 3);  
-		B(6,2) = h(a, 3)*X(2, 1) + h(a, 1)*X(2, 3);  
+		B(6,1) = h(a, 3)*X(1, 1) + h(a, 1)*X(1, 3);
+		B(6,2) = h(a, 3)*X(2, 1) + h(a, 1)*X(2, 3);
 		B(6,3) = h(a, 3)*X(3, 1) + h(a, 1)*X(3, 3);
 
         
@@ -822,11 +822,11 @@ void calculateInternalForces(Solid* solid, VboManager* vbom)  {
     TetrahedralTLEDState *state = solid->state;
 	
 	// bind state as 1d texture with 4 channels, to enable cache on lookups
-	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float4>();	
+	cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float4>();
 	cudaBindTexture( 0,  Ui_t_1d_tex, solid->vertexpool->Ui_t, channelDesc );
 	
 	// bind mesh as 1d texture with 1 channel, to enable texture cache on lookups
-	cudaChannelFormatDesc channelDesc2 = cudaCreateChannelDesc<float>();	
+	cudaChannelFormatDesc channelDesc2 = cudaCreateChannelDesc<float>();
 	cudaBindTexture( 0,  V0_1d_tex, mesh->volume, channelDesc2 );
 
     // run kernel (BLOCKSIZE=128)
@@ -859,8 +859,8 @@ void calculateInternalForces(Solid* solid, VboManager* vbom)  {
 
 
 __global__ void
-updateDisplacements_k(float4 *Ui_t, float4 *Ui_tminusdt, float *M, 
-                      float4 *Ri, float4 *Fi, int maxNumForces, 
+updateDisplacements_k(float4 *Ui_t, float4 *Ui_tminusdt, float *M,
+                      float4 *Ri, float4 *Fi, int maxNumForces,
                       float4 *ABC, unsigned int numPoints)
 {
 	int me_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -899,8 +899,8 @@ void updateDisplacement(Solid* solid) {
 	int pointSize = (int)ceil(((float)solid->vertexpool->size)/BLOCKSIZE);
 	updateDisplacements_k
         <<<make_uint3(pointSize,1,1), make_uint3(BLOCKSIZE,1,1)>>>
-        (solid->vertexpool->Ui_t, solid->vertexpool->Ui_tminusdt, 
-         solid->vertexpool->mass, solid->vertexpool->externalForces, 
+        (solid->vertexpool->Ui_t, solid->vertexpool->Ui_tminusdt,
+         solid->vertexpool->mass, solid->vertexpool->externalForces,
          solid->vertexpool->pointForces, solid->vertexpool->maxNumForces,
          solid->vertexpool->ABC, solid->vertexpool->size);
     CHECK_FOR_CUDA_ERROR();
