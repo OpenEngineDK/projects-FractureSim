@@ -13,6 +13,8 @@ darcs-dev /projects/FractureSim fh.daimi.au.dk:/users/cgd/code/projects/Fracture
 darcs /extensions/SetupHelpers           http://openengine.dk/code/extensions/SetupHelpers
 darcs /extensions/HUD                    http://openengine.dk/code/extensions/HUD
 darcs /extensions/SDL                    http://openengine.dk/code/extensions/SDL
+darcs /extensions/SDLImage                    http://openengine.dk/code/extensions/SDLImage
+darcs /extensions/CairoResource                    http://openengine.dk/code/extensions/CairoResource
 darcs /extensions/OpenGLRenderer         http://openengine.dk/code/extensions/OpenGLRenderer
 darcs /extensions/TGAResource            http://openengine.dk/code/extensions/TGAResource
 darcs /extensions/OBJResource            http://openengine.dk/code/extensions/OBJResource
