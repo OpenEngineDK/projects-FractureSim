@@ -78,9 +78,13 @@
 \pagenumbering{alph} % so roman and arabic numbers start from 1 when used
 \pagestyle{empty}
 
+\input{titlepage}
+\cleardoublepage
+
 % title page
-\maketitle
+%\maketitle
 \thispagestyle{empty}
+
 
 %\input{cover_page}
 \cleardoublepage % to insure that the page numbering is correct
@@ -92,6 +96,7 @@
 \input{summary}
 %\thispagestyle{empty}
 \input{acknowledgement}
+\cleardoublepage
 \thispagestyle{empty}
 \input{readers_guide}
 \cleardoublepage
