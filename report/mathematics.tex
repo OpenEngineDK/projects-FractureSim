@@ -3,7 +3,7 @@
 \section{Linear Transformations}
 \label{sec:linear_transformation}
 A linear transformation, or linear mapping, is a function $f$ that maps
-one vector space into another with the property that\citebook{page~175}{book:leon}:
+one vector space into another with the property that \citebook{page~175}{book:leon}:
 
 \begin{equation}
 f(\alpha x + \beta y) = \alpha f(x) + \beta f(y)
@@ -18,7 +18,7 @@ applied. Consider point $a$, $b$ and $c$, the ratio $\frac{ \vert
   b-a\vert}{\vert c-b \vert}$ is preserved when using affine transformations.
 An affine transformation can be a translation, a rotation, a scaling,
 a shear or a combination hereof using matrix
-multiplication\citebook{page~2}{book:3d-games}.
+multiplication \citebook{page~2}{book:3d-games}.
 %
 A common form of a linear equation in two variables, $x$ and $y$ is 
 
@@ -477,7 +477,7 @@ the tensor in the primed coordinate frame. \\
 
 Since $P$ is an orthogonal transformation matrix defining a rotation,
 the inverse of the transformation equals its transposed matrix
-$P^T$ as defined equation \eqref{eq:inverse_equals_transposed}. So the stress tensor
+$P^T$ as defined equation \eqref{eq:inverse_equals_transposed}. So a tensor
 represented in the unprimed coordinate frame can be obtained by:
 
 % Def. bathe 2.64
@@ -571,8 +571,9 @@ shearing.
 As already explained in section \vref{sec:physics_strain} strain
 represents the amount of stretch or compression by the relative
 distance between two particles in the material body. Strain is a
-dimensionless quantity which can be decomposed into normal and
-shearing strain. Normal and shearing strain can be represented by a
+dimensionless quantity which can be decomposed into normal
+strain $\varepsilon$ and
+shearing strain $\gamma$. Normal and shearing strain can be represented by a
 second order tensor.
 Normal strain is the axial stretch or compression represented down the
 diagonal as if it was a scaling matrix. Shearing strain is represented
@@ -665,7 +666,7 @@ In continuum mechanics tensors are very useful for representing
 e.g. stress. As already explained in section \vref{sec:physics_stress}
 stress can be decomposed into normal ($\sigma$) and 
 shearing stress ($\tau$). In three dimensions the stress at any point
-in the continuum can be completely defined by the stress tensor:
+in the continuum is completely defined by the stress tensor:
 
 \begin{equation}
 \label{eq:stress_tensor}
@@ -691,7 +692,7 @@ It is often of interest to determine the directions of the resulting
 strains also known as the \defit{principal directions}. The sizes of the resulting
 strains acting in the principal directions are known as the
 \defit{principal values}. 
-Consider a
+Consider the
 strain tensor $E_E$ defining normal and shearing strain. When the
 tensor is represented on matrix form we recognize the normal strain
 in the axial directions down the diagonal just like a scaling matrix. The shearing is
@@ -1012,8 +1013,8 @@ v = \lambda v$. By inserting $\lambda = 2$ into equation
 -2x_1 + 2x_2 & = 0
 \end{align}
 
-By looking at the coefficients and signs of the vector components $x_1$
-and $x_2$ we see that the equation is satisfied with the base solution:
+Looking at the coefficients and signs of the vector components $x_1$
+and $x_2$ we see that the equations are satisfied with the solution:
 
 \begin{equation}
 \begin{bmatrix}

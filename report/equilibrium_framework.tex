@@ -5,7 +5,7 @@
 where the mathematical model describes conservation of something. It could be
 conservation of mass in fluids, conservation of current in electrical
 circuits, conservation of energy in solid mechanics, conservation of
-momentum in physics etc. Whenever the mathematical model describes a problem
+momentum in dynamics etc. Whenever the mathematical model describes a problem
 that involves an external conservation law, %taken from the world of physics, chemistry,
 %engineering or elsewhere, 
 the particular problem is within the set of
@@ -74,10 +74,10 @@ by $u_1$, $u_2$, and $u_3$. \\
 
 When the gravitational force acts on the masses it causes each separate spring to
 react. The internal spring forces are represented by $w_1$, $w_2$,
-$w_3$, and $w_4$. A positive $w_i$ value is defined to be stretch and
-a negative value is compression. For each spring we define a connecting quantity
-$e_1$, $e_2$, $e_3$ and $e_4$ one for each elongation of the spring. \\
-
+$w_3$, and $w_4$. For each spring we define a connecting quantity
+$e_1$, $e_2$, $e_3$ and $e_4$ one for each elongation of the spring. A
+positive $e_i$ value is defined to be stretch and a negative value is
+compression. \\
 
 % The mass displacements $u_i$ and the internal spring forces $w_i$ are the primary
 % unknowns we want to determine. There is some constitutive 
@@ -107,8 +107,8 @@ $u$ to an elongation vector $e$.
 Figure \vref{fig:basic_ep_framework} illustrates how the different
 quantities can be related by matrices. This is what forms the significant structure
 of the framework used all over the field of applied mathematics. We
-are about to describe the fundamental framework for
-equilibrium steady state problems. \\
+are about to describe the fundamental equilibrium framework for
+steady state problems. \\
 
 \subsection{Relating Displacements to Elongations}
 We will begin by constructing matrix $A$. This is the question of
@@ -247,21 +247,21 @@ The last relation that will take us all the way around the framework
 is the one between the internal 
 forces $w$ and the external forces $f$. This is where the state of
 equilibrium is represented by a key equation, in this case the equation
-describes the conservation of forces as described by definition
+describing conservation of forces defined by definition
 \vref{static-equilibrium}.\\
 
 We need to find the relation between the internal and external
 forces. When the system has reached its state of equilibrium all
 springs and masses have stopped moving, therefore the internal and external
 forces must cancel out. The only external force in this
-system is the gravity acting on each of the three masses, obtained by:
+system is gravity acting on each of the three masses, obtained by:
 
 \begin{equation}
 \label{eq:force_eq_mass_times_gravity}
 f_i = m_i \ g
 \end{equation}
 
-where $g$ is the gravity and $i \ \epsilon \ \lbrace 1,2,3
+where $g$ is gravity and $i \ \epsilon \ \lbrace 1,2,3
 \rbrace$.\\
 
 Consider figure \vref{fig:basic_spring_mass_problem} and look at the
@@ -443,9 +443,9 @@ c_1 &  &  &  \\
 The matrix $A^T C A$ represents the connections and their properties
 in the system. In the domain of solid
 mechanics matrix $A^T C A$ is also known as the 
-\defit{stiffness} matrix. The stiffness matrix $K$ with spring constants
+\defit{stiffness matrix}. The stiffness matrix $K$ with spring constants
 $c_i = 1$ corresponding to the
-system as illustrated in
+system, as illustrated in
 figure \vref{fig:basic_spring_mass_problem} is obtained by:
 
 \begin{equation*}
@@ -549,7 +549,7 @@ there is movement, the potential energy is positive.
 %
 $A \ x = 0$ only in the case where $x=0$ so when there is no movement
 ($x=0$), which is the case in the initial configuration, the potential
-energy equals $0$.\\ 
+spring energy equals $0$.\\ 
 
 
 %\textbf{Positive semi-definite stiffness matrix}\\

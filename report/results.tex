@@ -30,7 +30,7 @@ the size of the problem domain.
 %geared towards testing the performance of the
 %physics module.
 %
-The execution time for a single iteration of the physics module is
+The execution time for a single iteration of the finite element solver is
 highly dependent on the geometry, but independent of the
 material parameters being used.
 %
@@ -44,11 +44,11 @@ material parameters being used.
 % the final task of adding the force contributions together dependents
 % on how many interconnected nodes there is.
 %
-To illustrate the relation between the execution time of the physics
-module and the size of the problem domain we have measured the time
-it take to perform $10^6$ iterations with different models varying in
+To illustrate the relation between the execution time of the finite element
+solver and the size of the problem domain we have measured the time
+it take to perform $10^6$ iterations with different models varying the
 number of body elements. The average execution time for a single
-iteration recorded and plotted as a function of the number of
+iteration is recorded and plotted as a function of the number of
 elements.
 % 
 % To get an idea of how the dependency develops as a function of the
@@ -84,7 +84,7 @@ The execution time was measured using the high precision timer
     tooth                           & 2264 &   667 &  61.09 \\
     tooth with 33\% slice           & 3796 &  1049 &  96.24 \\
     bar $5 \times 5 \times 5$       & 1619 &  4658 & 137.57 \\
-    sphere                          &  119 &  2393 & 256.11 \\
+%    sphere                          &  119 &  2393 & 256.11 \\
     test tooth high resolution      & 2763 &  8819 & 262.38 \\
     bar $2.5 \times 2.5 \times 2.5$ & 6297 & 21809 & 726.29 \\
     \hline
@@ -137,7 +137,7 @@ with a standard asymptotic error of $2.619\%$.
 %
 The graph clearly shows that we have a linear dependence
 between the geometry size and the time it takes to execute an iteration
-of the physics module. We expect this linear dependence to hold until
+of the finite element solver. We expect this linear dependence to hold until
 the mesh data exceeds the memory limit of the graphics card.
 
 % \subsection{Scaling the model}
@@ -152,15 +152,14 @@ requirement on the governing equation. The requirement imposes a
 critical time step limit, denoted $\Delta t_{cr}$, which must
 be met for the system to be stable.
 %
-This means that the times step we use to extrapolate the physics
-module must be smaller than $\Delta t_{cr}$, for the physics module to
-be stable.
+This means that the times step we use to iterate the finite element
+solver must be smaller than $\Delta t_{cr}$, for the solution to be
+stable.
 %
-If we also want the physics module to run in real-time, we
-must compute one iteration of the  physics faster than
-$\Delta t_{cr}$.
+If we also want the finite element solver to run in real-time, we must
+compute one iteration of the solver than $\Delta t_{cr}$.
 %
-The conclusions is: If we want the physics module to be
+The conclusions is: If we want the finite element solver to be
 stable and run in real-time, then we must have:
 $\Delta t_{sim} \le  \Delta t_{cr}$.
 %
@@ -308,7 +307,7 @@ In this test scenario we are interested in comparing the simulated
 deformation with the theoretical deformation calculated
 by hand. The scenario is a beam fixed in one end and stretched by a
 displacement modifier in the other end. The direction of the stretch 
-is parallel to the x-axis. \\
+is parallel to the $x$-axis. \\
 
 % elasticity
 As explained in section \vref{sec:elastic-deformation} elastic
@@ -323,13 +322,13 @@ elasticity is defined by (equation
 
 \begin{equation*}
   E =  \frac{\mbox{normal stress}}{\mbox{normal strain}}
-  = \frac{\sigma_x}{\varepsilon_x}
+  = \frac{\sigma}{\varepsilon}
   \qquad \Leftrightarrow \qquad
-  \varepsilon_x = \frac{\sigma_x}{E}
+  \varepsilon = \frac{\sigma}{E}
 \end{equation*}
 
 As mentioned in section \vref{sec:tled_solver} we use the
-Green-Lagrange strain measure $^t_0E$ 
+Green-Lagrange strain measure $^t_0E_{GL}$ 
 with the second Piola-Kirchoff stress measure $^t_0S$ instead of
 normal stress and strain. In section \vref{sec:elasticity} we assumed
 that the relation between stress and strain is linear since brittle
@@ -365,14 +364,14 @@ strain tensor as defined in equation
 
 % Green-Lagrange strain tensor
 \begin{equation*}
-^t_0E = \frac{1}{2}(^t_0C - I)
+^t_0E_{GL} = \frac{1}{2}(^t_0C - I)
 \end{equation*}
 
 By using the technique described in section
 \vref{sec:principal_values_and_directions} we determine the maximum
 principal strain value by solving the eigenproblem for the symmetric
-tensor $^t_0E$. By applying axial stretch along the positive
-x-direction in the global coordinate frame, the maximum principal
+tensor $^t_0E_{GL}$. By applying axial stretch along the positive
+$x$-direction in the global coordinate frame, the maximum principal
 strain direction will also be oriented this way. \\
 
 % measures on the second piola-kirchoff stress tensor
@@ -385,7 +384,7 @@ equation \eqref{eq:second_piola_kirchoff_tensor} on page
 \pageref{eq:second_piola_kirchoff_tensor}, repeated below:
 
 \begin{equation*}
-^t_0S_{ij} = \mu(\delta_{ij} - ^t_0C_{ij}^{-1}) + \lambda \ ^tJ \ (^tJ-1) \ ^t_0C_{ij}^{-1}
+^t_0S_{ij} = G(\delta_{ij} - ^t_0C_{ij}^{-1}) + \lambda \ ^tJ \ (^tJ-1) \ ^t_0C_{ij}^{-1}
 \end{equation*}
 
 Using a similar approach as with the strain value, we solve the
@@ -405,7 +404,7 @@ figure \vref{fig:results_stress_strain_curve}.
 \label{fig:results_stress_strain_curve}
 \end{figure}
 
-The relation is obviously non-linear, but as seen on the x-axis the
+The relation is obviously non-linear, but as seen on the $x$-axis the
 Green-Lagrange strain measure reaches $1.5$. The Green-Lagrange
 strain measure is non-linear so physically a measure of $1.5$ means
 the beam has been stretched twice its original length. A brittle material like dentin
@@ -683,7 +682,7 @@ of a tooth with a groove drilled halfway through. Due to the groove
 the object must be weakened in this area and is therefore expected to
 fracture somewhere close to this. The bottom of the tooth mock-up is fixed
 while forces are being applied gradually at the top pushing the object
-to the right. Again we use dentin as the material ($E = 12 \cdot 10^9$):
+to the right. Again we use dentin as the material ($E = 12 GPa$):
 
 \begin{figure}
   \begin{minipage}[b]{0.5\linewidth}
@@ -913,7 +912,7 @@ affect the outcome of the crack tracking algorithm. The illustrations
 to the left in figure \vref{fig:crack_tracking_different_density}
 show the crack propagation in a tooth with the correct density
 simulated in somewhat slow-motion. The illustrations to
-the right are conducted with a density increase of $10^6$:
+the right are conducted with a density increase of a factor of $10^6$:
 
 \begin{figure}
   \begin{minipage}[b]{0.5\linewidth}

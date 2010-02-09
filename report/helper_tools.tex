@@ -20,8 +20,8 @@ selection is used. Nodes inside the volumetric shape are in the set of
 selected nodes. During simulation a specified action is applied to the
 set of selected nodes.
 %
-The modifiers vary in the way they interact with the physics
-system. The following modifiers types will be introduced:
+The modifiers vary in the way they interact with the selected
+nodes. The following modifiers types will be introduced:
 
 \begin{itemize}
 \item Fixed Displacement Modifier
@@ -127,14 +127,13 @@ as explained next.
 \begin{figure}
   \centering
   \includegraphics[width=12cm]{./images/helper_tools_modifiers_restrictive.png}
-\caption{Gravitational force acts on the beam supported in both ends.}
+\caption{Beam supported in both ends.}
 \label{fig:modifier_restrictive}
 \end{figure}
 
-Figure \vref{fig:modifier_restrictive} illustrates the gravitational
-force acting on the beam supported by two restrictive displacement
-modifiers. The selection tool occupying the restrictive space is
-always visualized by a yellow color.  
+Figure \vref{fig:modifier_restrictive} illustrates a beam supported by
+two restrictive displacement modifiers. The selection tool occupying
+the restrictive space is always visualized by a yellow color.  
 
 \subsection{Projection Displacement Modifier}
 The \defit{projection displacement modifier} is an extension to the
@@ -260,7 +259,7 @@ A color ramp can be illustrated as in
 figure \vref{fig:cr-box}. The edge length of the box is one hereby
 limiting each RGB component range to be between $0$ and $1$.
 The black emphasized line in the figure illustrates the hot-to-cold
-color ramp. All values are mapped to this line hereby being mapped
+color ramp. All values are mapped to this line hereby transforming
 a scalar value to three vector components. 
 
 \begin{figure}
@@ -270,7 +269,7 @@ a scalar value to three vector components.
 \label{fig:cr-box}
 \end{figure}
 
-The principal stress is mapped to at color within the range of the
+The principal stress is mapped to a color within the range of the
 material dependent tensile strength ($\sigma^+_F$) and compressive
 strength ($\sigma^-_F$). Zero stress is green, stress above
 $\sigma^+_F$ is clamped to blue and stress below $\sigma^-_F$ to red.
@@ -309,12 +308,12 @@ representation and the obvious orientation.
 \end{figure}
 
 The nose of the airplane is pointing in the maximum
-principal direction and the wings are aligned the medium principal
+principal direction and the wings are aligned to the medium principal
 direction.
 %
 Any polygon model can be used for visualizing the stress tensors, but
 since the absolute coordinates of the visual entity for every tensor
-is being represented the memory usage quickly becomes an issue. The visual
+is being represented, the memory usage quickly becomes an issue. The visual
 entity for each stress tensor is represented separately to facilitate parallel
 execution of the matrix calculations necessary for orienting and
 locating the geometry in space. By doing so the calculations and the
@@ -373,7 +372,7 @@ The transformation matrix is an
 affine matrix representing both rotation and translation as defined in
 section \vref{sec:linear_transformation}.
 %
-The rotation matrix must align its x- and y-axis with the
+The rotation matrix must align its $x$ and $y$ axis with the
 maximum and medium principal direction of the stress tensor, respectively.
 As explained in section
 \vref{sec:principal_values_and_directions} finding the principal
@@ -389,9 +388,9 @@ space oriented according to
 the principal directions. From the orthonormal
 basis we can construct an affine linear rotation matrix simply by
 inserting the eigenvectors into a transformation matrix $T^e$. Assuming
-that the nose of the airplane points in the positive x-axis the vector
+that the nose of the airplane points in the positive $x$-axis the vector
 representing the maximum principal direction is used as the 
-base vector defining the x-axis. The maximum principal direction is
+base vector defining the $x$-axis. The maximum principal direction is
 inserted as row vector $[e_{11}, e_{12}, e_{13}]$ in matrix $T^e$,
 $[e_{21}, e_{22}, e_{23}]$ and  $[e_{31}, e_{32}, e_{33}]$ become the medium and
 minimum principal direction, respectively. The center of mass for each

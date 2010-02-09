@@ -164,18 +164,18 @@ U_z(x,y,z)
 \end{Bmatrix}
 = N U =
 \begin{Bmatrix}
-  L_1(x,y,z) U_x^{1} + L_2(x,y,z) U_x^{2}
-  + L_3(x,y,z) U_x^{3} + L_4(x,y,z) U_x^{4}
+  L_1(x,y,z) u_x^{1} + L_2(x,y,z) u_x^{2}
+  + L_3(x,y,z) u_x^{3} + L_4(x,y,z) u_x^{4}
 \vspace{2mm}\\
-  L_1(x,y,z) U_y^{1} + L_2(x,y,z) U_y^{2}
-  + L_3(x,y,z) U_y^{3} + L_4(x,y,z) U_y^{4} 
+  L_1(x,y,z) u_y^{1} + L_2(x,y,z) u_y^{2}
+  + L_3(x,y,z) u_y^{3} + L_4(x,y,z) u_y^{4} 
 \vspace{2mm}\\
-  L_1(x,y,z) U_z^{1} + L_2(x,y,z) U_z^{2} 
-  + L_3(x,y,z) U_z^{3} + L_4(x,y,z) U_z^{4}
+  L_1(x,y,z) u_z^{1} + L_2(x,y,z) u_z^{2} 
+  + L_3(x,y,z) u_z^{3} + L_4(x,y,z) u_z^{4}
 \end{Bmatrix}
 \end{equation}
 
-where $L_i$ is given by equation \eqref{eq:li}.
+where $L_i$ is given by equation \eqref{eq:li} on page \pageref{eq:li}.
 
 \section{Finding the Element Properties}
 %going ... to describe the relation of external forces and nodal
@@ -188,7 +188,7 @@ displacement to strain, stress to strain via the theory of
 elasticity, and finally we convert stress and strain into potential
 energy. The goal in this section, is to construct a function
 that describes the potential energy of an element in terms of its nodal
-displacements $U$. The equation for potential energy is defined
+displacements $U$. The equation for potential energy $\Pi$ is defined
 to be the potential energy of the work done by the external forces
 ($E_V$) and the internal strain energy ($E_S$).
 
@@ -211,7 +211,7 @@ E_S =  \int_V \varepsilon \cdot \sigma \ dV
 Instead of using the dot product notation we will use transposed
 matrices from here on. Furthermore, the four $3 \times 1$ vectors,
 stress ($\sigma$ and $\tau$) and strain ($\varepsilon$ and $\gamma$),
-have been combined into two $6 \times 1$ vectors, and use the per
+have been combined into two $6 \times 1$ vectors, and we use the per
 element displacement and force vectors $U$ and $F$, which look like
 this:
 
@@ -434,30 +434,34 @@ terms \citebook{page~263}{book:fem-engineers}:
 \begin{aligned}
 E_S (x,y,z) 
 &= \int_V U^T B^T C B U \ dV 
-= U^T B^T C B U \int_V dV \\
-&= U^T B^T C B U V 
-= U^T V B^T C B U
+= U^T B^T C B U \int_V dV
+= U^T B^T C B U V 
 \end{aligned}
 \end{equation}
 
 now defining the stiffness matrix to be:
 
 \begin{equation}
-K^{(e)} = V B^T C B
+K = B^T C B
 \end{equation}
 
 the function becomes:
 
 \begin{equation}
-E_S (x,y,z) = U^T K U
+E_S (x,y,z) = U^T K U V
 \end{equation}
 
 Inserting this into the function for potential energy and solving
 the integration of external force as above, gives:
 
 \begin{equation}
+\begin{aligned}
 \label{eq:linear-sys-eq}
-\prod (x,y,z) = E_S(x,y,z) - U^T F \int_V dV = U^T K U - U^T F V
+\prod (x,y,z)
+&= E_S(x,y,z) - U^T F \int_V dV
+= U^T K U V - U^T F V \\
+&= (U^T K U - U^T F) V
+\end{aligned}
 \end{equation}
 
 To get an impression and overview of the equation sizes we list the
@@ -482,7 +486,7 @@ of the complete system will then have a force vector $F$: $70 \times
 1$ and $U$: $70 \times 1$. The stiffness matrix for the system will
 then be $70 \times 70$ in size.
 %
-The example above is relatively small compared with the models we are
+This example is relatively small compared with the models we are
 using. The number of elements in our models range from 1000 to 10000
 elements.
 %
@@ -493,7 +497,7 @@ elements.
 %265 sum N - i,j,k
 
 \section{Imposing the Boundary Conditions}
-Because the number of unknowns in the system are larger that then
+Because the number of unknowns in the system are larger that the
 number of equations, we need to impose boundary conditions, so it is
 possible to solve the system.
 %
@@ -540,7 +544,7 @@ equations have to be differentiated \citebook{page~85-87}{book:bathe}.
 in our case, repeated from equation \eqref{eq:linear-sys-eq}:
 
 \begin{equation*}
-\prod (x,y,z) = U^T K U - U^T F V
+\prod (x,y,z) = (U^T K U - U^T F) V
 \end{equation*}
 
 by applying equation \eqref{eq:dp-eq-zero} this becomes:
@@ -559,8 +563,8 @@ K U = F
 %an equation with this appearance is sed
 This equation relates displacements to external forces via the
 stiffness matrix. The stiffness matrix describes physical laws of the
-problem we are modelling. The stiffness matrix could model any
-problem, making this equation general. Therefore equation
+problem we are modelling, and could model any
+problem, making this equation very general. Therefore equation
 \eqref{eq:std-fem-eq} is called the
 \defit{standard finite element equation}.
 
@@ -611,8 +615,8 @@ In general implicit or explicit methods are used when obtaining
 numerical solutions to time-dependent problems involving partial
 differential equations. Basically explicit methods calculate the next
 system state based on the current, whereas implicit
-methods solve an equation from the current system state. If $B(t)$
-is the current system state at time $t$ and 
+methods solve a system of equations involving the current and the next system
+state. If $B(t)$ is the current system state at time $t$ and 
 $B(t + \Delta t)$ is the next system state at time $t$ plus a time
 step $\Delta t$ then an explicit method would obtain the next 
 system state by:
@@ -631,7 +635,7 @@ The implicit method requires extra computations when solving the
 equation but since $G$ is a function of both the current and the next system
 state, it is possible to find solutions using
 large time steps. Implicit integration methods tends to be unconditionally numerically
-stable (with a few exceptions) whereas the explicit method is not. The explicit methods are
+stable (with a few exceptions) whereas explicit methods are not. The explicit methods are
 only conditionally stable because the numerical error increases along
 with the size of the time step. The \defit{central difference method} is an
 explicit method that is very effective in the solution of certain
@@ -680,26 +684,26 @@ this section. \\
 
 % Explicit
 The central difference method is used for the explicit time
-integration scheme which allows us to perform calculations
-separately for each element. This makes the 
+integration scheme. Explicit integration schemes allow us to perform
+calculations separately for each element. This makes the 
 solving technique highly suitable for parallel execution. 
 
 \subsubsection{Solution Method}
 The solving technique used is developed for high-speed non-linear finite
 element analysis of soft materials by \citeabook{article:tled}, their work
 is based on methods 
-presented by \citeabook{article:miller}. The key contribution made to the
+presented by \citeabook{article:miller}. The key contribution made
+compared to the
 previous work done by \citeabook{article:miller} is mainly performance
 improvements, e.g. a solution scheme for
 solving finite element equations in parallel. To gain an overview of
 the solution method we will start by briefly introduce the
 equations used and how they are related. \\
 
-The solver works in an iterative way and
-by the end of each iteration we obtain a solution to the equilibrium
-of the body as defined in equation
+The solver works in an iterative way and by the end of each iteration
+we obtain equilibrium of the body as defined in equation
 \eqref{eq:damped_harmonic_motion_nonlinear}. The solution 
-is the displacement of each node in each element of the body. \\
+to this equation is a displacement of each node in the body. \\
 
 \subsubsection*{Notation}
 Throughout this section the following notation is used.
@@ -870,7 +874,7 @@ to the identity matrix.
 An important property of the deformation gradient is that it can
 always be decomposed into a unique product of two matrices, a
 symmetric stretch matrix $^t_0Q$ and an orthogonal matrix $^t_0R$
-corresponding to a rotation such that\citebook{page~508}{book:bathe}:
+corresponding to a rotation such that \citebook{page~508}{book:bathe}:
 
 \begin{equation}
 ^t_0X = \ ^t_0R \ ^t_0Q
@@ -890,7 +894,7 @@ and rotation. This is the reason why the identity matrix is added in
 \eqref{eq:deformation_gradient_tensor} or else the tensor would
 be all zeros as a result of zero displacement ($^t\partial U_d$ =
 0). The zero-tensor would eliminating the transformational properties
-and as we shall see later result in a density of zero.
+and as we shall see result in a density of zero.
 
 \subsubsection*{Measure of Volume Change}
 The determinant of the deformation gradient is a measure of the volume
@@ -900,6 +904,7 @@ volume can change, we refer to this as the density ratio given
 by: 
 
 \begin{equation}
+\label{eq:volume_change}
 \frac{^0\rho}{^t\rho} = \ ^tJ = det(^t_0X)
 \end{equation}
 
@@ -920,7 +925,7 @@ configuration to a deformed configuration. Although the deformation gradient def
 previously is a measure of deformation from the initial configuration
 to a deformed configuration, it cannot be used directly for
 strain measures because it contains rigid body rotations. A
-deformation gradient has the same properties as a rotation matrix. 
+deformation gradient has some of the same properties as a rotation matrix. 
 A rotation followed by its inverse leads to no change, the inverse of
 an orthogonal rotation matrix equals its transpose, 
 (RR$^{T}$ = R$^{T}$R = 1 see section \vref{sec:basic_math_rotation},
@@ -958,16 +963,16 @@ a deformed configuration.
 % {\it linear} and suitable for small deformations. \\
 
 The \defit{Green-Lagrange strain tensor} is a non-linear strain
-measure based on the Cauchy-Green deformation tensor.
+measure based on the Right Cauchy-Green deformation tensor.
 Multiplying the deformation gradient with its transpose
 \eqref{eq:right_cauchy_green} eliminates the rotation, but at the 
 same time the change in strain length is squared which makes it a
 \defit{non-linear} strain measure. Non-linear strain measures are suitable
 for both small and large deformations. If the time step is small (much
-smaller than unity) the non-linear terms in the Cauchy-Green
+smaller than unity) the non-linear terms in the Right Cauchy-Green
 deformation tensor become negligible and the strain measure reduces
 to a linear expression \citebook{page~215}{book:modeling_metal_fem}.
-The Cauchy-Green deformation tensor is defined with respect to the
+The Right Cauchy-Green deformation tensor is defined with respect to the
 initial configuration, hence the Green-Lagrange strain tensor is on
 total Lagrangian formulation:   
 
@@ -981,7 +986,7 @@ total Lagrangian formulation:
 \subsubsection*{Second Piola-Kirchoff Stress Tensor}
 \label{sec:second_piola_kirchoff_stress_tensor}
 % % Second Piola-Kirchoff stress tensor
-With the Cauchy-Green deformation tensor and the Green-Lagrangian
+With the Right Cauchy-Green deformation tensor and the Green-Lagrangian
 strain tensor in place we can derive a measure of stress. 
 As mentioned earlier the \defit{Second Piola-Kirchoff stress} is
 work-conjugate with the Green-Lagrangian strain tensor
@@ -1027,13 +1032,13 @@ Kronecker's delta, defined by:
       \mbox{if } i \ne j \end{matrix}\right. 
 \end{equation}
 
-The inverse of the Cauchy-Green deformation tensor is denoted
+The inverse of the Right Cauchy-Green deformation tensor is denoted
 $^t_0C^{-1}$, and $^tJ$ is the determinant of the
 deformation gradient tensor at time $t$.
 %
 The terms in equation \eqref{eq:second_piola_kirchoff_tensor} defining
 the second Piola-Kirchoff stress do not seem to have a 
-direct relation to the physical interpretation
+direct physical interpretation
 \citebook{page~134}{book:continuum-mechanics-anthony}. The intuition behind a strain
 measure can be related directly to the physical stretches of the
 material fibers, the second Piola-Kirchoff stress on the other hand is
@@ -1061,17 +1066,11 @@ The strain displacement matrix $^t_0B^{e}$ relates the strain in
 element $e$ to the element's nodal displacements as defined by
 equation \eqref{eq:strain_interpolation_matrix} on page
 \pageref{eq:strain_interpolation_matrix}. 
-The strain displacement 
-matrix is defined for each element and represented as a $6 \times 12$
-matrix as defined in \eqref{eq:strain_interpolation_matrix} on page
-\pageref{eq:strain_interpolation_matrix}. 
-%
-The strain measure is defined for each element, while the strain
-displacement matrix is defined for 
-each node in each element. The strain displacement matrix applies a
-linear transformation, with translation and rotation, to each node.
-The initial strain displacement matrix for the $a^{th}$ node in an
-element is defined as:
+The strain displacement matrix is defined for each element and
+represented as a $6 \times 12$ matrix. The strain displacement matrix
+applies a linear transformation, with translation and rotation, to
+each node. The initial strain displacement matrix for the $a^{th}$
+node in an element is defined as:
 
 \begin{equation}
 _0B^{e}_{a} = \
@@ -1083,7 +1082,10 @@ _0B^{e}_{a} = \
   _0N_{a,3} & 0 & _0\partial N_{a,1} \\
   0 & _0\partial N_{a,3} & _0\partial N_{a,2} \\
 \end{bmatrix} 
-\ \ (a = 1,2,....,n)
+\begin{aligned}
+\ \ &(e = 1,2,\dots,n) \\
+\ \ &(a = 1,2,\dots,4)
+\end{aligned}
 \end{equation} \\
 
 where $_0\partial N_{a,i}$ with subscript $a$ and $i$ denotes the partial
@@ -1100,20 +1102,24 @@ Since the geometrical function can change over time we need to update
 the strain displacement matrix. Using the constant strain displacement
 matrix $_0B^{e}_{a}$ and the current deformation gradient
 $^t_0X$ we obtain the updated strain displacement matrix
-$_0B^{e}_{a}$ by:
+$^t_0B^{e}_{a}$ by:
 
 \begin{equation}
 \label{eq:strain-displacement-updated}
 ^t_0B^{e}_{a} = \ _0B^{e}_{a} \ ^t_0X^T
-\hspace{10mm} \ \ (a = 1,2,....,n)
+\hspace{10mm}
+\begin{aligned}
+\ \ &(e = 1,2,\dots,n) \\
+\ \ &(a = 1,2,\dots,4)
+\end{aligned}
 \end{equation}
 
 \subsubsection*{Nodal Force Contributions}
 \label{sec:nodal_force_contributions}
 The internal stresses and the strain displacements have been obtained so
-now we can derive the nodal force contributions $\tilde{P}$. The nodal force is
-calculated for each node in each element. The four nodal
-forces are obtained by: 
+now we can derive the per element nodal force contributions
+$\tilde{P}$. The per element nodal force is calculated for each node
+in each element. The four nodal force vectors are obtained by: 
 
 \begin{equation}
 \label{eq:force_contributions}
@@ -1160,13 +1166,13 @@ the current and previous displacement matrix, respectively.
 % nodal forces have been computed the next displacement vector
 % $^{t+\Delta t}U$ can be computed. \\
 Since the mass and
-damping matrices are constant the following vectors on page
+damping matrices are constant the following matrices on page
 \pageref{eq:vector_component_abc} can be pre-calculated 
 hereby simplifying equation \eqref{eq:displacement-vector-component-wise}:
 
 \begin{equation}
 \label{eq:displacement-vector-reduced}
-^{t+\Delta t}U_i = A_i(^tR_i - \ ^tF_i) + B_i \ ^tU_i + C_i \ ^{t-\Delta t}U_i
+^{t+\Delta t}U_i = A_i(^tP_i - \ ^tF_i) + B_i \ ^tU_i + C_i \ ^{t-\Delta t}U_i
 \end{equation}
 
 \begin{equation}
@@ -1402,7 +1408,7 @@ initiating the crack. Finding the maximum principal stress means
 solving the eigenproblem as explained in section
 \vref{sec:principal_values_and_directions}. The maximum principal
 stress direction defines the normal vector to the initial crack
-plane. This means the orientation of the initial crack plane is only
+plane. This means the orientation of the initial crack plane is completely
 determined by the maximum principal stress direction.
 
 
@@ -1431,11 +1437,11 @@ As depicted in figure \vref{fig:crack_configurations} case (a) the
 crack plane has no predefined neighbouring edges and is therefore
 determined by the maximum principal stress direction alone. When the crack
 has been initiated the following crack planes depend on the
-element's neighbourhood. Case (b)
+element's neighbours. Case (b)
 illustrates an element about to be 
-cracked. In this case the cracked neighbour defines two crack points
+cracked. In this case a cracked neighbour defines two crack points
 that must be located on the crack plane we are about to determine. The
-new crack plane is only free to rotate around the edge defined by the
+new crack plane is only free to rotate around this edge defined by the
 two neighbouring crack points.
 The new normal vector $n^{\prime}$ to the plane is determined by the principal stress
 direction $n$ and the shared edge defined between crack point $A$ and $B$,
@@ -1450,6 +1456,7 @@ neighbouring crack planes. With two or more neighbouring edges the
 plane normal is completely determined and the element's maximum
 principal stress direction is not considered. Case (a) initiates the
 crack which only happens once. From here the crack propagates by
-cracking all neighbours in the next iteration, and their neighbours in
-the next etc. This way the failure surface will propagate like rings
-in the water, from the initial cracked element and out. 
+cracking this element's neighbours in the next iteration, and their
+neighbours in the next etc. This way the failure surface will
+propagate like rings in the water, from the initial cracked element
+and out. 

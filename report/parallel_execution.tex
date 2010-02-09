@@ -41,7 +41,7 @@ called GPGPU programming.
 %
 GPGPU programming has been done for quite a while now. The beginning was
 a sort of misuse of the original APIs for the GPU. Programmers wrote
-their applications in shader languages, which originally were intended
+their applications in \defit{shader languages}, which originally were intended
 for producing graphical effects as part of the visualization.
 %
 As GPGPU programming has spread, new initiatives towards making a
@@ -374,8 +374,8 @@ single memory transaction of 32, 64 or 128 bytes
 \citebook{page~82}{book:cuda-pg}.
 %
 This means that if the threads are using memory cells located
-next to each other in an array the memory for all the threads
-can be fetched in one transaction or block copied of the memory.
+next to each other in an array, the memory for all the threads
+can be fetched in one transaction or block copied of the global memory.
 %
 To facilitate this we use the same memory allocation scheme as 
 \citebook{page~55-56}{Rasmusson2008}. Instead of allocating

@@ -16,7 +16,7 @@ evaluation basis for a dentist, improvements must be made.
 It would be very helpful to get evaluation feedback from a dentist
 especially on the sense of touch when the fragmentation is
 performed. Analysing the fragments of the tooth by comparing the
-simulated fragmentation to actual tooth fragments could be very
+simulated fragmentation to actual tooth fragments could also be very
 interesting. \\
 
 % Shape function
@@ -30,7 +30,7 @@ coordinates instead of global.
 %
 The geometry of the
 elements are represented by floating point numbers which have a
-relative representation error\citebook{page~9}{notes:oleby}. So the
+relative representation error \citebook{page~9}{notes:oleby}. So the
 error increases with the distance from origo of the global coordinate
 system. By translating the geometry of
 the elements into origo and scaling it to unity the error can be
@@ -52,18 +52,18 @@ object are displaced until they are free of collision. At the point of
 contact between tool and object all forces are applied through
 deformation of the object's surface. Using brittle
 materials even the slightest deformation causes a huge amount of
-internal stress which makes the interaction between tool and object
+internal stress, which makes the interaction between tool and object
 difficult. When the tool touches the surface of the object in a way
 that seems very gently on the screen, the small surface deformation is
 actually causing the object to fracture immediately. This would
 probably be the correct response if we did hit the object with a sharp
 tool using great force, but this is not the case here. Basically the
 problem is the method used when applying the forces as
-displacement. By displacing the surface elements at the
+displacement. By displacing the surface elements, at the
 point of contact the internal forces peak in a single iteration before
 they get the chance to propagate to neighbouring elements over
-multiple iterations. This has to do with the parallel approach
-used. Since each element is solved in parallel they only interact when
+multiple iterations. This has to do with the explicit approach
+used. Since each element is solved explicit they only interact when
 nodal force contributions are added at the end of each
 iteration. Therefore forces needs to propagate through the elements
 over multiple iterations.
@@ -98,7 +98,7 @@ poorly.
 %
 It performs poorly because the internal stress has not propagated
 properly from the point of impact and throughout the element mesh.
-As a result the magnitude of the principal stress values is
+As a result some elements have a magnitude of the principal stress values is
 alternating around zero. This causes the maximum principal stress
 direction to alter between the three principal directions in a more or
 less random manner.

@@ -122,11 +122,9 @@ Now that the wisdom tooth has been exposed from both the surrounding
 tissue and jawbone, the dentist can move on and prepare a controlled
 fragmentation of the tooth. The fragmentation must carefully separate
 the crown of the tooth from its roots as illustrated by the red line
-in figure \vref{fig:groove_line}.
-A straight groove is drilled along the red line, as illustrated on figure
-\vref{fig:groove_line}. The groove is approximately
-5 millimeters deep, or one third of the tooth, and located right below
-the crown. 
+in figure \vref{fig:groove_line}. A straight groove is drilled along
+the red line. The groove is approximately 5 millimeters deep, or one
+third of the tooth, and located right below the crown. 
 
 \begin{figure}
   \centering
@@ -200,8 +198,8 @@ possible, would be a solution.
 However intuition tells us that it is probably impossible to represent and 
 simulate the physical laws for such small units. Let us consider atoms
 as the basic unit of matter, the nucleus diameter of an atom is about $10^{-15}$
-meter. Even for a small object like a tooth the amount of units to
-be represented would be billions, easily exceeding the computer
+meter. Even for a small object like a tooth the number of atoms needed
+to represent it would be in billions, easily exceeding the computer
 resources available. A discrete method must be used in order to
 facilitate computation of the problem domain. 
 
@@ -289,7 +287,7 @@ It is no surprise that different materials behave very
 differently. Dropping a glass vase on the floor would probably break
 it while a rubber ball would bounce back without a scratch. What might
 be a surprise to some, is the rather complex physical theory behind
-this. The answer to why some materials are able to undergo change in form without
+this. The answer to why some materials are able to undergo change in shape without
 breaking and others are not, lies in the structure of the
 molecules. Since representing a material on the level of molecules
 would exceed the computational resources, this phenomenon must somehow be
@@ -297,11 +295,11 @@ represented on a higher level.  \\
 
 % Energy and elasticity
 A rubber ball can deform into an ellipsoid and still return to its
-original form. In physics elasticity is the property that
+original shape. In physics elasticity is the property that
 makes a material deform due to external forces, but still makes it
-return to its original form when the external forces are removed. This
+return to its original shape when the external forces are removed. This
 phenomenon requires a model where external forces somehow are transformed into
-elastic energy. \\
+energy. \\
 
 
 % Forces applied to a material causes deformation and induces internal stress, 
@@ -348,14 +346,14 @@ As already mentioned the surgical procedure of removing a wisdom tooth
 involves various steps of cutting tissue, drilling, fracturing dental
 material, stitching tissue, etc. Simulating each step requires a
 different approach and the use of distinct theory. It is out of scope
-of a single masters thesis to handle all of the different step. \\
+of a single master's thesis to handle all of the different step. \\
 
 % would require a tremendous amount of work impracticable
 % due to resources available.
 %
 Considering the relatively limited amount of work published
 within the field of fracturing volumetric models in real-time
-compared to the other fields of interest from the various simulation
+compared to the other fields of interest, from the various simulation
 steps, attention will be focused on solving this particular problem. \\
 
 This thesis deals with simulating the specific parts of the
@@ -369,12 +367,11 @@ analysis. Using the finite element method to conduct real-time
 analysis is a fairly new concept developed within recent years. It
 has proved to be one of the most precise methods available.
 %
-The method for predicting the point of origin and the propagation of
-the crack will be based upon the theory of maximum principal
-stress. 
+The method for predicting the point of origin will be based upon the
+theory of maximum principal stress. 
 %
 To the best of our knowledge the parallel approach of conducting real-time
-structural analysis in conjunction with crack propagation, based
+structural analysis in conjunction with crack detection, based
 upon maximum principal stress is new to the field. \\
 
 % Motivate deformation and fracture framework
@@ -384,7 +381,7 @@ objects.
 %
 With point of reference in the laws of physics we will
 construct a simulation model that strictly complies with relevant
-theory. The context of use is simulated surgery therefore speed
+theory. The context of use is simulated surgery, therefore speed
 and robustness of the model will be favoured over accuracy.
 %
 External forces will be applied through a simulated dental tool, similar
@@ -460,9 +457,9 @@ increase in performance. \\
 % Real-time
 Thomas Sangild Sørensen and Jesper Mosegaard presents methods on
 how surgical simulations can accelerate deformable models through
-the parallel nature of the GPU\citeabook{article:gpu_surgery}. They show
+the parallel nature of the GPU \citeabook{article:gpu_surgery}. They show
 that deformable models based on the spring-mass or finite element
-method can be implemented using parallel programming hereby gaining a
+method can be implemented using parallel programming, hereby gaining a
 significant increase in performance. \\
 
 
@@ -512,7 +509,7 @@ intersects with an object in the simulator.
 Handling user input immediately is crucial to prevent the surgeon from
 experiencing latency and hereby loosing the illusion of real-time.   
 Thomas Sangild Sørensen and Jesper
-Mosegaard\citeabook{article:haptic_feedback} present efficient methods for
+Mosegaard \citeabook{article:haptic_feedback} present efficient methods for
 handling high-frequently haptic feedback using the GPU. \\
 
 % Heart simulator
@@ -530,6 +527,6 @@ tooth as a preparation for the fragmentation.
 A method for drilling in volumetric material in context of simulated
 surgery has been developed by Peter Trier et al.
 \citeabook{article:visible_ear}. The method is base on a data set 
-available as a three-dimensional image format, and visualization
+available in a three-dimensional image format, and visualization is
 based on ray-castings. This technique has proved very promising. \\
 

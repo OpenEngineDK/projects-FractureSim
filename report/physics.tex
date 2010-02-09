@@ -402,7 +402,7 @@ velocity increases or decreases so does the kinetic energy. It would
 require the same amount of work to decelerate an object to rest, as it
 took to accelerate it to velocity $v$. The force required to
 decelerate the object has to be in the opposite
-direction. The kinetic energy $E_k$ of an object is defined by
+direction. The kinetic energy $E_K$ of an object is defined by
 \citebook{page~164-165}{book:uni-physics}:
 
 \begin{equation}
@@ -630,10 +630,10 @@ inter-particle distances are preserved. In a deformation they are not.
 \label{fig:deformation_of_line}
 \end{figure}
 
-Consider the straight line through the undeformed configuration as
+Consider the straight line through the undeformed configuration $R_0$ as
 illustrated in figure \vref{fig:deformation_of_line}. After the body
 has undergone a deformation the straight line has been mapped to a
-smooth curve as illustrated in the deformed configuration. Somehow we
+smooth curve as illustrated in the deformed configuration $R_t$. Somehow we
 would like to represent the line or fiber deformation that takes
 place. Focus attention on the line segment $dx$ and imagine that the
 length of the line segment is much shorter than the radius of
@@ -722,7 +722,7 @@ stretched) by the initial length of the body.
 %is stretched) divided by the length of the body.
 
 \begin{equation}
-\mbox{normal strain: } \frac{l-l_0}{l_0} = \frac{\Delta l}{l}
+\mbox{normal strain: } \frac{l-l_0}{l_0} = \frac{\Delta l}{l_0}
 \end{equation}
 
 In general strain is not distributed uniformly over the entire
@@ -881,7 +881,7 @@ to deform without particular volume change.
 % Shear stress is denoted $\tau_{xy}$,
 % $\tau_{yz}$ and $\tau_{zx}$. 
 The first letter in the double subscript
-indicates the \defit{plane} in which the stress acts; whereas the second
+indicates the \defit{plane} in which the stress acts, whereas the second
 subscript indicates in which \defit{direction} the stress
 acts.
 %the coordinate direction which is normal to the plane in which the stress
@@ -889,7 +889,7 @@ acts.
 %in which the stress acts. 
 For example $\tau_{xy}$ has $x$ as its first
 subscript therefore the stress acts in the $yz$-plane because the
-coordinate direction $x$ is a normal to this plane. Second subscript
+direction $x$ is a normal to this plane. The second subscript
 is $y$ indicting the actual stress direction.
 %
 We assume equilibrium of the element's volume, therefore $\tau_{xy}$
@@ -1064,7 +1064,7 @@ work can be expressed as
   \int_{V} u \cdot f_V \ dV
 \end{equation}
 
-Substituting these definitions into the equation: $ -W= E_P^2$, we obtain:
+Substituting these definitions into the equation: $ -W= E_P^1$, we obtain:
 
 \begin{equation}
   \label{eq:pompe}
@@ -1112,10 +1112,10 @@ To visualize how a material goes through the different
 types of deformation, we look at stress-strain curves. A stress-strain
 curve is a graph where measurements of stress as a function of
 strain, are plotted. The graph should be interpreted as follows: When
-moving away from origin along the x axis, the material gets more and
+moving away from origin along the $x$ axis, the material gets more and
 more stretched (or compressed) depending on the direction. Normally
 the stress-strain curve only includes stretch, which is positive along
-the x axis.
+the $x$ axis.
 %
 Isotopic materials yield the same stress-strain curve in
 any direction, therefore only one stress-strain curve is needed. To
@@ -1129,7 +1129,7 @@ show an overview of how to interpret the curves. Figure
 phases. The transition point between linear and non-linear elasticity
 is called \defit{proportional limit}. Between elastic and
 plastic deformation it is called \defit{yield strength}, and the
-material will break when reaching the \defit{fracture} point.
+material will break when reaching the \defit{fracture point}.
 The maximum amount of stress during plastic deformation is called the
 \defit{ultimate strength} limit.
 
@@ -1419,7 +1419,7 @@ material dependent and can be found in reference books like
 \citeabook{book:springer-materials}. Seen on a stress-strain curve a 
 modulus is the slope of the linear piece of the graph. A high modulus 
 indicates a hard or stiff material whereas a low modulus indicates a
-soft or bendy material.
+soft elastic material.
 %A relationship between $E$ and $G$ exists, this
 %relationship includes elastic constant, referred to as Poisson's
 %ratio. Poisson's ratio must be introduced before the relationship can
@@ -1464,7 +1464,7 @@ the elastic modulus and Poisson's ratio in all dimensions.
 %If stress other than pure tensile or pure shearing is applied, the
 %material behaviour gets a bit more complicated. 
 %
-Consider a cubic element with tensile stress $\sigma_x$, $\sigma_y$
+Consider a cubic element with normal stress $\sigma_x$, $\sigma_y$
 and $\sigma_z$ acting in the $x$, $y$, and $z$ direction, respectively.
 %
 % According to equation 

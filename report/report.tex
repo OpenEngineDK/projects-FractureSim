@@ -48,7 +48,7 @@
 \makeoddfoot{plain}{}{}{\thepage}
 
 % bib tex
-\usepackage{natbib} 
+\usepackage{natbib}
 % from: http://texblog.net/latex/layout/
 % removes some of the overfull and underfull warnings
 \usepackage{microtype} 
@@ -112,9 +112,11 @@
 Figures marked by the following symbols are from external sources:
 \begin{center}
 \begin{minipage}{0.9\linewidth}
-\textdagger \ Image provided by Søren Schou, Aarhus School of
-Dentistry. \\
-$\ddagger$ \ From NVIDIA's CUDA Programming Guide (Version 2.3.1).
+\begin{tabular}{c l}
+\textdagger & Image provided by Søren Schou, Aarhus School of
+Dentistry. \\[3pt]
+$\ddagger$ & From NVIDIA's CUDA Programming Guide (Version 2.3.1).
+\end{tabular}
 \end{minipage}
 \end{center}
 \cleardoublepage
