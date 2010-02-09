@@ -1,0 +1,65 @@
+% -*- mode: latex; mode: auto-fill; coding: utf-8; -*-
+
+\chapter*{Readers Guide}
+This thesis consists of three parts. Part I presents analytical
+theories. This part includes statics, dynamics, continuum, and fracture
+mechanics. Futhermore, elasticity theory and basic linear algebra is
+introduced. Part II presents discrete theories. Here the fundamental
+equilibrium framework and the finite element method are explained in
+detail and used to construct a simulation model. Part III explains how
+the simulation software is designed and implemented. Parallel
+execution is introduced and the simulation software constructed is
+evaluated.
+%
+The following is a brief summary of each chapter: \\ 
+
+Chapter \ref{chapter:introduction} introduces the reader to the field
+of simulated surgery and the potential of computer aided simulations
+in general. Here the motivation behind this thesis is stated.
+%
+Chapter \ref{chapter:problem_domain} explains the surgical procedure
+of wisdom tooth removal step by step. The physical phenomena of
+interest are identified and the concepts real-time and simulator are
+defined. The main objectives in the thesis is stated and related work
+are presented.
+
+\section*{Part I - Analytic Theories}
+Chapter \ref{chapter:physics} introduces the fundamental physics
+used. Work, energy, and equilibrium are defined before moving on to
+continuum mechanics where the concepts deformation, elasticity,
+stress and strain are introduced.
+%
+Chapter \ref{chapter:mathematics} explains the basic linear algebra
+used.
+
+\section*{Part II - Discrete Theories}
+Chapter \ref{chapter:equilibrium_framwork} introduces the fundamental
+structure for equilibrium problems in general.
+%
+Chapter \ref{chapter:finite_element_method} describes the finite
+element method. The discretization of the continuum body and how
+to assemble the system equations are explained in detail.
+%
+Chapter \ref{chapter:applying_finite_element_method} explains how to
+apply the finite element method and a concrete solver technique is
+presented.
+
+\section*{Part III - Implementation}
+Chapter \ref{chapter:simulation_model} presents the simulation
+software developed.
+%
+Chapter \ref{chapter:parallel_execution} introduces the concept of
+parallel execution and explains how we utilize NVIDIA's CUDA
+technology.
+%
+Chapter \ref{chapter:helper_tools} explains the developed tools for
+interacting with the simulation software and how to visualise
+tensors.
+%
+Chapter \ref{chapter:results} presents the results obtained.
+%
+Chapter \ref{chapter:future_work} is a discussion on possible
+improvements.
+%
+Chapter \ref{chapter:conclusion} summarizes and concludes on the
+results obtained. 

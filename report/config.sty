@@ -1,0 +1,126 @@
+% -*- mode: latex; mode: auto-fill; coding: utf-8; -*-
+
+%% PACKAGES
+\usepackage[a4paper]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{lmodern}
+
+\author{
+  Christian P. V. Christoffersen \\ cpvc@cs.au.dk
+  \and
+  Carsten Nørby \\ tic@cs.au.dk
+}
+
+% CITATIONS
+%  \citep -> (Author, 1999)
+%  \citet -> Author (1999)
+% - see http://merkel.zoneo.net/Latex/natbib.php
+\usepackage[round]{natbib}
+
+%% COLORS
+\usepackage{color}
+\definecolor{Brown}{cmyk}{0,0.81,1,0.60}
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{CadetBlue}{cmyk}{0.62,0.57,0.23,0}
+
+
+%% CODE LISTINGS
+% Usage:
+% \begin{lstlisting}
+% public class Test {
+%   void test(int i);
+% }
+% \end{lstlisting}
+\usepackage{listings}
+\lstset{language=C++}
+\lstset{basicstyle=\normalsize}
+\lstset{keywordstyle=\ttfamily\color{OliveGreen}}
+\lstset{identifierstyle=\ttfamily\color{CadetBlue}\bfseries}
+\lstset{commentstyle=\color{Brown}}
+\lstset{stringstyle=\ttfamily}
+\lstset{showstringspaces=false}
+%\lstset{numbers=left}
+
+%% Preamble options
+%% do not indent new sentences
+\setlength{\parindent}{0pt}
+
+%% COMMANDS
+
+%
+\newcommand{\refweb}[1]{\footnote{ \url{#1}}}
+\newcommand{\refsec}[1]{\ref{#1}}
+
+% In-line code
+% \code{code}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% Mark for review
+%\review{sentence}
+%\newcommand{\review}[1]{#1}
+\newcommand{\review}[1]{\color{red} #1 \color{black}}
+
+% Insert comment on something
+% \comments{name}{comment}
+\newcommand{\comments}[2]{\footnote{#1 -- #2}}
+
+% Define bold font
+\newcommand{\oedate}[1]{\bf #1}
+
+% Use this when defining concepts
+\newcommand{\defit}[1]{\textit{#1}}
+% Use this when stating definitions from books
+\newtheorem{definition}{Definition}
+
+% todo
+% \todo{what to do}
+\newcommand{\todo}[1]{\texttt{#1}}
+
+
+\newcommand{\cpedbegin}[1]{\color{red}}
+\newcommand{\cpedend}[0]{\color{black}}
+
+\newcommand{\citebook}[2]{[\citealp[#1]{#2}]}
+\newcommand{\citeabook}[1]{[\citealp{#1}]}
+
+%\Newcommand{\defit}[1]{\textit{#1}}
+%\newtheorem{definition}{Definition}
+
+\newcommand{\openengine}[0]{OpenEngine}
+
+\newcommand{\layoutpb}[0]{\newpage}
+
+% usage:
+% \mycite[page no]{books bibname}{cited text}
+% or
+% \mycite{source}{cited text}
+\def\myempty{}
+\newcommand*{\mycite}[3][]{\begin{quote} \textit{``#3''}
+    \def\temp{#1}%
+    \ifx\temp\myempty \cite{#2}
+    \else \cite[#1]{#2}
+    \fi  \end{quote}}
+
+
+% References on variable page using \vref{}
+\usepackage[english]{varioref}
+\newcommand{\appref}[1]{\ref{#1}}
+
+\newcommand{\layoutnewpage}[0]{\newpage}
+
+\newcommand{\doubleblank}[0]{
+\clearpage
+\thispagestyle{empty}
+\mbox{}
+\clearpage
+\thispagestyle{empty}
+\mbox{}
+}

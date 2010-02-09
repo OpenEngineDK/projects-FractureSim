@@ -1,0 +1,179 @@
+% -*- mode: latex; mode: auto-fill; coding: utf-8; -*-
+
+%\chapter{Introduction}
+% - simulator
+% - real time
+% - soft tissue + hård materiale
+% Set the scene, fixed object, apply forces, eventually break the
+% object into smaller pieces.
+
+The research field of computer simulated surgery has been a
+topic of increased interest in recent years.
+%
+The current research has reached a level that facilitates
+real-time simulation of deformations in soft organic materials. 
+%in high-resolution on consumer hardware. 
+Using computer aided simulations as an educational
+tool or an interactive training facility has a lot of potential when
+it comes to imparting new knowledge to students or
+trainees. Surgical procedures can be studied and practiced iteratively
+through extended feedback including any imaginable visual
+information. While performing the simulated surgery instructions and
+guidance could be presented, any potential risk could be pointed out,
+and unexpected critical scenarios could occur. 
+Simulated surgery has the potential to enrich the
+learning process on so many levels.  
+%
+From the perspective of
+the student the main objective of using simulated surgery is to
+acquire certain, often very difficult, skills in a risk-free
+environment. Introducing surgical certificates based
+on simulations is an option within the near future. Professional approval
+based on simulated scenarios has been used for many years when
+educating and certifying pilots. \\
+
+% Challenges and limitations 
+The field of simulated surgery still faces great
+challenges especially when it comes to the sense of touch. It is
+very difficult to simulate the correct feedback on the tool being
+used e.g. the weight, friction, momentum, manoeuvrability
+etc. Simulation models based on the laws of physics will
+always be idealized and respond as predicted by theory. Sometimes
+theory and practice is not consistent. \\
+%
+% With attention focused on improving the visual feedback there
+% is a lot to benefit from simulated surgeries. 
+
+%
+The development within computer aided visualization has been
+tremendous during the last decades. The research within this field
+has benefited heavily from the huge investments made by the
+entertainment industry constantly striving towards improving the level
+of realism. 
+%
+Simulating organic material like human tissue or organs require a
+model capable of representing the complex structures and
+the theoretical laws of behaviour. 
+%
+In the field of applied mathematics a generalized method for
+conducting numerical modeling of physical systems was first well
+defined in the late 1960's and early 1970's. 
+%
+Although these mathematical models are capable of capturing
+complicated problems they tend to get very complex and computationally
+expensive.
+%
+Within recent years the introduction of multi-core hardware and the
+development in GPU programming languages, suddenly has made these
+models, based on the actual laws of physics, realisable. By taking
+advantage of the parallel architecture of the GPU, the computational
+resources have increased by orders of magnitude assuming the problem
+can be solved in a parallel environment. \\
+
+%In recent years the research field within computer simulated surgeries
+%has increased drastically. 
+%
+% The increasing interest for simulated surgeries used as an educational
+% tool or interactive training facility is probably due to the
+% fact that the current level of research now facilitates
+% real-time simulation of organic materials in high-resolution.
+% %
+% The mathematical models capable of representing problems within the
+% problem domain of simulating complex structures have been developed
+% in modern times. In applied mathematics a generalized method for
+% conducting numerical modeling of physical systems was first well
+% defined in the late 1960's and early 1970's. 
+% %
+% The development within computer aided visualizations has been
+% tremendous during the last decades. The research within this field
+% have benefited heavily from the huge investments made from the
+% entertainment industry constantly trying to improve the level of
+% realism. 
+% %
+% Simulating organic material like human tissue and organs requires huge
+% computational efforts, but with the introduction of multi-core
+% hardware and the development in GPU programming languages, models
+% based on the laws of physics suddenly becomes realisable. \\
+%
+
+% Modern consumer hardware has gradually increased in
+% computational resources to a level now facilitating real-time
+% execution of interactive 
+%
+
+% Modern consumer hardware has gradually reached a level that now 
+% facilitates real-time execution of plausible simulations based on
+% mathematical models incorporating the laws of physics
+
+% Background history
+This thesis is motivated by the current demand for an educational tool
+teaching a specific dental procedure. Inspired by related
+simulated surgeries The Aarhus School of Dentistry has requested a
+simulator for teaching the common procedure of wisdom tooth
+extraction. Performing the surgical procedure requires certain skills
+and must be
+performed with caution to prevent serious nerve damage. All
+surgery involves risks, in this case the patient's tongue or part of
+the lip could become permanently numb due to nerve damage. This
+emphasizes the importance of a proficiency before
+operating on patients. Besides lots of lessons and videos teaching how
+to perform the operation, students practise on a rubber doll known
+as a \defit{phantom}. Operating on a phantom is the last step before the
+students are expected to perform supervised operations on
+patients. According to Professor, dr. odont. Søren Schou, Aarhus
+University, there is a huge educational gap between operating on a
+phantom and a real patient. \\
+
+%This thesis deals with the design and implementation of a model
+%This thesis deals with the development of a simulation model based on
+%structural analysis using the laws of physics to simulate 
+This thesis deals with the development of a model for simulating one
+specific part of the complete surgical procedure of wisdom tooth
+removal.
+%
+Attention is focused on how to simulate the fragmentation
+that will separate the crown of the tooth from its roots. 
+By solving this particular problem we get one step closer
+towards the development of a complete simulator, handling the entire surgical
+procedure, hereby providing an educational tool
+with the purpose of minimizing the gap between operating on a phantom
+and a real patient. \\
+
+The simulation model
+is based on the finite element method which is a widely accepted
+method for structural analysis. The physical laws from the field of
+continuum and fracture mechanics concerning deformation and
+fragmentation of solids are applied to obtain as realistic
+results as possible with the computational resources available. \\
+
+% Explain to humans what the simulator is - MVC pattern
+Basically the simulator consists of three main parts. A visual,
+an interactive, and a computational part. The visual part is
+responsible for delivering real-time three-dimensional images on the
+screen. The interactive part handles the user interaction and
+simulates the dental tools accordingly. The computational part 
+is responsible for solving the equations defined by the method used
+for the structural analysis. \\
+
+% Interdisciplinary approach
+It requires an interdisciplinary approach to develop a framework for
+simulating deformations and possible fractures in solid objects. 
+From the field of dentistry, knowledge on how to perform the actual surgical
+procedure, is needed. 
+%
+Simulating real world phenomena of
+fracturing solid objects involves theoretical physics and mathematics, as well as
+engineering disciplines of predicting how solids behave under
+stress. 
+%
+Constructing a computational model representing the complex structures
+that incorporates the laws of physics suitable for high performance
+parallel execution is a computer science discipline. Implementing the
+simulator using the proper technologies, benchmarking the
+software model and validating the results are all within the
+field of computer science. 
+
+% The main emphasis here is on how to
+% assemble the relevant theory in the construction of a valid model what
+% will be real-time executable
+

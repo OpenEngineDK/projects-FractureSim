@@ -1,0 +1,217 @@
+% -*- mode: latex; mode: auto-fill; coding: utf-8; -*-
+ 
+%\documentclass[a4paper,twoside,openright]{report}
+%\documentclass[a4paper]{book}
+\documentclass[a4paper,twoside,openright]{memoir}
+%openany, titlepage
+
+\usepackage{config}
+\usepackage{amssymb,amsmath}
+\usepackage{subfig}
+\usepackage{wrapfig}
+\usepackage{color}
+
+% control the floating environments
+\let\newfloat\relax % for compatibility of memoir and float
+\usepackage{float} % [H] forces figures in place
+\makeatletter
+\renewcommand\fps@figure{H}
+\renewcommand\fps@table{H}
+\makeatother
+
+% full control over headers and footers in book and article format
+% \let\footruleskip\relax % for compatibility of memoir and fancyhdr
+% \let\rm\rmfamily        % for compatibility of memoir and blindtext
+% \usepackage{fancyhdr}
+% \fancyhf{} % tom header/footer
+% \fancyhead[EL]{\bfseries\rightmark}
+% \fancyhead[OR]{\bfseries\leftmark}
+% \fancyfoot[EL]{\thepage}
+% \fancyfoot[OR]{\thepage}
+
+% Memoir style headers
+\makepagestyle{mystyle}
+\makeevenhead{mystyle}{\leftmark}{}{}
+\makeoddhead{mystyle}{}{}{\rightmark}
+\makeevenfoot{mystyle}{\thepage}{}{}
+\makeoddfoot{mystyle}{}{}{\thepage}
+\makeheadrule{mystyle}{\textwidth}{0.01pt}
+
+\makepsmarks{mystyle}{
+  \def\chaptermark##1{\markboth{\chaptername\ \thechapter.\ ##1}{}}
+  \def\sectionmark##1{\markright{Section \thesection. ##1}}
+%  \def\subsectionmark##1{\markright{##1}} 
+} 
+
+% overwrite default styles
+\makeevenfoot{plain}{\thepage}{}{}
+\makeoddfoot{plain}{}{}{\thepage}
+
+% bib tex
+\usepackage{natbib} 
+% from: http://texblog.net/latex/layout/
+% removes some of the overfull and underfull warnings
+\usepackage{microtype} 
+% Package for pseudocode
+% http://www.math.mtu.edu/~kreher/cages.html
+\usepackage{pseudocode}
+% url refs, url=text,
+\usepackage{url} % links as text
+\usepackage{hyperref} % makes links clickable
+
+
+\citestyle{chicago} % Chicago Manual of Style citations
+\bibliographystyle{is-alpha} % is- shows ISBN in references
+
+\title{
+  Real-time Fragmentation of Solid Material \\
+  using the Finite Element Method
+}
+
+\date{\today}
+
+% to include only specific sections the \includeonly command may be
+% used as \includeonly{section1,section2,and-so-on} (no spaces)
+
+\begin{document}
+
+\pagenumbering{alph} % so roman and arabic numbers start from 1 when used
+\pagestyle{empty}
+
+% title page
+\maketitle
+\thispagestyle{empty}
+
+%\input{cover_page}
+\cleardoublepage % to insure that the page numbering is correct
+
+\pagenumbering{Roman}
+\pagestyle{plain}
+
+%\pagestyle{empty}
+\input{summary}
+%\thispagestyle{empty}
+\input{acknowledgement}
+\thispagestyle{empty}
+\input{readers_guide}
+\cleardoublepage
+
+\pagebreak % to insure that the page numbering is correct
+
+\cleardoublepage
+%\pagenumbering{roman}
+%\pagenumbering{Roman}
+\tableofcontents*
+\cleardoublepage
+\listoffigures*
+Figures marked by the following symbols are from external sources:
+\begin{center}
+\begin{minipage}{0.9\linewidth}
+\textdagger \ Image provided by Søren Schou, Aarhus School of
+Dentistry. \\
+$\ddagger$ \ From NVIDIA's CUDA Programming Guide (Version 2.3.1).
+\end{minipage}
+\end{center}
+\cleardoublepage
+\listoftables*
+\cleardoublepage
+%\include{symbols}
+\pagebreak
+
+\pagenumbering{arabic}
+%\pagestyle{fancy}
+\pagestyle{mystyle}
+
+% Code for creating empty pages
+% Use plain style on empty pages before new chapter
+% \makeatletter
+% \def\cleardoublepage{\clearpage\if@twoside \ifodd\c@page\else
+%   \hbox{}
+%   \thispagestyle{empty}
+%   \newpage
+%   \if@twocolumn\hbox{}\newpage\fi\fi\fi}
+% \makeatother \clearpage{\pagestyle{empty}\cleardoublepage}
+
+\chapter{Introduction}
+\label{chapter:introduction}
+\input{introduction}
+
+\doubleblank
+
+\chapter{Problem Domain}
+\label{chapter:problem_domain}
+\input{problem_domain}
+
+\doubleblank
+
+\part{Analytical Theories}
+\chapter{Physics}
+\label{chapter:physics}
+\input{physics}
+
+\chapter{Mathematics}
+\label{chapter:mathematics}
+\input{mathematics}
+
+
+\doubleblank
+
+\part{Discrete Theories}
+\chapter{The Equilibrium Framework}
+\label{chapter:equilibrium_framwork}
+\input{equilibrium_framework}
+
+\chapter{The Finite Element Method}
+\label{chapter:finite_element_method}
+\input{finite_element_method}
+
+\doubleblank
+
+\chapter{Applying the Finite Element Method}
+\label{chapter:applying_finite_element_method}
+\input{applying_finite_element_method}
+
+
+\part{Implementation}
+\chapter{The Simulation Model}
+\label{chapter:simulation_model}
+\input{simulation_model}
+
+\doubleblank
+
+\chapter{Parallel Execution}
+\label{chapter:parallel_execution}
+\input{parallel_execution}
+
+\chapter{Helper Tools}
+\label{chapter:helper_tools}
+\input{helper_tools}
+
+\doubleblank
+
+\chapter{Results}
+\label{chapter:results}
+\input{results}
+
+\chapter{Future Work}
+\label{chapter:future_work}
+\input{future_work}
+
+\chapter{Conclusion}
+\label{chapter:conclusion}
+\input{conclusion}
+
+\doubleblank
+
+\part{Appendices}
+\appendix
+\input{appendix_hookes_law}
+\input{appendix_test_data}
+\input{appendix_surface_model}
+\input{appendix_test_machines}
+\input{appendix_openengine}
+%\clearpage
+\cleardoublepage
+\bibliography{refs}
+
+\end{document}

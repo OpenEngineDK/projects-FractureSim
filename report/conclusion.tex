@@ -1,0 +1,100 @@
+% -*- mode: latex; mode: auto-fill; coding: utf-8; -*-
+
+% Intro
+The main objective of this thesis was to construct a simulation model
+capable of conducting real-time structural analysis of stress and
+strain to be used for crack surface prediction. \\
+
+%
+For the structural analysis we constructed a simulation model based upon
+the finite element method and a solver based on the Total Lagrangian
+Explicit Dynamics technique aimed towards parallel execution. 
+%
+% FEM
+% The finite element method is one of the most widely accepted methods for
+% structural analysis. 
+The finite element method with its pure style is so elegant and
+yet so complex it takes years to fully master.
+% - Worth the effort
+Once the method has been implemented as the fundamental framework for
+representing and solving the problem domain its true potential emerges. 
+% - Stable, predictable, great results -> based on physics e.g. deformation, stress/strain
+According to our experiences the method turns out to be very
+stable, predictable and beneficial when analysing the behaviour of stress
+and strain. \\
+
+% 
+Recall from the problem statement that in the context of simulated
+surgery the demand for a robust model, real-time execution, and
+plausible results is favoured over accuracy.
+%
+% Problem is the critical time step
+Challenges arise when simulating small objects like a human tooth
+made of a brittle material like dentin. 
+%
+When using an explicit solver we need to respect the boundary
+conditions on the size of the time step since this is crucial for the
+numerical stability of the method.
+%
+The critical time step is effectively reduced when increasing the
+material stiffness or decreasing the smallest edge 
+length in the object simulated.
+%
+The real-time analysis conducted in section
+\vref{sec:realtime_analysis} illustrates that with the given
+object size and material we cannot achieve real-time simulation which
+strictly complies with the theoretical laws of physics.
+% Compromise
+If we compromise the
+theoretical laws of physics by increasing the material density of the tooth we
+are allowed to extrapolate simulation time by a larger time step hereby
+facilitating real-time execution. In the sense of physical
+interpretation the change in density, and hereby the external forces
+required for deformation, is out of proportions. But in the sense of 
+simulated response the prediction of the crack surface looks very
+promising. The crack surface determined seems unaffected since the
+same material stiffness is used as elaborated in 
+section \vref{sec:fragmentation_with_varying_density}. \\
+
+%
+Benchmarking the simulation model with the fragmentation scenario as
+described in section \vref{sec:results_fragmentation_tooth} reveals great
+potential. 
+%
+The system equations representing the tooth model can be solved
+approximately $20.000$ times per second simulated on hardware as
+described in appendix \appref{sec:test-machine-desktop} without
+fine-tuning the CUDA implementation. This easily accommodates
+real-time interaction and visual feedback at real-time frame rates ($>
+25$ FPS). \\
+
+% Crack Tracking
+% - Performs well in general - Fracture Mechanics
+We have presented a local crack tracking algorithm based upon relevant 
+theory from fracture mechanics in particular the principle of maximum
+stress direction. 
+%
+Though improvements can be made as explained in section
+\vref{chapter:future_work} we believe the method applied 
+shows great potential towards fracturing solid brittle materials.
+%
+In general the failure surface as predicted by the
+crack tracking algorithm looks very promising. The location and
+curvature of the failure surface corresponds to the stress analysis
+and the intuition of how the object would actually fracture. \\
+
+% - Crack Tracking + Explicit solver = challenges
+Using this crack tracking scheme in direct correlation with
+the stress and strain analysis conducted did cause a few
+shortcomings. As pointed out in section \vref{chapter:future_work} the
+approach used for applying forces and 
+measuring stress needs improvement to obtain a less sensitive
+interaction. 
+%
+To improve this method any further we need feedback on how actual teeth
+fracture in the given surgical scenario. A thorough comparison of simulated
+contra actual tooth fragments, requires research beyond the scope of a
+single master thesis.
+
+
+

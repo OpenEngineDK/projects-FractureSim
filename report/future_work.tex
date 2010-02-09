@@ -1,0 +1,200 @@
+% -*- mode: latex; mode: auto-fill; coding: utf-8; -*-
+
+During the development of the simulation prototype 
+%While working intensively with this thesis 
+lots of improvements came
+to mind. When considering the endless interdependent
+components of the final prototype, ideas, questions or improvements
+arise to each of the individual components. It seems like whenever we look
+into how things are connected and how changes would propagate though the
+system new challenges arise.
+%
+In this section we have limited the discussion of any future work by only
+considering improvements of the prototype that will lead towards a
+simulator that can be evaluated by dentists. To form a decent
+evaluation basis for a dentist, improvements must be made.
+It would be very helpful to get evaluation feedback from a dentist
+especially on the sense of touch when the fragmentation is
+performed. Analysing the fragments of the tooth by comparing the
+simulated fragmentation to actual tooth fragments could be very
+interesting. \\
+
+% Shape function
+\subsubsection*{Improving the precision on the pre-calculations}
+The pre-calculation of the shape function derivatives is based on the
+geometry of the elements. Currently the global position of the
+elements can cause significant floating point inaccuracy leading to
+inaccurate shape function derivatives. To minimize the error the shape
+function derivatives could be pre-calculated in local space
+coordinates instead of global. 
+%
+The geometry of the
+elements are represented by floating point numbers which have a
+relative representation error\citebook{page~9}{notes:oleby}. So the
+error increases with the distance from origo of the global coordinate
+system. By translating the geometry of
+the elements into origo and scaling it to unity the error can be
+minimized. \\
+
+
+% Apply forces
+\subsubsection*{Improving how to apply forces}
+An essential part of the simulator is the interaction. To simulate a
+reaction something has to act on the system changing the state of
+equilibrium. As described in section \vref{sec:modifiers} all
+interaction is carried out through the 
+modifiers. The Projective Displacement modifier is the modifier used for
+simulating interactive tools like the elevator from the test
+scenarios. As implied by its name, the modifier interacts with the
+system through nodal displacements. So when there is detectable
+collision between tool and object the colliding surface nodes of the
+object are displaced until they are free of collision. At the point of
+contact between tool and object all forces are applied through
+deformation of the object's surface. Using brittle
+materials even the slightest deformation causes a huge amount of
+internal stress which makes the interaction between tool and object
+difficult. When the tool touches the surface of the object in a way
+that seems very gently on the screen, the small surface deformation is
+actually causing the object to fracture immediately. This would
+probably be the correct response if we did hit the object with a sharp
+tool using great force, but this is not the case here. Basically the
+problem is the method used when applying the forces as
+displacement. By displacing the surface elements at the
+point of contact the internal forces peak in a single iteration before
+they get the chance to propagate to neighbouring elements over
+multiple iterations. This has to do with the parallel approach
+used. Since each element is solved in parallel they only interact when
+nodal force contributions are added at the end of each
+iteration. Therefore forces needs to propagate through the elements
+over multiple iterations.
+%
+A more gentle method for applying forces could improve the interaction
+between tool and object. The displacement could be gradually applied
+to the surface elements or distributed over multiple elements within a
+certain distance to compensate for the propagation.
+
+% Improve strategy for measuring stress
+\subsubsection*{Improving the method for measuring internal stress}
+In relation to how forces are applied into the system the method for
+determining the maximum level of internal stress needs
+improvement. The current method determines the maximal level of stress
+by considering each individual element separately. 
+%
+If the internal stress peaks in a single element
+%due to a small displacement
+the fracturing limit is exceeded upon impact
+causing the object to start fracturing before the stress has
+propagated properly through the element mesh. Instead the maximum
+level of stress could be measured by interpolating the stresses from
+neighbouring elements hereby reducing peak values. 
+
+% Crack tracking
+\subsubsection*{Improving the crack tracking algorithm}
+In general we have obtained good results from the local crack
+tracking algorithm implemented. But there are improvements to be
+made. If the crack initialization has been initiated due to an
+internal stress peak in a single element the algorithm performs
+poorly.
+%
+It performs poorly because the internal stress has not propagated
+properly from the point of impact and throughout the element mesh.
+As a result the magnitude of the principal stress values is
+alternating around zero. This causes the maximum principal stress
+direction to alter between the three principal directions in a more or
+less random manner.
+%
+The crack tracking algorithm relies on the principal stress directions
+so as a consequence of the randomness the failure surface
+determination can 'spin out of control'. Since every element only can
+crack once and the number of elements is finite, the algorithm is
+deterministic at all times. But the crack propagation can in rare
+cases form a spiral like a winding staircase. This only occurs when
+the crack is propagating through parts of the body with internal
+principal stress values around zero and could be avoided by improving
+the stress measure as mentioned earlier or by improving the crack
+tracking algorithm to perform better with seemingly random stress
+directions.
+
+% Re-meshing
+\subsubsection*{Re-meshing of the fractured body}
+When the crack tracking algorithm has determined a failure surface the
+intersecting elements should be separated accordingly. The prototype
+does not handle the actual separation of the fragments. To facilitate a
+proper evaluation of the size and shape of the fragments, separation
+has to be performed. How each element has been cracked is registered
+as crack points determining the intersection between the crack plane
+and the element edges. This representation is used for visualizing
+the crack surface and can be used to separate the element mesh.
+
+% Composite materials
+\subsubsection*{Support composite materials}
+A wisdom tooth consists of different materials, primarily dentin.
+The material properties of dentin are not the same throughout a tooth,
+different material subgroups like superficial, middle,
+and deep dentin have different material properties.
+%
+Besides dentin a layer of enamel is covering the crown, this material
+is also divided into subgroups \citebook{page~324}{Giannini2004322}.
+%
+Currently the prototype only supports homogeneous materials which
+means that all elements have the same material properties. By
+implementing support for different material properties in each element,
+inhomogeneous and composite materials could be simulated. It would
+require extending the mesh file format, the internal data structures
+and making small changes to the finite element solving technique. It
+could be very interesting to evaluate and test how the crack tracking
+performs in composite materials.
+
+
+% Registering tooth
+\subsubsection*{Improve tooth mesh}
+The tooth mesh used in the test scenarios is modelled by hand roughly
+shaped to form the real tooth borrowed. Since only the surface of the
+real tooth has been taken into consideration the model does not
+include any internal cavities. Instead a model could be created from
+a volumetric x-ray image by registering the surface curvature in each
+layer and assemble these to form a volumetric contour of the tooth which
+includes cavities. The internal cavities will effect the propagation
+of internal stress and strain making the tooth simulation more
+compliant with the actual scenario.
+
+
+% GUI
+\subsubsection*{Improving the graphical user interface}
+The prototype suffers from a lot of hard coded properties and
+setups. Few parameters, like which mesh and material should be used,
+can be passed as command-line arguments at start-up. Other than that, the
+code needs to be changed and recompiled. A graphical user interface capable
+of changing the simulated scenario at run-time is necessary if
+non-technical personal should evaluate the simulator.
+
+
+% Haptic
+\subsubsection*{Support for haptic devices}
+To facilitate a proper evaluation of the simulated fragmentation
+process the input devices must be improved. Feedback from dentists
+on how the tools manoeuvre in space, how the twisting action of the
+elevator tool complies to the actual scenario etc. would be helpful.
+%
+Using a standard keyboard and mouse is not sufficient if we are
+interested in evaluating the simulated response of user interactions.
+When using the simulated tool the user tends to lose
+the sense of how much force he or she actually applies to the
+object. Especially with brittle materials where even a very small
+deformation causes huge amounts of internal stress. 
+%
+Implementing support for a haptic device with force feedback would be
+necessary for the dentists to evaluate the sense of touch and
+manoeuvrability in the simulator. 
+
+% \subsubsection*{Hardware }
+% With the launch of Snow Leopard, Apple, NVIDIA, and the Khronos Group
+% have provided a hardware independent alternative to CUDA (to get
+% hardware independance).
+% }
+
+% \section{Optimizing the geometry for visualization}
+% As a pre-computational step the vertex-pool could be sorted, so all
+% surface vertices are located at the start of the vertex-pool. When all
+% surface vertices are located together, we can render the surface
+% faster.

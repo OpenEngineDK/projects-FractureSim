@@ -1,0 +1,183 @@
+% -*- mode: latex; mode: auto-fill; coding: utf-8; -*-
+
+\chapter{Hooke's Law in Three Dimensions}
+\label{appendix:hookes-law-on-matrix-form}
+This section provides the general relationship between stress and
+strain for elastic material in three dimensions on matrix form. The
+general relationship between stress
+and strain for a homogeneous material can be expressed by a
+$3 \times 3 \times 3 \times 3$
+symmetric fourth-order tensor with 81 components, this tensor is
+called the \defit{material tensor} and denoted $C$. But because both
+the stress and strain tensors are symmetric $3 \times 3$ matrices the
+material tensor reduces to a $6 \times 6$ tensor (matrix) with 36
+components for general anisotropic material, this matrix is called the
+\defit{material matrix} \citebook{page~220}{book:applied_math}. When
+considering isotropic materials only 21 of the 36 components differ
+because of symmetry \citebook{page~659-661}{book:fem-engineers}.
+%
+Using vectorization of the stress and strain matrices and Voigt
+notation for the material matrix, the relationship looks as follows:
+
+\begin{equation}
+\begin{Bmatrix}
+\sigma \\
+\tau
+\end{Bmatrix}
+= C 
+\begin{Bmatrix}
+\varepsilon \\
+\gamma
+\end{Bmatrix}
+\end{equation}
+
+or on matrix form:
+
+\begin{equation}
+\begin{Bmatrix}
+\sigma_x \\
+\sigma_y \\
+\sigma_z \\
+\tau_{xy} \\
+\tau_{xz} \\
+\tau_{yz}
+\end{Bmatrix}
+=
+\begin{bmatrix}
+C_{11} & \cdots & \cdots & \cdots & \cdots & C_{16} \\
+\vdots & \ddots & & & & \vdots \\
+\vdots & & \ddots & & & \vdots \\
+\vdots & & & \ddots & & \vdots \\
+\vdots & & & & \ddots & \vdots \\
+C_{61} & \cdots & \cdots & \cdots & \cdots & C_{66}
+\end{bmatrix}
+\begin{Bmatrix}
+\varepsilon_x \\
+\varepsilon_y \\
+\varepsilon_z \\
+\gamma_{xy} \\
+\gamma_{xz} \\
+\gamma_{yz}
+\end{Bmatrix}
+\end{equation}
+
+Depending of if we use linear or non-linear elasticity theory, the
+material matrix will look different, here we present the material
+matrix for linear elasticity. Recall equation
+\eqref{eq:hookes-law-in-3d} from section
+\vref{sec:stress-strain-relation-in-3d} relating normal stress and
+normal strain, repeated here for convince.
+
+\begin{subequations}
+\begin{equation*}
+    \varepsilon_x = \frac {1}{E} \left [ \sigma_x - \nu \left (
+        \sigma_y + \sigma_z \right ) \right ]
+\end{equation*}
+\begin{equation*} 
+    \varepsilon_y = \frac {1}{E} \left [ \sigma_y - \nu \left (
+        \sigma_x + \sigma_z \right ) \right ]  
+\end{equation*}
+\begin{equation*}
+    \varepsilon_z = \frac {1}{E} \left [ \sigma_z - \nu \left (
+        \sigma_x + \sigma_y \right ) \right ]  
+\end{equation*}
+\end{subequations}
+
+Rewriting this on matrix form the normal strain relation looks as follows:
+
+\begin{equation}
+\begin{bmatrix}
+\varepsilon_x \\ \varepsilon_y \\ \varepsilon_z
+\end{bmatrix}
+=
+\frac{1}{E}
+\begin{bmatrix}
+  1 & - \nu & - \nu \\
+  - \nu & 1 & - \nu \\
+  - \nu & - \nu & 1
+\end{bmatrix}
+\begin{bmatrix}
+  \sigma_x \\ \sigma_y \\ \sigma_z
+\end{bmatrix}
+\end{equation}
+
+For the shearing stress and strain we recall equation
+\eqref{eq:3d-shear-ss-relation} from section
+\vref{sec:stress-strain-relation-in-3d}:
+
+\begin{equation*}
+  \gamma_{xy} = \tau_{xy} / G
+  \qquad
+  \gamma_{yz} = \tau_{yz} / G
+  \qquad
+  \gamma_{zx} = \tau_{zx} / G
+\end{equation*}
+
+and equation \eqref{eq:EG-relation} relating
+$G$ and $E$
+
+\begin{equation*}
+G = \frac{E}{2(1+\nu)}
+\end{equation*}
+
+and by substituting $G$ the equations becomes:
+
+\begin{equation}
+  \gamma_{xy} = \tau_{xy} \frac{2(1+\nu)}{E}
+  \qquad
+  \gamma_{yz} = \tau_{yz} \frac{2(1+\nu)}{E}
+  \qquad
+  \gamma_{zx} = \tau_{zx} \frac{2(1+\nu)}{E}
+\end{equation}
+
+on matrix form, it looks like this:
+
+\begin{equation}
+\begin{bmatrix}
+\gamma_x \\ \gamma_y \\ \gamma_z
+\end{bmatrix}
+=
+\frac{1}{E}
+\begin{bmatrix}
+  2(1+\nu) & 0 & 0 \\
+  0 & 2(1+\nu) & 0 \\
+  0 & 0 & 2(1+\nu)
+\end{bmatrix}
+\begin{bmatrix}
+  \tau_x \\ \tau_y \\ \tau_z
+\end{bmatrix}
+\end{equation}
+
+from the two matrices we assemble the inverse material matrix $D$.
+
+\begin{equation}
+\label{eq:D-3d}
+D = C^{-1} = \frac{1}{E} 
+\begin{bmatrix}
+  1 & - \nu & - \nu & 0 & 0 & 0 \\
+  - \nu & 1 & - \nu & 0 & 0 & 0 \\
+  - \nu & - \nu & 1 & 0 & 0 & 0 \\
+  0 & 0 & 0 & 2(1+\nu) & 0 & 0 \\
+  0 & 0 & 0 & 0 & 2(1+\nu) & 0 \\
+  0 & 0 & 0 & 0 & 0 & 2(1+\nu)
+\end{bmatrix}
+\end{equation}
+
+the material matrix is then:
+
+\begin{equation}
+\label{eq:C-3d}
+C = \frac{E}{(1+\nu)(1-2\nu)} 
+\begin{bmatrix}
+  1-\nu & \nu & \nu & 0 & 0 & 0 \\
+  \nu & 1-\nu & \nu & 0 & 0 & 0 \\
+  \nu & \nu & 1-\nu & 0 & 0 & 0 \\
+  0 & 0 & 0 & \frac{1-2\nu}{2} & 0 & 0 \\
+  0 & 0 & 0 & 0 & \frac{1-2\nu}{2} & 0 \\
+  0 & 0 & 0 & 0 & 0 & \frac{1-2\nu}{2}
+\end{bmatrix}
+\end{equation}
+
+Remark that if we should construct the material matrix for the
+non-linear elasticity theory, then $C$ would be a function of strain
+\citebook{page~659-662}{book:fem-engineers}
