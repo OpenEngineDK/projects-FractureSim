@@ -34,7 +34,7 @@ name linear. Using \defit{homogeneous} coordinates means representing an
 $n$-dimensional vector by $(n+1)$ components. This way we can
 include translation in the set of affine transformations and hereby get rid of
 $b$ in equation \eqref{eq:linear-equation}. 
-The following examples shows commonly used affine transformations. \\
+The following examples show commonly used affine transformations. \\
 
 \subsection*{Translation}
 \label{sec:basic_math_translation}
@@ -246,7 +246,7 @@ mathematics it sometimes seems like a ``magic'' entity. \\
 % sailor http://en.wikibooks.org/wiki/General_relativity:What_is_a_tensor%3F
 %The use of tensors are probably best explained though examples.
 
-The use of tensors are probably best motivated through an
+The use of tensors is probably best motivated through an
 example. Consider the life of a pirate sailing on the ocean only
 powered by the wind.
 Dependent on the weather conditions the wind
@@ -295,7 +295,7 @@ As illustrated on figure \vref{fig:tensor_pirate_ship} the pirate ship with its 
 going in a direction say $45^\circ$ to the right of the wind
 direction. We represent the wind direction and speed as $w =
 [1,1]^T$ hereby setting the wind speed to the length of the vector
-which equals $\sqrt{2}$. Lets say each wind speed unit produces two force 
+which equals $\sqrt{2}$. Let's say each wind speed unit produces two force 
 units. A tensor representing this linear relation in direction and
 magnitude can be written in matrix form:
 
@@ -356,7 +356,7 @@ f = U \cdot w
 \end{equation} \\
 
 Tensors are all about linear relations. Tensors of different orders
-exist we will classify tensors according to
+exist and we will classify tensors according to
 their order. All tensors can be represented by $n$-dimensional
 arrays where $n$ equals the tensor order. The number of indices needed to 
 address each individual element in a tensor corresponds to the order. A
@@ -542,8 +542,8 @@ on matrix form this expands to:
       \end{matrix}}\right]
 \end{equation}
 
-The diagonal elements of $T'$ represents the scale along the axis of
-the primed coordinate frame and the off-diagonal elements represents
+The diagonal elements of $T'$ represent the scale along the axis of
+the primed coordinate frame and the off-diagonal elements represent
 shearing.
 
 % In order to discuss this relation in more depth we will
@@ -687,7 +687,7 @@ since $\tau_{xy} = \tau_{yx}$, $\tau_{yz} = \tau_{zy}$, and $\tau_{zx} =
 \subsection{Principal Values and Directions}
 \label{sec:principal_values_and_directions}
 %If for example a strain tensor represents normal and shearing strain
-It is often of our interest to determine the directions of the resulting 
+It is often of interest to determine the directions of the resulting 
 strains also known as the \defit{principal directions}. The sizes of the resulting
 strains acting in the principal directions are known as the
 \defit{principal values}. 
@@ -698,9 +698,9 @@ in the axial directions down the diagonal just like a scaling matrix. The sheari
 represented as the off-diagonal components introducing rotation
 capabilities into the matrix. Together the normal and shearing strain
 forms a transformation matrix mapping vectors from an unprimed to a
-primed coordinate frame. The base vectors spanning the primed vector space is
-exactly the principle directions we are interested in. Rotating the
-unprimed coordinate frame until its base vectors aligns with the base vectors of the
+primed coordinate frame. The base vectors spanning the primed vector space are
+exactly the principal directions we are interested in. Rotating the
+unprimed coordinate frame until its base vectors align with the base vectors of the
 primed coordinate frame, will effectively eliminate the rotation. 
 The result from applying normal and shearing strain can hereby be
 represented combined as normal strain in the directions of the primed
@@ -730,9 +730,9 @@ in section \vref{sec:matrix_eigenproblem}.
 %
 The eigenvectors of any symmetric tensor
 $T$ is by definition three mutually perpendicular vectors. The
-eigenvectors defines the
+eigenvectors define the
 principal directions and the corresponding 
-eigenvalues defines the principal values \citebook{page~838}{book:bathe}. 
+eigenvalues define the principal values \citebook{page~838}{book:bathe}. 
 The three eigenvectors are often referred to as the minimum, medium
 and maximum principal directions according to the size of their
 corresponding eigenvalues. \\
@@ -919,12 +919,12 @@ The equation $A v = \lambda v$ can also be written as
 According to definition \vref{def:eigenproblem} $\lambda$ is an eigenvalue of $A$
 if and only if the corresponding vector $v$ is nonzero. Equation
 \eqref{eq:def_eigenproblem_equal_zero} has a nonzero 
-solution of $v$ if and only if $det(A - \lambda I) = 0$ is
-satisfied, this equation is
+solution of $v$ if and only if $det(A - \lambda I) = 0$.
+This equation is
 also known as the \defit{characteristic equation} for matrix $A$. \\
 
 Expanding the
-determinant leaves us with an polynomial of $n$-degree for the
+determinant leaves us with a polynomial of $n^{th}$ degree for the
 $\lambda$ term. This polynomial is also known as the
 \defit{characteristic polynomial}. The characteristic polynomial will have
 exactly $n$ roots being the eigenvalues from which we can find $n$
@@ -998,7 +998,7 @@ which expands to:
 - 3)(\lambda - 2) = 0
 \end{equation}
 
-Obvious $\lambda = 2$ and $\lambda = 3$ is a valid solution here.
+Obviously $\lambda = 2$ and $\lambda = 3$ is a valid solution here.
 Standard techniques for finding roots in a given
 polynomial exists. Having established the two eigenvalues we still need to find their
 corresponding and independent eigenvectors satisfying the equation $A

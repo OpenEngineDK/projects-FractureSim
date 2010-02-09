@@ -1,7 +1,7 @@
 % -*- mode: latex; mode: auto-fill; coding: utf-8; -*-
 
 \label{sec:framework_for_equilibrium_problems}
-\defit{Equilibrium problems} is the set of problems
+\defit{Equilibrium problems} are the set of problems
 where the mathematical model describes conservation of something. It could be
 conservation of mass in fluids, conservation of current in electrical
 circuits, conservation of energy in solid mechanics, conservation of
@@ -22,10 +22,10 @@ establish a fundamental framework for solving equilibrium problems.\\
 % approximate solutions. \\
  
 A \defit{steady state problem}, also known as a \defit{static problem}, is a problem where only
-two configurations exists.  
+two configurations exist.  
 The first one is the initial configuration describing the state of the
 system. If the problem is within the field of mechanics, the initial
-configuration will describe the systems masses, external loads, connecting springs and
+configuration will describe the system's masses, external loads, connecting springs and
 so forth. Finding the equations describing the behavior of the
 system, is also part of the initial configuration.
 Without introducing time, the system will react to the applied loads,
@@ -89,7 +89,7 @@ $f$ we can describe the problem by relating these as follows:
 
 \begin{itemize}
 \item There will be a matrix $A$ relating the displacement vector
-$u$ to a elongation vector $e$.
+$u$ to an elongation vector $e$.
 \item There will be a matrix $C$ relating the elongation vector $e$
   to a spring force vector $w$.
 \item There will be a matrix relating the spring force vector $w$ to the
@@ -208,7 +208,7 @@ quantities. Using Hooke's law we need to define a spring constant. When
 the spring constant is multiplied with the stretch $e$ the internal
 force $w$ are obtained. For each spring we define
 a spring constants $c_1$, $c_2$, $c_3$ and $c_4$. The internal
-spring forces is then obtained by:
+spring forces are then obtained by:
 
 \begin{align*}
 w_1 &= c_1 e_1 \\
@@ -279,9 +279,9 @@ w_1 = f_1 + w_2
 \end{equation}
 
 which can be written as $w_1 - w_2 = f_1$. Now consider the internal
-force $w_2$, both $f_2$ and $w_3$ act downwards, therefore $w2$ must
+force $w_2$, both $f_2$ and $w_3$ act downwards, therefore $w_2$ must
 equal the sum of the contributions: $w_2 = f_2 +w_3$. The three relations
-between the internal forces and the external forces is obtained by: 
+between the internal forces and the external forces are obtained by: 
 
 \begin{align*}
 w_1 - w_2 &= f_1 \\
@@ -443,7 +443,7 @@ c_1 &  &  &  \\
 The matrix $A^T C A$ represents the connections and their properties
 in the system. In the domain of solid
 mechanics matrix $A^T C A$ is also known as the 
-\defit{stiffness} matrix. The stiffness matrix $K$ with spring constant
+\defit{stiffness} matrix. The stiffness matrix $K$ with spring constants
 $c_i = 1$ corresponding to the
 system as illustrated in
 figure \vref{fig:basic_spring_mass_problem} is obtained by:
@@ -571,7 +571,7 @@ fixed so there are no boundary conditions.
 \label{fig:unbound_spring_mass_problem}
 \end{figure}
  
-Recall how matrix $A$ was constructed, it is going to be a $n \times m$
+Recall how matrix $A$ was constructed, it is going to be an $n \times m$
 matrix where the first
 row represents the stretching in the first spring.
 % Here being $-1$ of
@@ -643,7 +643,7 @@ where $x$ is any non-zero vector. So for instance
 
 so clearly matrix $K$ can take a non-zero vector to
 the \defit{null space}. In this case it goes for all multiples of the vector
-$[1,1,1]^T$. Assume that vector $x$ is equal the displacement vector $u$, we are free to
+$[1,1,1]^T$. Assume that vector $x$ is equal to the displacement vector $u$, we are free to
 move all masses arbitrarily by the same amount, up or down, without causing any
 change in the potential energy. This is an example of a system that is not well defined
 due to the missing boundary conditions. \\

@@ -54,9 +54,9 @@ The next step is dynamics, where objects are allowed to move
 but not to deform. Dynamics expands the analytical
 method by allowing movement and rotation.
 %
-In statics an object is viewed as a single point which describes it's
+In statics an object is viewed as a single point which describes its
 position. In dynamics objects are modeled by their position and
-orientation. Statics and dynamics makes these assumptions so objects
+orientation. Statics and dynamics make these assumptions so objects
 are less complex to analyse. In continuum mechanics objects are
 represented by volumetric elements, which are more complex.
 
@@ -170,7 +170,7 @@ behavior.
 %
 Depending on what types of problems we consider and which kind of
 results we are seeking, this definition of equilibrium must be
-interpreted differently to meet the constrains imposed on a given
+interpreted differently to meet the constraints imposed on a given
 problem.
 %
 We now consider three interpretations of the definition, with
@@ -280,7 +280,7 @@ the quantity to define equilibrium.
 %   stretch or compress the body must be taken into account.}
 %
 To define equilibrium for a deformable object, we will instead used
-the \defit{principle of conservation of energy} as define in
+the \defit{principle of conservation of energy} as defined in
 definition \vref{def:pmpe}.
  
 \begin{definition}
@@ -295,7 +295,7 @@ energy, and mechanical energy. Again we note, although this time not
 directly apparent, that equilibrium for moving objects is a subset of
 equilibrium for deformable objects. In section \vref{sec:continuum},
 when the theory of continuum mechanics is elaborated, we will return
-to what equilibrium is for a deformable, in that section it will be
+to what equilibrium is for a deformable object, in that section it will be
 applied to a continuum.
 
 \subsection{Work}
@@ -317,7 +317,7 @@ result of the displacement $dr$. Work is measured in Newton meter
 
 Consider a force $f$ acting on an object at point $P$ as illustrated
 in figure \vref{fig:worka}. Suppose the object undergoes an infinitesimal
-motion, so $P$ has displaced by vector $dr$ (see figure
+motion, so $P$ is displaced by vector $dr$ (see figure
 \vref{fig:workb}). The differential work $dW$ done by $f$ as a result
 of the displacement $dr$ can then be illustrated as in figure
 \vref{fig:workc}. In this figure the force $f$ is not parallel to $dr$
@@ -445,7 +445,7 @@ does not dissipate.
 \subsubsection{Conservation of Mechanical Energy}
 \label{sec:conser-of-me}
 When dealing with a conservative system the total amount of
-energy is refered to as the mechanical energy ($E_M$), and is defined
+energy is referred to as the mechanical energy ($E_M$), and is defined
 by:
 
 \begin{equation}
@@ -715,7 +715,7 @@ directions on a body hereby stretching it.
 \end{figure}
 
 For the simple case of a body axially loaded,
-the normal strain will be uniformly distributes through out the body
+the normal strain will be uniformly distributed throughout the body
 and can be obtained by dividing the displacement (how much the body is
 stretched) by the initial length of the body.
 %Normal strain is defined to be the displacement (how much the body
@@ -727,7 +727,7 @@ stretched) by the initial length of the body.
 
 In general strain is not distributed uniformly over the entire
 body, therefore we define strain at a specific point within the
-body. Because continuum mechanics assume strain to be continues,
+body. Because continuum mechanics assumes strain to be continuous,
 differential calculus is used to define strain at any point.
 In three dimensions, we have a normal strain component
 for each direction in the reference frame. Written out as individual
@@ -766,7 +766,7 @@ illustrated in figure \vref{fig:shear-strain}.
     \includegraphics[width=7cm]{./images/physics_shearing_strain_a.png}
     \label{fig:shearing-strain-one-direction}
   }
-  \subfloat[Shearing strain in two direction.]{
+  \subfloat[Shearing strain in two directions.]{
     \includegraphics[width=7cm]{./images/physics_shearing_strain_b.png}
     \label{fig:shearing-strain-two-directions}
   }
@@ -787,7 +787,7 @@ interested in defining the resulting shear strain between
 planes. Figure \vref{fig:shearing-strain-two-directions} illustrates
 the distortion from shear strain in two directions. To measure the
 resulting shear strain between the $xz$-plane and the $yz$-plane the
-two individual shearing strains is added together.
+two individual shearing strains are added.
 %
 The individual components of the shearing strain in three dimensions are
 \citebook{page~7}{book:theory-of-elasticity}:
@@ -802,7 +802,7 @@ The individual components of the shearing strain in three dimensions are
   \frac{\partial u_z}{\partial y}
 \end{equation}
 
-where $u_x$, $u_y$ and $u_z$ is the axial displacements along the $x$, $y$
+where $u_x$, $u_y$ and $u_z$ are the axial displacements along the $x$, $y$
 and $z$ axis, respectively. Shearing strain can be represented on vector
 form as: $\gamma = [ \gamma_{xy}, \ \gamma_{xz}, \ \gamma_{yz} ]^T$.\\
 
@@ -842,7 +842,7 @@ is introduced as this is a representation of the internal forces.
 Stress is a measure of the average amount of force exerted per unit
 area ($N$/$m^2$). It is a measure of the intensity of the total
 internal forces acting within a body across imaginary internal
-surfaces, as a reaction to external applied forces.
+surfaces, as a reaction to externally applied forces.
 %In
 %general, stress is expressed as a force $f$ acting over area $A$: 
 
@@ -854,7 +854,7 @@ surfaces, as a reaction to external applied forces.
 As with strain, stress can be decomposed into two separate components:
 \defit{normal stress} and \defit{shearing stress}.
 Consider an infinitesimal cubic element with
-edges parallel to the axis as illustrated in figure
+edges parallel to the axe as illustrated in figure
 \vref{fig:stress_box}.
 
 %As with strain, stress can be decomposed into normal ($\sigma$) and
@@ -867,7 +867,7 @@ edges parallel to the axis as illustrated in figure
 \label{fig:stress_box}
 \end{figure}
 
-The components of normal stress is denoted $\sigma_x$,
+The components of normal stress are denoted $\sigma_x$,
 $\sigma_y$ and $\sigma_z$, one for each axial stress acting
 perpendicular to a body face. Normal stress is either tension or
 compression, often causing change in volume. Shearing stress is
@@ -1020,7 +1020,7 @@ specify this definition for a continuum. Recall from section
 \vref{sec:conser-of-me} that when an object has changed shape we
 consider two states of the object and their energy relation. Equation
 \eqref{eq:EW} is repeated below, it relates the
-change in potential energy to the work done be kinetic
+change in potential energy to the work done by kinetic
 energy. Equilibrium for a continuum is precisely this, the relation
 between the work done by external force, and the resulting internal
 force measured as potential energy.
@@ -1090,7 +1090,7 @@ phases based on how the material behaves. The first phase represents
 \defit{elastic deformation}, here the material absorbs the forces and
 stores them as stress and strain. The second phase represents
 \defit{plastic deformation}, during this phase the internal structures
-of the material changes permanently. If the amount of stress and
+of the material change permanently. If the amount of stress and
 strain exceeds the point of \defit{fracture} the material will collapse.
 Elastic deformation is reversible, but the other deformation types are not.
 \citebook{page~344-345}{book:uni-physics}
@@ -1176,7 +1176,7 @@ the strain falls back to the original level
 \citebook{page~183}{book:material-science}.
 
 \subsection{Plastic Deformation}
-\defit{Plastic deformation}, also known as \defit{plastic flow}, is a
+\defit{Plastic deformation}, also known as \defit{plastic flow}, is an
 irreversible deformation, which means that the body will not return to
 its original configuration when the external forces are released. When
 the amount of external forces exceeds the yield strength the plastic
@@ -1613,39 +1613,39 @@ illustrated in figure \vref{fig:crack-surfaces}.
 \label{sec:physics_crack_init}
 % include that there are teories for having more than one crack init.
 There are different theories of how to calculate the crack
-initialization point, we use: \defit{maximum principal stress} since this
+initialization point. We use: \defit{maximum principal stress} since this
 technique has proved suitable for brittle materials
 \citebook{page~370}{book:strength-materials}.
 %
-\defit{Principle stress} is a measure where both shearing and normal
+\defit{Principal stress} is a measure where both shearing and normal
 stress is incorporated, yielding three vectors. The longest vector of
-the three revels in which the direction the maximum stress points in a
-given point within the material. The method of maximum principle finds
-the maximum principle stress of all points in the material, yielding
+the three reveals in which direction the maximum stress points in a
+given point within the material. The method of maximum principal finds
+the maximum principal stress of all points in the material, yielding
 the precise point and direction of the stress.
 %
 If this stress exceeds the fracture point ($\sigma_F$), the material
-breaks in this precises location. If a material have different
+breaks in this precise location. If a material has different
 fracture point limits when stretched or compressed, they are
 denoted: $\sigma_F^+$ and $\sigma_F^-$.
 % 
-How to calculate the principle stress based on normal and shearing
+How to calculate the principal stress based on normal and shearing
 stress will be elaborated in section
 \vref{sec:principal_values_and_directions}, when linear transformation
 has been introduced.
 %
-The principle stress also contains information about how the crack
-surfaces will form. The vectors direction defines the normal of the
+The principal stress also contains information about how the crack
+surfaces will form. The vector direction defines the normal of the
 crack plane.
 
 \subsection{Crack length}
-The energy it takes to form the new surfaces is determined by the
+The energy it takes to form the new surface is determined by the
 crack surfaces area and the \defit{strain energy release rate}, which
 is a material property.
 The length of the crack is determined by the amount of strain energy
 stored in the point where the crack opens and the amount it takes to
 create the crack surfaces. The amount of energy used to create a
-surface in a give material depends upon the material itself and on
+surface in a given material depends upon the material itself and on
 the area of the crack surfaces. The area of the surfaces when using
 the lens form is further approximated by using a circle. This is done
 because the lens is much wider that thick and therefore a circle
@@ -1725,7 +1725,7 @@ energy.
 Looking at the strain energy function $E_S$ we see that this energy
 rapidly increases as the crack starts to propagate.
 %
-When the $E_T$ graph crosses the $x$ axis, there are no more energy
+When the $E_T$ graph crosses the $x$ axis, there is no more energy
 left and the crack propagation stops.
 
 \begin{figure}
@@ -1777,7 +1777,7 @@ dS = \frac{\partial E_S}{\partial a} \qquad \qquad dC = \frac{\partial E_C}{\par
 %
 % ref som siger at hvis der allerede er en crack, forsættes denne.
 %
-Brittle material often have a single crack propagating through the
+Brittle material often has a single crack propagating through the
 entire material \citebook{section~9.1}{book:solid-mechanics}.
 %
 % hastighed: lydens.

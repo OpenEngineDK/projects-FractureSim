@@ -8,7 +8,7 @@ solutions to a wide variety of different engineering and physics
 problems.
 %
 The method, which is diverse and flexible, can be applied to complex
-problems where analytical solutions seldom exist or are to "expensive"
+problems where analytical solutions seldom exist or are too "expensive"
 to solve. As this is precisely the case with many problems in the broad
 field of continuum mechanics, where the complex shape of a continuum
 needs to be approximated, the method is used extensively within this
@@ -253,7 +253,7 @@ particular element type:
 \end{itemize}
 
 The number and type of nodal variables assigned to an element are
-called the elements \defit{degree of freedom} (DOF). If for example we have a
+called the element's \defit{degree of freedom} (DOF). If for example we have a
 three-node element, where a two-dimensional displacement vector are
 the nodal variable, then the element have six degrees of freedom. The
 degrees of freedom for an element is the same as the number of
@@ -293,7 +293,7 @@ freedom increases hereby facilitating more complex interpolation
 functions. The nodal variables can be use
 to express non-linear interpolation functions. Consider using a
 two-node line element as the element type. The line with its two nodes
-have two nodal variables which can express a $1^{st}$ order polynomial
+have two nodal variables which can express a first order polynomial
 equal to a linear interpolation:
 
 \begin{equation*}
@@ -301,8 +301,8 @@ P(x) = ax + b
 \end{equation*}
 
 if we increase the number of nodes in the element by inserting an
-extra node on the midpoint of the line we get three nodal variables
-and can now use a $2^{nd}$ order polynomial to express a non-linear
+extra node at the midpoint of the line we get three nodal variables
+and can now use a second order polynomial to express a non-linear
 interpolation: 
 
 \begin{equation*}
@@ -311,15 +311,15 @@ P(x) = ax^2 +bx + c
 
 As the number of element nodes increases so does the order of the
 polynomial we use as the interpolation
-functions. Higher order interpolation functions gives more control over
-how the interpolation functions acts inside an element. But the
+function. Higher order interpolation functions gives more control over
+how the interpolation functions act inside an element. But the
 interpolation functions must have convergence at the element
 boundaries hereby satisfying the compatibility conditions, and
 although we choose a higher order polynomial the interpolation
 functions are only continuous across element boundaries but not
 differentiable.
 %
-The consequences of using a higher order interpolation functions with
+The consequences of using a higher order interpolation function with
 more nodes at each element is that the per element calculations get
 more complex and more time consuming. Instead of increasing the
 number of nodes for each element it is also an option to increase
@@ -417,7 +417,7 @@ be used becomes a challenge. To keep track of this the common thing to do
 is to make a table containing the information. This table is called an
 \defit{element table} an it relates \defit{element numbers} and
 \defit{local node numbers} to \defit{global node numbers}. As this is
-best illustrated though an example, figure \vref{fig:node-numbering}
+best illustrated through an example, figure \vref{fig:node-numbering}
 shows a domain discretized into triangular elements, and table
 \vref{table:element-table} the associated element table
 \citebook{page~15-16}{notes:danish-oil}.
@@ -445,7 +445,7 @@ $e_{12}$ & 9 & 12 & 8 \\
 \label{table:element-table}
 \end{table}
 
-The table indexes the elements by their number $n$ of element $e_n$
+The table indexes the elements by the number $n$ of element $e_n$
 in the left column, and local node numbers 1, 2, and 3 in the top
 row. The table is then filled with the global node numbers for each
 element. An example element ($e_2$) is shown in figure
@@ -487,8 +487,8 @@ been sectioned into
 three-node triangular elements with exterior nodes at the vertices of
 the triangles connecting the elements.
 %
-This type of domain discretization allow us to select $\phi$ to vary
-linearly over an element. Where the linear variation can be
+This type of domain discretization allows us to select $\phi$ to vary
+linearly over an element. The linear variation can be
 illustrated as in figure
 \vref{fig:piecewise-functions-over-triangle}.
 
@@ -681,7 +681,7 @@ unknowns are vectors, so we must be careful to insure that
 coordinate transformation occur. When we assemble the element
 properties, in section \vref{sec:finding-the-element-properties}, we
 will see that the coordinate transformations are part of each
-element stiffness matrix. Because of this the transformations is done
+element's stiffness matrix. Because of this the transformations are done
 for each element before the whole system is considered.
 
 % upwards: rewritten from fem-engineers, p. 37
@@ -713,7 +713,7 @@ When we use these coordinates to derive the interpolation functions,
 then integration can be done in a special closed form making it easier
 to evaluate the integrals in element equations.
 %
-Natural coordinates basically describes the location of any point
+Natural coordinates basically describe the location of any point
 inside an element in terms of that element's exterior nodes. The
 local natural coordinates within an element are denoted by: $L_i$
 where $i \in \{1, 2, ..., n\}$ and $n$ is the number of external nodes
@@ -790,7 +790,7 @@ inside a triangular element in figure \vref{fig:point-in-triangle}.
 
 The relationship between the global Cartesian coordinates of the point
 $(x,y)$ within the element, and the new local natural coordinates, that we
-are constructing, should have a linear dependency. The linear property
+are constructing, should have a linear dependence. The linear property
 holds for the following equations
 
 \begin{equation}
@@ -801,7 +801,7 @@ y =& L_1 y_1 + L_2 y_2 + L_3 y_3
 \end{aligned}
 \end{equation}
 
-In addition to the equation above, requiring linear dependency, we
+In addition to the equation above, requiring linear dependence, we
 again require that the weighting functions sum to unity:
 
 \begin{equation}
@@ -874,7 +874,7 @@ inside an element can be illustrated, this is shown in figure
 
 Note that in figure \vref{fig:graph-of-length-coords} the interpolation
 functions are viewed at a particular element and that the graphs
-illustrates the interpolation functions for one element. In figure
+illustrate the interpolation functions for one element. In figure
 \vref{fig:graph-of-area-coords} however the interpolation functions are
 viewed at one node, which means that all interpolation functions for
 elements sharing this node are shown in the figure.
@@ -1116,7 +1116,7 @@ $e_b$ & 2 & 3 & 4 & 5 \\
 \label{table:element-table-for-example}
 \end{table}
 
-The element stiffness matrices are the:
+The element stiffness matrices are:
 
 \begin{equation}
 K^a =
@@ -1136,7 +1136,7 @@ K^b_{41} & K^b_{42} & K^b_{43} & K^b_{44}
 \end{bmatrix}
 \end{equation}
 
-Element $e_a$ relate forces to displacements as follows:
+Element $e_a$ relates forces to displacements as follows:
 
 \begin{equation}
 \label{eq:matrix-equation-for-element-a}
@@ -1192,7 +1192,7 @@ u^5
 The reason for combining the system stiffness matrix this way is
 directly apparent from the two element equations above. In these
 equations some of the field variables are the same. The way we
-combine them insures that these field variables will not be repeated
+combine them ensures that these field variables will not be repeated
 in the final equations. \newline
 
 The expanded element stiffness matrices are then:
@@ -1270,7 +1270,7 @@ include boundary conditions. The boundary conditions are employed to
 make sure that the system in fact has a solution as discussed in
 section \vref{sec:the-stiffness-matrix}.
 If we have known nodal values, these are inserted, otherwise we have
-to constrain parts of the system in some way.
+to constrain parts of the system in some other way.
 % upwards: rewritten from fem-engineers, p. 7-8
 % more on page 48-56
 

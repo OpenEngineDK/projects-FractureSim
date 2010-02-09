@@ -8,16 +8,16 @@ discrete finite element model introduced in section
 %
 To summarize we have chosen the following which will be further
 elaborated in upcoming sections. At step four, assembling the system
-equations, no choise can be made so our choices are listed three steps
+equations, no choice can be made so our choices are listed three steps
 at the time.
 %
 We discretize the solution region into four-node tetrahedral elements,
 select linear volumetric coordinates as our interpolation
-function, and use elasticity theory and energy preservation to
+functions, and use elasticity theory and energy preservation to
 describe the element properties.
 %
 At this point we assemble the element properties to obtain the system
-equation precisely as described in section
+equations precisely as described in section
 \vref{sec:asseble-the-element-properties}.
 %
 Then we impose boundary conditions by fixing nodal positions, and
@@ -78,7 +78,7 @@ Tetrahedron structures gives good approximations to the continuum
 body. As it is hard to imagine how tetrahedra fill a body
 figure \vref{fig:hexahedron2tetrahedra} gives an example of how a
 box can be fully covered by five tetrahedra, which is the minimum
-number nessecery to fill a box.
+number nessecary to fill a box.
 
 \begin{figure}
   \centering
@@ -188,16 +188,17 @@ displacement to strain, stress to strain via the theory of
 elasticity, and finally we convert stress and strain into potential
 energy. The goal in this section, is to construct a function
 that describes the potential energy of an element in terms of its nodal
-displacement vector $U$. The equation for potential energy is defined
+displacements $U$. The equation for potential energy is defined
 to be the potential energy of the work done by the external forces
-($E_V$) and the interal strain energy ($E_S$).
+($E_V$) and the internal strain energy ($E_S$).
 
 \begin{equation}
 \prod (x,y,z) = E_S + E_V = E_S - W
 \end{equation}
 
-Where $E_S$ is the strain energy and $E_V$ is the potential energy of
-the external forces. Where $E_V = -W$ as defined in equation
+%Where $E_S$ is the strain energy and $E_V$ is the potential energy of
+%the external forces.
+Where $E_V = -W$ is defined in equation
 \eqref{eq:EW} on page \pageref{eq:EW}. From equation
 \eqref{eq:strain_energy} and \eqref{eq:external-work} we have that:
 
@@ -292,7 +293,7 @@ and shearing strain by equation \eqref{eq:individual-shear-strain} as:
   \frac{\partial u_z}{\partial y}
 \end{equation*}
 
-on matrix form this looks like the following:
+On matrix form this looks like the following:
 
 \begin{equation}
 \begin{Bmatrix}
@@ -451,7 +452,7 @@ the function becomes:
 E_S (x,y,z) = U^T K U
 \end{equation}
 
-inserting this into the function for potential energy and solving
+Inserting this into the function for potential energy and solving
 the integration of external force as above, gives:
 
 \begin{equation}
@@ -585,7 +586,7 @@ matrix and $U$ is the displacement vector. Equation
 \eqref{eq:undamped_harmonic_motion} is equivalent to the equation for
 undamped harmonic motion. By measuring the actual dynamic response of
 structures it can be observed that energy vanishes during motion,
-preventing the structure from oscillating infinitely. Taking this into
+preventing the structure from oscillating indefinitely. Taking this into
 account damping is introduced into the equation \citebook{page~166}{book:bathe}: 
 
 \begin{equation}
@@ -674,7 +675,7 @@ We also need to choose an appropriate stress
 measure to use with the strain measure. According to
 \citebook{page~515}{book:bathe} the \defit{Second Piola-Kirchoff} stress tensor
 is work-conjugate with the Green-Lagrangian strain
-tensor. These two measures will be further elaborate in
+tensor. These two measures will be further elaborated in
 this section. \\
 
 % Explicit
@@ -956,7 +957,7 @@ a deformed configuration.
 % Right Cauchy-Green deformation tensor, into a strain measure which is
 % {\it linear} and suitable for small deformations. \\
 
-The \defit{Green-Lagrangian strain tensor} is a non-linear strain
+The \defit{Green-Lagrange strain tensor} is a non-linear strain
 measure based on the Cauchy-Green deformation tensor.
 Multiplying the deformation gradient with its transpose
 \eqref{eq:right_cauchy_green} eliminates the rotation, but at the 
@@ -964,10 +965,10 @@ same time the change in strain length is squared which makes it a
 \defit{non-linear} strain measure. Non-linear strain measures are suitable
 for both small and large deformations. If the time step is small (much
 smaller than unity) the non-linear terms in the Cauchy-Green
-deformation tensor becomes negligible and the strain measure reduces
+deformation tensor become negligible and the strain measure reduces
 to a linear expression \citebook{page~215}{book:modeling_metal_fem}.
 The Cauchy-Green deformation tensor is defined with respect to the
-initial configuration, hence the Green-Lagrangian strain tensor is on
+initial configuration, hence the Green-Lagrange strain tensor is on
 total Lagrangian formulation:   
 
 % Green-Lagrangian strain tensor
@@ -989,12 +990,12 @@ tensor is obtained by:
 
 \begin{equation}
 \label{eq:second_piola_kirchoff}
-^t_0S = \frac{\partial ^t_0E_s}{\partial ^t_0E_{GL}}
+^t_0S = \frac{\partial ^t_0E_S}{\partial ^t_0E_{GL}}
 \end{equation}
 
-where $E_s$ is the \defit{strain energy function}.
+where $E_S$ is the \defit{strain energy function}.
 A strain energy function is a function representing the internal
-stored energy that will make a perfect elastic material return to
+stored energy that will make a perfectly elastic material return to
 its original shape when external forces are removed. \\
 % The restoring
 % force is the same as the potential energy stored in the
@@ -1019,7 +1020,7 @@ where $G$ is defined by equation \eqref{eq:EG-relation} on page
 \end{equation}
 
 In \eqref{eq:second_piola_kirchoff_tensor} $\delta_{ij}$ is the
-Kronecker's delta, define by:
+Kronecker's delta, defined by:
 
 \begin{equation}
   \delta_{ij} = \left\{\begin{matrix} 1, & \mbox{if } i=j \\ 0, &
@@ -1027,11 +1028,11 @@ Kronecker's delta, define by:
 \end{equation}
 
 The inverse of the Cauchy-Green deformation tensor is denoted
-$^t_0C_{ij}^{-1}$, and $^tJ$ is the determinant of the
+$^t_0C^{-1}$, and $^tJ$ is the determinant of the
 deformation gradient tensor at time $t$.
 %
 The terms in equation \eqref{eq:second_piola_kirchoff_tensor} defining
-the second Piola-Kirchoff stress do not seems to have a 
+the second Piola-Kirchoff stress do not seem to have a 
 direct relation to the physical interpretation
 \citebook{page~134}{book:continuum-mechanics-anthony}. The intuition behind a strain
 measure can be related directly to the physical stretches of the
