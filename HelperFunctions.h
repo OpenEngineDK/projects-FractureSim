@@ -52,7 +52,7 @@ static Scene::TransformationNode* Create
     rightside->colr[0] = rightside->colr[1] = rightside->colr[2] = color;
 
     MaterialPtr m = MaterialPtr(new Material());
-	//m->texr = ResourceManager<ITextureResource>::Create(textureFile);
+	//m->texr = ResourceManager<ITexture2D>::Create(textureFile);
 	leftside->mat = rightside->mat = m;
         
     GeometryNode* node = new GeometryNode();
