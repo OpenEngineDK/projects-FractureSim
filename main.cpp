@@ -108,7 +108,7 @@ int main(int argc, char** argv) {
     bn->AddNode(new CoordSystemNode());
 
     // must be done before using memory!
-    INITIALIZE_CUDA();
+    //INITIALIZE_CUDA();
     CHECK_FOR_CUDA_ERROR();
     logger.info << "CUDA info:" << PRINT_CUDA_DEVICE_INFO() << logger.end;
 

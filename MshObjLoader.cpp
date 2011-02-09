@@ -1,6 +1,7 @@
 #include "MshObjLoader.h"
 
 #include <Core/Exceptions.h>
+#include <stdio.h>
 
 MshObjLoader::MshObjLoader(std::string mshfile, std::string objfile) {
     this->mshfile = mshfile;
