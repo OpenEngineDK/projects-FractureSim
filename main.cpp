@@ -9,6 +9,7 @@
 
 // OpenEngine stuff
 #include <Meta/Config.h>
+#include <Meta/CUDA.h>
 #include <Logging/Logger.h>
 #include <Logging/StreamLogger.h>
 #include <Core/Engine.h>
@@ -105,6 +106,11 @@ int main(int argc, char** argv) {
     bn->AddNode(new GridNode(1000,30,color));
     bn->AddNode(new CoordSystemNode());
 
+    // must be done before using memory!
+    INITIALIZE_CUDA();
+    CHECK_FOR_CUDA_ERROR();
+    logger.info << "CUDA info:" << PRINT_CUDA_DEVICE_INFO() << logger.end;
+
     std::string solidname = argv[1];
     std::string mpname = argv[2];
     Solid* solid = SolidFactory::Create(solidname);
@@ -139,5 +145,3 @@ int main(int argc, char** argv) {
     delete setup;
     return EXIT_SUCCESS;
 }
-
-

@@ -44,9 +44,6 @@ TLEDNode::~TLEDNode() {
 }
 
 void TLEDNode::Handle(Core::InitializeEventArg arg) {
-    INITIALIZE_CUDA();
-    CHECK_FOR_CUDA_ERROR();
-    logger.info << "CUDA info:" << PRINT_CUDA_DEVICE_INFO() << logger.end;
     logger.info << "TLEDNode initialization start" << logger.end;
 
     logger.info << "pre computing" << logger.end;
