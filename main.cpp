@@ -51,6 +51,7 @@ using namespace OpenEngine::Resources;
 int main(int argc, char** argv) {
     // Create simple setup
     SimpleSetup* setup = new SimpleSetup("TLED");
+    setup->GetRenderer().SetBackgroundColor(Vector<4,float>(1.0));
 
     if (argc == 3) {
     // Print usage info.
