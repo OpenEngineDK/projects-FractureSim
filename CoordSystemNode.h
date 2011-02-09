@@ -8,7 +8,7 @@ using namespace OpenEngine;
 class CoordSystemNode : public Scene::RenderNode {
  public:
     CoordSystemNode();
-    void Apply(Renderers::IRenderingView* view);
+    void Apply(Renderers::RenderingEventArg arg, Scene::ISceneNodeVisitor& v);
 };
 
 #endif // _COORD_SYSTEM_NODE_

@@ -62,6 +62,7 @@ TARGET_LINK_LIBRARIES( ${PROJECT_NAME}
   Extensions_SetupHelpers
   Extensions_GenericHandlers
   Extensions_OpenGLRenderer
+  Extensions_CUDA
   # Project libs
   #${CUDA_TARGET_LINK} #cuda
   ${CUDA_CUT_LIBRARIES} #cutil

@@ -47,7 +47,7 @@ class TLEDNode : public Scene::RenderNode, public Core::IModule {
     TLEDNode(Solid* solid);
     virtual ~TLEDNode();
 
-    virtual void Apply(Renderers::IRenderingView* view);
+    virtual void Apply(Renderers::RenderingEventArg arg, Scene::ISceneNodeVisitor& v);
     virtual void Handle(Core::InitializeEventArg arg);
     virtual void Handle(Core::ProcessEventArg arg);
     virtual void Handle(Core::DeinitializeEventArg arg);

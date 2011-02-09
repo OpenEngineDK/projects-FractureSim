@@ -3,6 +3,8 @@
 
 #include <Math/Vector.h>
 #include <Geometry/Line.h>
+#include <Geometry/FaceSet.h>
+#include <Scene/GeometryNode.h>
 #include <Scene/TransformationNode.h>
 #include <Scene/RenderStateNode.h>
 
@@ -55,14 +57,14 @@ static Scene::TransformationNode* Create
 	//m->texr = ResourceManager<ITexture2D>::Create(textureFile);
 	leftside->mat = rightside->mat = m;
         
-    GeometryNode* node = new GeometryNode();
+    Scene::GeometryNode* node = new Scene::GeometryNode();
     node->SetFaceSet(faces);
 
     Scene::RenderStateNode* rsn = new Scene::RenderStateNode();
-    rsn->DisableOption(RenderStateNode::WIREFRAME);
+    rsn->DisableOption(Scene::RenderStateNode::WIREFRAME);
     rsn->AddNode(node);
 
-    TransformationNode* tnode = new TransformationNode();
+    Scene::TransformationNode* tnode = new Scene::TransformationNode();
     tnode->AddNode(rsn);
 
     tnode->Rotate(0.0, Math::PI/2, 0.0);    

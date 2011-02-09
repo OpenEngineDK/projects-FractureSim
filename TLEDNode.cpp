@@ -104,9 +104,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
 
 
-
+    /*
     // ----- Basic beam bending setup ------ //
-    /*    
     float scale = 3;
     float3 force = make_float3(0, -(float)(1.0 * pow(10,7)), 0);
     ForceModifier* addForce = new ForceModifier(solid, new PolyShape("Box12.obj", scale, scale*2, scale*2), force);
@@ -119,8 +118,9 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     //fixedBox2->Move(-70,POS_Y,POS_Z);
     fixedBox2->Move(-5.0,POS_Y,POS_Z);
     modifier.push_back(fixedBox2);
-    */  
+    */
 
+    /*
     // ---  Stress-strain curve setup ---- //
     float scale = 30;
     float3 force = make_float3((float)(1.0 * pow(10,6))/9.0f, 0, 0);
@@ -129,7 +129,8 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     addForce->Move(90, POS_Y, POS_Z);
     addForce->SetColorBufferForSelection(&vbom->GetBuf(BODY_COLORS));
     modifier.push_back(addForce);
-    
+    */
+
     /*             
     float3 disp = make_float3(0, 0, 0);
     addDisp = new DisplacementModifier(solid, new PolyShape("Box12.obj", scale,scale*2,scale*2), disp);
@@ -138,11 +139,12 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     addDisp->SetColorBufferForSelection(&vbom->GetBuf(BODY_COLORS));
     modifier.push_back(addDisp);
     */
+    /*
     FixedModifier* fixedBox2 = new FixedModifier(new PolyShape("Box12.obj", scale, scale*2, scale*2));
     fixedBox2->Move(-90,POS_Y,POS_Z);
     //fixedBox2->Move(-5,POS_Y,POS_Z);
     modifier.push_back(fixedBox2);
-    
+    */
 
     // ----- Mesh independence setup ----- //
     /*
@@ -180,7 +182,6 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
 
 
     // ----- Crack supported beam setup ----- //
-    /*
     float scale = 5;
     float3 force = make_float3(0, -(float)(5.125 * pow(10,8)), 0);
     ForceModifier* addForce = new ForceModifier(solid, new PolyShape("Box12.obj", scale, scale, scale), force);
@@ -191,8 +192,6 @@ void TLEDNode::Handle(Core::InitializeEventArg arg) {
     FixedModifier* fixedBox2 = new FixedModifier(new PolyShape("Box12.obj", scale, scale, scale));
     fixedBox2->Move(-5,POS_Y,POS_Z);
     modifier.push_back(fixedBox2);
-    */
-
 
     // ------ Crack tooth dummy by force ------ //
     /*    float scale = 15;
@@ -332,7 +331,7 @@ void TLEDNode::Handle(Core::ProcessEventArg arg) {
     //    printf("%E \t %E \t %E\n", ((160.0f+maxDisp)/160.0f)-1.0, addForce->addForce.x*20.0f, maxDisp);
     //    static int p = 0;
     //if( p++ % 10 == 0 )
-    logger.info << "MaxDisp(Axial/Total): (" << maxX << "/" << maxDisp << ")" << logger.end;
+    //logger.info << "MaxDisp(Axial/Total): (" << maxX << "/" << maxDisp << ")" << logger.end;
     
     // Crack Tracking
     if( crackTrackingEnabled ){
@@ -398,11 +397,10 @@ void TLEDNode::Handle(Core::DeinitializeEventArg arg) {
     //cleanupDisplay();
 }
 
-void TLEDNode::Apply(Renderers::IRenderingView* view) {
-    VisitSubNodes(*view);
+void TLEDNode::Apply(Renderers::RenderingEventArg arg, Scene::ISceneNodeVisitor& v) {
+    this->VisitSubNodes(v);
 
     if (!solid->IsInitialized()) return;
-
     
     // These buffers will only be rendered if they are enabled.
     vbom->Render(CENTER_OF_MASS);
@@ -425,12 +423,11 @@ void TLEDNode::Apply(Renderers::IRenderingView* view) {
 
      // needs to be last, because it is transparent
     if (renderPlane) 
-        plane->Accept(*view);
+        plane->Accept(v);
     
     //    tool->VisualizeNormals();
     
 }
-
 
 void TLEDNode::ApplyModifiers(Solid* solid) {
     std::list<Modifier*>::iterator itr;

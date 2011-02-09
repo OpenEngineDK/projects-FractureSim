@@ -7,12 +7,12 @@ GridNode::GridNode(float numberOfLinesPerAxis,
     this->color = color;
 }
 
-void GridNode::Apply(Renderers::IRenderingView* view) {
+void GridNode::Apply(Renderers::RenderingEventArg arg, Scene::ISceneNodeVisitor& v) {
     // draw xz plane as grid
     for (float i= -numberOfLinesPerAxis; i<numberOfLinesPerAxis; 
          i+=spaceBetweenLines) {
         if (i == 0.0) continue;
-        view->GetRenderer()->DrawLine( Geometry::Line(Math::Vector<3,float>(-numberOfLinesPerAxis,0.0,i),  Math::Vector<3,float>(numberOfLinesPerAxis,0.0,i) ), color);
-        view->GetRenderer()->DrawLine( Geometry::Line(Math::Vector<3,float>(i, 0.0, -numberOfLinesPerAxis), Math::Vector<3,float>(i, 0.0, numberOfLinesPerAxis) ), color);
+        arg.renderer.DrawLine( Geometry::Line(Math::Vector<3,float>(-numberOfLinesPerAxis,0.0,i),  Math::Vector<3,float>(numberOfLinesPerAxis,0.0,i) ), color);
+        arg.renderer.DrawLine( Geometry::Line(Math::Vector<3,float>(i, 0.0, -numberOfLinesPerAxis), Math::Vector<3,float>(i, 0.0, numberOfLinesPerAxis) ), color);
     }
 }

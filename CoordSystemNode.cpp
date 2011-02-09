@@ -11,17 +11,17 @@ using namespace OpenEngine::Math;
 CoordSystemNode::CoordSystemNode() {
 }
 
-void CoordSystemNode::Apply(Renderers::IRenderingView* view) {
+void CoordSystemNode::Apply(Renderers::RenderingEventArg arg, Scene::ISceneNodeVisitor& v) {
     // draw coordinate system axis
-    view->GetRenderer()->
+    arg.renderer.
         DrawLine( Geometry::Line(Math::Vector<3,float>(0.0),
                                  Math::Vector<3,float>(1000.0,0.0,0.0) ),
                   Math::Vector<3,float>(1.0,0.0,0.0) );
-    view->GetRenderer()->
+    arg.renderer.
         DrawLine( Geometry::Line(Math::Vector<3,float>(0.0),
                                  Math::Vector<3,float>(0.0,1000.0,0.0) ),
                   Math::Vector<3,float>(0.0,1.0,0.0) );
-    view->GetRenderer()->
+    arg.renderer.
         DrawLine( Geometry::Line(Math::Vector<3,float>(0.0),
                                  Math::Vector<3,float>(0.0,0.0,1000.0) ),
                   Math::Vector<3,float>(0.0,0.0,1.0) );

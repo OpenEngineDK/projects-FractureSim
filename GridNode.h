@@ -11,7 +11,7 @@ class GridNode : public Scene::RenderNode {
     GridNode(float numberOfLinesPerAxis,
              float spaceBetweenLines, Math::Vector<3,float> color);
     ~GridNode() {}
-    void Apply(Renderers::IRenderingView* view);
+    void Apply(Renderers::RenderingEventArg arg, Scene::ISceneNodeVisitor& v);
  private:
     float numberOfLinesPerAxis;
     float spaceBetweenLines;

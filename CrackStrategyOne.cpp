@@ -1,8 +1,11 @@
-
 #include "CrackStrategyOne.h"
+
+#include <Core/Exceptions.h>
 #include <Logging/Logger.h>
 #include <Math/Math.h>
 #include <algorithm>
+
+using namespace OpenEngine;
 
 inline bool operator==(const float4 l, const float4 r) {
     return l.x==r.x && l.y==r.y && l.z==r.z && l.w==r.w;

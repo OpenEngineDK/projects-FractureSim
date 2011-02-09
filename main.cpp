@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
     }
     else {
         logger.info << "please specify solid name and material properties: ex "
-                    << argv[0] << " bar concrete" << logger.end;
+                    << argv[0] << " bar5 concrete" << logger.end;
     }
     delete setup;
     return EXIT_SUCCESS;
