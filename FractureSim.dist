@@ -2,38 +2,38 @@
 # http://www.openengine.dk/wiki/Projects/FractureSim
 
 # main repository
-darcs / http://openengine.dk/code/openengine
-darcs-dev / fh.daimi.au.dk:/users/cgd/code/openengine
+git / https://github.com/OpenEngineDK/openengine.git
+git-dev / git@github.com:OpenEngineDK/openengine.git
 
 # project repository
-darcs /projects/FractureSim http://openengine.dk/code/projects/FractureSim
-darcs-dev /projects/FractureSim fh.daimi.au.dk:/users/cgd/code/projects/FractureSim
+git /projects/FractureSim https://github.com/OpenEngineDK/projects-FractureSim.git
+git-dev /projects/FractureSim git@github.com:OpenEngineDK/projects-FractureSim.git
 
 # required extensions
-darcs /extensions/SetupHelpers           http://openengine.dk/code/extensions/SetupHelpers
-darcs /extensions/HUD                    http://openengine.dk/code/extensions/HUD
-darcs /extensions/SDL                    http://openengine.dk/code/extensions/SDL
-darcs /extensions/SDLImage                    http://openengine.dk/code/extensions/SDLImage
-darcs /extensions/CairoResource                    http://openengine.dk/code/extensions/CairoResource
-darcs /extensions/OpenGLRenderer         http://openengine.dk/code/extensions/OpenGLRenderer
-darcs /extensions/TGAResource            http://openengine.dk/code/extensions/TGAResource
-darcs /extensions/OBJResource            http://openengine.dk/code/extensions/OBJResource
-darcs /extensions/AccelerationStructures http://openengine.dk/code/extensions/AccelerationStructures
-darcs /extensions/GenericHandlers        http://openengine.dk/code/extensions/GenericHandlers
-darcs /extensions/CUDA                   http://openengine.dk/code/extensions/CUDA
-darcs /extensions/ActionMappers          http://openengine.dk/code/extensions/ActionMappers
+git /extensions/SetupHelpers           https://github.com/OpenEngineDK/extensions-SetupHelpers.git
+git /extensions/HUD                    https://github.com/OpenEngineDK/extensions-HUD.git
+git /extensions/SDL                    https://github.com/OpenEngineDK/extensions-SDL.git
+git /extensions/SDLImage                    https://github.com/OpenEngineDK/extensions-SDLImage.git
+git /extensions/CairoResource                    https://github.com/OpenEngineDK/extensions-CairoResource.git
+git /extensions/OpenGLRenderer         https://github.com/OpenEngineDK/extensions-OpenGLRenderer.git
+git /extensions/TGAResource            https://github.com/OpenEngineDK/extensions-TGAResource.git
+git /extensions/OBJResource            https://github.com/OpenEngineDK/extensions-OBJResource.git
+git /extensions/AccelerationStructures https://github.com/OpenEngineDK/extensions-AccelerationStructures.git
+git /extensions/GenericHandlers        https://github.com/OpenEngineDK/extensions-GenericHandlers.git
+git /extensions/CUDA                   https://github.com/OpenEngineDK/extensions-CUDA.git
+git /extensions/ActionMappers          https://github.com/OpenEngineDK/extensions-ActionMappers.git
 
 
-darcs-dev /extensions/SetupHelpers           fh.daimi.au.dk:/users/cgd/code/extensions/SetupHelpers
-darcs-dev /extensions/HUD                    fh.daimi.au.dk:/users/cgd/code/extensions/HUD
-darcs-dev /extensions/SDL                    fh.daimi.au.dk:/users/cgd/code/extensions/SDL
-darcs-dev /extensions/OpenGLRenderer         fh.daimi.au.dk:/users/cgd/code/extensions/OpenGLRenderer
-darcs-dev /extensions/TGAResource            fh.daimi.au.dk:/users/cgd/code/extensions/TGAResource
-darcs-dev /extensions/OBJResource            fh.daimi.au.dk:/users/cgd/code/extensions/OBJResource
-darcs-dev /extensions/AccelerationStructures fh.daimi.au.dk:/users/cgd/code/extensions/AccelerationStructures
-darcs-dev /extensions/GenericHandlers        fh.daimi.au.dk:/users/cgd/code/extensions/GenericHandlers
-darcs-dev /extensions/CUDA                   fh.daimi.au.dk:/users/cgd/code/extensions/CUDA
-darcs-dev /extensions/ActionMappers          fh.daimi.au.dk:/users/cgd/code/extensions/ActionMappers
+git-dev /extensions/SetupHelpers           git@github.com:OpenEngineDK/extensions-SetupHelpers.git
+git-dev /extensions/HUD                    git@github.com:OpenEngineDK/extensions-HUD.git
+git-dev /extensions/SDL                    git@github.com:OpenEngineDK/extensions-SDL.git
+git-dev /extensions/OpenGLRenderer         git@github.com:OpenEngineDK/extensions-OpenGLRenderer.git
+git-dev /extensions/TGAResource            git@github.com:OpenEngineDK/extensions-TGAResource.git
+git-dev /extensions/OBJResource            git@github.com:OpenEngineDK/extensions-OBJResource.git
+git-dev /extensions/AccelerationStructures git@github.com:OpenEngineDK/extensions-AccelerationStructures.git
+git-dev /extensions/GenericHandlers        git@github.com:OpenEngineDK/extensions-GenericHandlers.git
+git-dev /extensions/CUDA                   git@github.com:OpenEngineDK/extensions-CUDA.git
+git-dev /extensions/ActionMappers          git@github.com:OpenEngineDK/extensions-ActionMappers.git
 
 # windows libraries
 win32 /libraries http://openengine.dk/data/libraries/boost-win32.zip
